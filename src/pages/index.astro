@@ -1,0 +1,6 @@
+---
+// Bare `/` (no locale prefix) → redirect to default locale `/es/`.
+// Astro 6 with i18n.routing.prefixDefaultLocale:true does NOT produce a bare
+// `/` page, so this is the entry point for visitors who hit the domain root.
+return Astro.redirect('/es/', 302);
+---

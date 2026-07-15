@@ -1,0 +1,10 @@
+{
+  "site": {
+    "title": "The Journey of Xoje",
+    "tagline": "Printable CV, generated from the personal knowledge graph."
+  },
+  "actions": {
+    "print": "Print CV",
+    "switchLocale": "Espanol"
+  }
+}

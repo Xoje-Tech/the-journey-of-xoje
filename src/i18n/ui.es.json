@@ -1,0 +1,10 @@
+{
+  "site": {
+    "title": "The Journey of Xoje",
+    "tagline": "CV imprimible, generado desde el grafo de conocimiento personal."
+  },
+  "actions": {
+    "print": "Imprimir CV",
+    "switchLocale": "English"
+  }
+}

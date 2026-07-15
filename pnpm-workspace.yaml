@@ -1,0 +1,14 @@
+# The Journey of Xoje intentionally does NOT declare a workspace.
+# We link directly to `../personal-brand/packages/*` via `file:` protocol in
+# package.json. Personal-brand is its own workspace root with its own
+# pnpm-workspace.yaml at packages/* — making THIS directory a second
+# workspace root would cause pnpm to either mis-resolve transitive
+# workspace:* deps from personal-brand (cv -> kb -> core) or complain
+# about the parent already having a workspace declared.
+#
+# See AGENTS.md → "Workspace linkage" for the full rationale.
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+onlyBuiltDependencies: '["esbuild","sharp"]'

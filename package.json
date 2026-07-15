@@ -1,0 +1,36 @@
+{
+  "name": "the-journey-of-xoje",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Static portfolio whose print output IS the Harvard-style CV produced by @personal-brand/cv.",
+  "scripts": {
+    "build:cv": "node scripts/build-cv.mjs",
+    "predev": "node scripts/build-cv.mjs",
+    "dev": "astro dev",
+    "build:astro": "astro build",
+    "prebuild": "node scripts/build-cv.mjs",
+    "build": "pnpm build:cv && astro build",
+    "preview": "astro preview",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "format": "prettier --write \"**/*.{ts,astro,json,md,mjs,yml,yaml}\""
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "dependencies": {
+    "@personal-brand/core": "link:../personal-brand/packages/core",
+    "@personal-brand/cv": "link:../personal-brand/packages/cv",
+    "@personal-brand/kb": "link:../personal-brand/packages/kb",
+    "astro": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

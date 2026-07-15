@@ -1,0 +1,26 @@
+---
+import '../styles/screen.css';
+import '../styles/print.css';
+
+// Astro automatically bundles CSS imported here into the emitted
+// `/_astro/*.css` files. We do NOT inline the print CSS manually —
+// Astro's bundler inlines small stylesheets automatically per its
+// `build.inlineStylesheets: 'auto'` setting (see astro.config.mjs).
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Journey of Xoje</title>
+  </head>
+  <body data-locale={locale}>
+    <slot />
+  </body>
+</html>

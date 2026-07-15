@@ -1,0 +1,102 @@
+/* Screen-only styles. Print-specific rules live in print.css. */
+
+:root {
+  --ink: #1a1a1a;
+  --paper: #fafafa;
+  --muted: #555;
+  --accent: #0b66c2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.5;
+}
+
+header.no-print {
+  max-width: 800px;
+  margin: 2rem auto 1rem;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.site-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.site-tagline {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lang-switch__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.lang-switch__link:hover {
+  text-decoration: underline;
+}
+
+.print-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.print-btn:hover {
+  filter: brightness(1.1);
+}
+
+article[data-locale] {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+article[data-locale] h1 {
+  font-size: 1.6rem;
+  margin: 1.2rem 0 0.6rem;
+}
+article[data-locale] h2 {
+  font-size: 1.15rem;
+  margin: 1.6rem 0 0.4rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.2rem;
+}
+article[data-locale] h3 {
+  font-size: 1rem;
+  margin: 0.8rem 0 0.3rem;
+}
+article[data-locale] p,
+article[data-locale] li {
+  font-size: 0.95rem;
+}

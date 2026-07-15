@@ -1,0 +1,103 @@
+/*
+ * print.css — The Slice-1 print contract.
+ *
+ * Visual language comes from the canonical Harvard CV that lives at
+ * `~/projects/pb-beta/OUTPUTS/cv/cv-product-eng/reference-hardvard.docx`
+ * (template authored by midudev, applied manually to Jose Vilches'
+ * CV). Style decisions distilled from the .docx:
+ *
+ *   - serif body & headings: STIX Two Text
+ *   - sans display: Inter, Poppins (used sparingly in screen; print is
+ *     pure serif to match Harvard sheet aesthetics)
+ *   - link color: #1155cc (Harvard reference blue)
+ *   - ink color: #000000
+ *
+ * Web fallbacks ordered so a reader on a machine without STIX Two Text
+ * still gets a respectable serif — Charter → Source Serif Pro → Lora →
+ * Liberation Serif → Times New Roman.
+ *
+ * Required substrings (enforced by tests/print-contract.test.ts):
+ *
+ *   CONTRACT_RULES = [
+ *     '@page',
+ *     'size: A4',
+ *     '1.6cm',
+ *     'no-print',
+ *     'page-break-inside',
+ *     'STIX Two Text',     // serif body — Harvard visual language
+ *     '#1155cc',           // Harvard link blue
+ *   ]
+ *
+ * If you add/remove a substring above, update the test in
+ * tests/print-contract.test.ts as well.
+ */
+
+@media print {
+  /* Hide all `.no-print` elements (top nav, Print button, locale switch). */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Strip URL annotations after links for a clean sheet. */
+  a[href]::after {
+    content: '' !important;
+  }
+
+  body {
+    font-family: 'STIX Two Text', 'Charter', 'Source Serif Pro', 'Lora',
+      'Liberation Serif', 'Times New Roman', serif;
+    font-size: 10.5pt;
+    line-height: 1.35;
+    color: #000;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Harvard-link blue, distilled from reference-hardvard.docx */
+  a,
+  a:link,
+  a:visited {
+    color: #1155cc;
+    text-decoration: none;
+  }
+
+  article[data-locale] {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+
+  article[data-locale] h1 {
+    font-family: 'STIX Two Text', 'Charter', 'Source Serif Pro',
+      'Liberation Serif', 'Times New Roman', serif;
+    font-size: 22pt;
+    margin: 0 0 0.3cm 0;
+  }
+  article[data-locale] h2 {
+    font-family: 'STIX Two Text', 'Charter', 'Source Serif Pro',
+      'Liberation Serif', 'Times New Roman', serif;
+    font-size: 13pt;
+    margin: 0.6cm 0 0.2cm 0;
+    border-bottom: 0.5pt solid #444;
+    padding-bottom: 0.1cm;
+  }
+  article[data-locale] h3 {
+    font-family: 'STIX Two Text', 'Charter', 'Source Serif Pro',
+      'Liberation Serif', 'Times New Roman', serif;
+    font-size: 11.5pt;
+    margin: 0.35cm 0 0.1cm 0;
+  }
+
+  /* Section-level guard: never break a CV section across pages. */
+  section[data-cv-section] {
+    page-break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 1.6cm 2cm;
+}
