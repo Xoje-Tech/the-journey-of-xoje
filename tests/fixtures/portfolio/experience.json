@@ -1,0 +1,99 @@
+[
+  {
+    "id": "ride-on-2026",
+    "title": "Desarrollador de Software con enfoque en IA",
+    "type": "full-time",
+    "industry": "movilidad / producto digital",
+    "company": "RIDE ON Riders & Mechanics",
+    "period": "2026-03 -> 2026-06",
+    "team": "2 desarrolladores + CEO + marketing",
+    "stack": ["Astro", "Vue", "Firebase", "Firestore SDK", "Visual Studio Code", "GitHub Copilot", "Cursor", "OpenCode"],
+    "responsibilities": [
+      "Definir e implementar funcionalidades end-to-end desde requisitos abiertos.",
+      "Desarrollar frontend de producto con Astro y Vue.",
+      "Implementar backend y persistencia con Firebase y su ecosistema.",
+      "Integrar herramientas de IA en el ciclo de desarrollo para acelerar entrega.",
+      "Aplicar SDD para mantener consistencia y mantenibilidad en codigo asistido por IA."
+    ],
+    "results": "Sin metrica cuantificable declarada por ahora para ciclo de entrega y calidad.",
+    "notes": "Entrada derivada de texto narrativo de LinkedIn; requiere entrevista para cuantificar impacto.",
+    "tags": []
+  },
+  {
+    "id": "ride-on-2025",
+    "title": "Desarrollador Full Stack",
+    "type": "full-time",
+    "industry": "movilidad / producto digital",
+    "company": "RIDE ON Riders & Mechanics",
+    "period": "2025-08 -> 2026-03",
+    "team": "2 desarrolladores",
+    "stack": ["TypeScript", "Node.js", "Firebase", "Tailwind", "Vue", "Astro", "Angular", "Cursor", "OpenCode", "GitHub Copilot", "SDD"],
+    "responsibilities": [
+      "Integrar el contexto tecnico y funcional del producto.",
+      "Participar en la definicion de estructura de trabajo del equipo.",
+      "Contribuir a la seleccion de tecnologias base del proyecto.",
+      "Ayudar a establecer estandares de desarrollo para evolucionar el modelo de trabajo.",
+      "Iterar procesos de desarrollo asistido por IA hacia mayor consistencia."
+    ],
+    "results": "Sin metrica cuantificable declarada por ahora para decisiones tecnicas adoptadas.",
+    "notes": "La descripcion disponible es de proceso; falta evidencia puntual de entregables.",
+    "tags": []
+  },
+  {
+    "id": "twinny-2024",
+    "title": "Desarrollador de front-end",
+    "type": "full-time",
+    "industry": "software B2B / CRM",
+    "company": "Twinny",
+    "period": "2024-05 -> 2025-07",
+    "team": "6 personas (CEO, CTO/Senior Back/DevOps, Junior Back, secretaria, Front Junior, y Full Stack)",
+    "stack": ["Angular (hasta v19)", "Jira", "Swagger", "GitHub Copilot"],
+    "responsibilities": [
+      "Iterar disenos con diseno/producto para mejorar cumplimiento de requisitos y UX.",
+      "Impulsar buenas practicas de desarrollo con mejor documentacion de tarjetas Jira.",
+      "Promover uso de Swagger para documentar el backend y alinear frontend-backend.",
+      "Actuar como referente de estado del desarrollo para seguimiento de avance.",
+      "Acelerar productividad del flujo de trabajo con adopcion temprana de GitHub Copilot.",
+      "Introducir conceptos de DDD y buenas practicas de codigo al equipo frontend."
+    ],
+    "results": "Sin metrica cuantificable declarada por ahora para impacto en productividad y calidad.",
+    "notes": "No se aportaron metricas verificables en la entrevista; mantener enfoque en responsabilidades y contexto.",
+    "tags": []
+  },
+  {
+    "id": "crmble-2023",
+    "title": "Programador Frontend",
+    "type": "full-time",
+    "industry": "software B2B / CRM (ecosistema Atlassian)",
+    "company": "Crmble",
+    "period": "2023-03 -> 2024-05",
+    "team": "8 personas (CEO, CTO, diseno, Senior Backend/DevOps, Senior Frontend, Trainee Frontend, Junior Frontend, Frontend)",
+    "stack": ["Angular", "Bootstrap", "Sass"],
+    "responsibilities": [
+      "Resolver tickets de bugs y pequenos desarrollos de producto.",
+      "Desarrollar el sistema de componentes como fuente de verdad para las aplicaciones.",
+      "Alinear implementacion frontend con diseno para cumplimiento pixel perfect."
+    ],
+    "results": "Contribuir a la expansion del producto hacia otra plataforma dentro del ecosistema Atlassian. Alcanzar autonomia operativa temprana para producir desde fase inicial y apoyar a perfiles trainee/junior.",
+    "notes": "No hubo decisiones tecnicas de alto impacto tomadas directamente en este rol; no enfatizar ese punto en outputs.",
+    "tags": []
+  },
+  {
+    "id": "lcs-robotics-2022",
+    "title": "Integrador de Sistemas de Automatizacion industrial",
+    "type": "full-time",
+    "industry": "componentes de automocion / automatizacion industrial",
+    "company": "LCS Robotics",
+    "period": "2022-06 -> 2022-12",
+    "team": "estructura grande por departamentos (Produccion, Mantenimiento, Calidad, etc.)",
+    "stack": ["Estandar VASS", "robots KUKA"],
+    "responsibilities": [
+      "Supervisar ritmo y continuidad de la produccion en linea.",
+      "Aplicar hotfixes para resolver incidencias durante produccion y evitar paradas.",
+      "Desarrollar lineas de robots automatizadas para operacion industrial."
+    ],
+    "results": "Incrementar responsabilidad progresivamente desde supervision/hotfixes hacia programacion de lineas.",
+    "notes": "Rol de entrada con fuerte aprendizaje operativo; no se enfatizan decisiones tecnicas de alto impacto. Valor diferencial: adaptacion en entorno internacional, ingles operativo y curva de aprendizaje rapida.",
+    "tags": []
+  }
+]

@@ -1,0 +1,9 @@
+# act configuration for the-journey-of-xoje
+#
+# We override the default ubuntu image to a Node 22 variant because:
+# - pnpm 11 + Node 22 (declared in package.json engines + packageManager)
+# - act's default `node:16-bullseye` is too old and fails pnpm install
+#
+# See: https://nektosact.com/usage/index.html
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--container-architecture linux/amd64
