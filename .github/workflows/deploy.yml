@@ -36,13 +36,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Materialize CV markdown
-        # Use the portfolio fixture committed in tests/fixtures/portfolio/.
-        # This is the canonical DATA for the public site (5 experiences, 28 skills).
-        # Source of truth remains ~/.personal-brand/DATA/ for local dev; this
-        # fixture is a snapshot that the workflow deploys to Pages.
+        # Slice 3.1: standalone script reads tests/fixtures/portfolio/ (committed DATA)
+        # and writes src/content/cv.{es,en}.md. No @personal-brand/* imports.
         run: |
           PB_DATA_DIR="$GITHUB_WORKSPACE/tests/fixtures/portfolio" \
-          node scripts/build-cv.mjs
+          node scripts/build-cv-static.mjs
 
       - name: Build Astro
         run: pnpm build

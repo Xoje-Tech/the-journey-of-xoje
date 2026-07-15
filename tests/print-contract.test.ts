@@ -77,13 +77,16 @@ function readAllEmittedCss(): string {
 describe('print contract — slice 1', () => {
   beforeAll(() => {
     // Make sure content is generated first (prebuild hook normally does this).
-    const buildCv = spawnSync('node', ['scripts/build-cv.mjs'], {
+    // Slice 3.1: switched from build-cv.mjs (which imported @personal-brand/*)
+    // to build-cv-static.mjs (standalone, no external runtime deps).
+    const buildCv = spawnSync('node', ['scripts/build-cv-static.mjs'], {
       cwd: PROJECT_ROOT,
       encoding: 'utf8',
+      env: { ...process.env, PB_DATA_DIR: resolve(PROJECT_ROOT, 'tests/fixtures/portfolio') },
     });
     if (buildCv.status !== 0) {
       throw new Error(
-        `build-cv.mjs failed before print-contract test\nstderr: ${buildCv.stderr}`,
+        `build-cv-static.mjs failed before print-contract test\nstderr: ${buildCv.stderr}`,
       );
     }
     // Run astro build. Clean dist first so we test fresh output.

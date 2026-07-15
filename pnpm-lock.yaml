@@ -8,15 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@personal-brand/core':
-        specifier: link:../personal-brand/packages/core
-        version: link:../personal-brand/packages/core
-      '@personal-brand/cv':
-        specifier: link:../personal-brand/packages/cv
-        version: link:../personal-brand/packages/cv
-      '@personal-brand/kb':
-        specifier: link:../personal-brand/packages/kb
-        version: link:../personal-brand/packages/kb
       astro:
         specifier: ^6.0.0
         version: 6.4.8(@types/node@22.20.1)(rollup@4.62.2)

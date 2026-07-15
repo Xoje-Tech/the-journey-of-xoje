@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Static portfolio whose print output IS the Harvard-style CV produced by @personal-brand/cv.",
+  "description": "Static portfolio whose print output IS a Harvard-style CV. CV content is materialized at build time from a static DATA snapshot under tests/fixtures/portfolio/.",
   "scripts": {
-    "build:cv": "node scripts/build-cv.mjs",
-    "predev": "node scripts/build-cv.mjs",
+    "build:cv": "node scripts/build-cv-static.mjs",
+    "predev": "node scripts/build-cv-static.mjs",
     "dev": "astro dev",
     "build:astro": "astro build",
-    "prebuild": "node scripts/build-cv.mjs",
+    "prebuild": "node scripts/build-cv-static.mjs",
     "build": "pnpm build:cv && astro build",
     "preview": "astro preview",
     "test": "vitest run --passWithNoTests",
@@ -22,9 +22,6 @@
   },
   "packageManager": "pnpm@11.9.0",
   "dependencies": {
-    "@personal-brand/core": "link:../personal-brand/packages/core",
-    "@personal-brand/cv": "link:../personal-brand/packages/cv",
-    "@personal-brand/kb": "link:../personal-brand/packages/kb",
     "astro": "^6.0.0"
   },
   "devDependencies": {
