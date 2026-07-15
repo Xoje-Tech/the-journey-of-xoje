@@ -23,8 +23,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11
+        # version is auto-detected from package.json "packageManager" field
+        # (pnpm@11.9.0). Don't pass `version` explicitly — causes ERR_PNPM_BAD_PM_VERSION.
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,11 +36,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Materialize CV markdown
-        # Read ~/.personal-brand/DATA/*.json, write src/content/cv.{es,en}.md.
-        # This step needs PB_DATA_DIR or defaults to ~/.personal-brand/DATA.
-        # In CI we point it at the seeded test fixture to avoid leaking real DATA.
+        # Use the portfolio fixture committed in tests/fixtures/portfolio/.
+        # This is the canonical DATA for the public site (5 experiences, 28 skills).
+        # Source of truth remains ~/.personal-brand/DATA/ for local dev; this
+        # fixture is a snapshot that the workflow deploys to Pages.
         run: |
-          PB_DATA_DIR="$HOME/.personal-brand/DATA" \
+          PB_DATA_DIR="$GITHUB_WORKSPACE/tests/fixtures/portfolio" \
           node scripts/build-cv.mjs
 
       - name: Build Astro
