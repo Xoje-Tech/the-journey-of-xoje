@@ -31,6 +31,6 @@ const { locale } = Astro.props;
   
   const c = document.getElementById('game-canvas');
   if (c instanceof HTMLCanvasElement) {
-    init(c, { spritesheetPath: playerSpritesheet.src });
+    (window as any).gameHandle = init(c, { spritesheetPath: playerSpritesheet.src });
   }
 </script>

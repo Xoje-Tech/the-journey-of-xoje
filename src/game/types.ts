@@ -113,3 +113,9 @@ export interface GameStateUpdateEventPayload {
   lastCollected: string | null;
   unlockedId: string; // The ID of the item just collected to unlock in DOM
 }
+
+export interface GameHandle {
+  stop(): void;
+  getFps(): number;
+  start(): void;
+}
