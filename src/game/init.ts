@@ -36,7 +36,7 @@
  *
  * Return value: `{ stop() }` cancels the RAF loop and detaches listeners.
  */
-import { applyFriction, wrapAround } from './physics';
+import { applyFriction, wrapAround, clampPlayerY, checkCollision } from './physics';
 import { sampleInputs } from './input';
 import {
   drawGrid,
@@ -44,10 +44,13 @@ import {
   updateTrail,
   TRAIL_MAX_AGE_MS,
   TRAIL_MAX_LEN,
+  drawBiomes,
+  drawCollectibles,
+  drawBottomCTA,
 } from './render';
 import { formatHud } from './hud';
 import { PlayerEntity } from './player';
-import type { CanvasDims, InitOptions, InputState, Player, TrailPoint } from './types';
+import type { CanvasDims, InitOptions, InputState, Player, TrailPoint, Camera, CollectibleItem } from './types';
 
 // Phase 0 decisions, encoded as named constants so the values are greppable
 // and tests can reference them.
@@ -55,6 +58,32 @@ export const DEFAULT_FRICTION = 0.92; // OQ1: smooth glide
 export const DEFAULT_GRID_SIZE = 40;
 export const DEFAULT_PLAYER_SIZE = 14;
 export const DEFAULT_ACCEL = 0.6;
+export const MAP_HEIGHT = 4000;
+
+export const SKILL_TEMPLATES = [
+  // LCS Robotics (0 - 1000)
+  { id: 'kuka-robotics', name: 'KUKA robotics tooling', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.3, y: 250 },
+  { id: 'international-ops', name: 'Operacion en entorno internacional', category: 'qualitative' as const, biome: 'LCS Robotics', xRatio: 0.7, y: 500 },
+  { id: 'typescript', name: 'TypeScript', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.5, y: 750 },
+
+  // Crmble (1000 - 2000)
+  { id: 'sass', name: 'Sass', category: 'technical' as const, biome: 'Crmble', xRatio: 0.25, y: 1200 },
+  { id: 'bootstrap', name: 'Bootstrap', category: 'technical' as const, biome: 'Crmble', xRatio: 0.75, y: 1400 },
+  { id: 'design-system', name: 'Design system', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.4, y: 1600 },
+  { id: 'pixel-perfect', name: 'Pixel-perfect implementation', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.6, y: 1800 },
+
+  // Twinny (2000 - 3000)
+  { id: 'angular', name: 'Angular', category: 'technical' as const, biome: 'Twinny', xRatio: 0.3, y: 2200 },
+  { id: 'jira', name: 'Jira', category: 'technical' as const, biome: 'Twinny', xRatio: 0.7, y: 2400 },
+  { id: 'swagger', name: 'Swagger', category: 'technical' as const, biome: 'Twinny', xRatio: 0.5, y: 2600 },
+  { id: 'ddd', name: 'Domain-Driven Design (DDD)', category: 'qualitative' as const, biome: 'Twinny', xRatio: 0.4, y: 2800 },
+
+  // RIDE ON (3000 - 4000)
+  { id: 'astro', name: 'Astro', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.2, y: 3200 },
+  { id: 'vue', name: 'Vue', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.8, y: 3400 },
+  { id: 'nodejs', name: 'Node.js', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.5, y: 3600 },
+  { id: 'tdd', name: 'Test-Driven Development (TDD)', category: 'qualitative' as const, biome: 'RIDE ON', xRatio: 0.6, y: 3800 },
+];
 
 // Phase-2 polish constants. Keep them next to the slice so anyone reading
 // init.ts sees the magic numbers in context.
@@ -104,6 +133,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     vy: 0,
     size: playerSize,
   };
+
+  const camera: Camera = { y: 0 };
+
+  const collectibles: CollectibleItem[] = SKILL_TEMPLATES.map(t => ({
+    id: t.id,
+    name: t.name,
+    category: t.category,
+    biome: t.biome,
+    x: 0, // dynamic X coordinates mapped in resize()
+    y: t.y,
+    radius: 12,
+    collected: false,
+  }));
 
   /** Instantiate the clean architecture PlayerEntity and load spritesheet */
   const playerEntity = new PlayerEntity(opts.spritesheetPath);
@@ -163,6 +205,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       player.x = cssW / 2;
       player.y = playerSize;
     }
+
+    // Map collectible positions on resize based on screen width
+    collectibles.forEach((item, idx) => {
+      const template = SKILL_TEMPLATES[idx];
+      if (template) {
+        item.x = cssW * template.xRatio;
+      }
+    });
   }
 
   function onKeyDown(e: KeyboardEvent): void {
@@ -263,10 +313,20 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     const prevY = player.y;
     player.x += player.vx;
     player.y += player.vy;
-    const wrapped = wrapAround(player, dims.w, dims.h);
-    const didWrap = wrapped.x !== prevX + player.vx || wrapped.y !== prevY + player.vy;
-    player.x = wrapped.x;
-    player.y = wrapped.y;
+
+    // 1. Clamping player vertically instead of wrapping
+    const clampedY = clampPlayerY(player.y, MAP_HEIGHT);
+    if (clampedY !== player.y) {
+      player.vy = 0;
+      player.y = clampedY;
+    }
+
+    // 2. Horizontal wrapping
+    player.x = ((player.x % dims.w) + dims.w) % dims.w;
+    const didWrap = player.x !== prevX + player.vx;
+
+    // 3. Viewport camera Y centers on player Y and clamps
+    camera.y = clampPlayerY(player.y - dims.h / 2, MAP_HEIGHT - dims.h);
 
     // Trail update: append the current position, age the buffer, drop
     // old entries. Reset the trail when the player wraps around — a
@@ -285,13 +345,51 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       trail = [];
     }
 
+    // Collisions check & Dispatch CustomEvent
+    for (const item of collectibles) {
+      if (!item.collected && checkCollision(player, item)) {
+        item.collected = true;
+        const collectedCount = collectibles.filter(c => c.collected).length;
+        const totalCount = collectibles.length;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('game-state-update', {
+            detail: {
+              collectedCount,
+              totalCount,
+              lastCollected: item.name,
+              unlockedId: item.id,
+            }
+          }));
+        }
+      }
+    }
+
     // Render. Logical-pixel coordinates because we already scaled the ctx.
     ctx.clearRect(0, 0, dims.w, dims.h);
+    
+    // Draw grid stationary background
     drawGrid(ctx, dims.w, dims.h, gridSize);
+    
+    // Draw World-space elements with camera translation
+    ctx.save();
+    ctx.translate(0, -camera.y);
+    
+    // Draw Biomes
+    drawBiomes(ctx, dims.w, camera.y, dims.h);
+    
+    // Draw Collectibles
+    drawCollectibles(ctx, collectibles, camera.y, dims.h);
+    
+    // Draw Bottom CTA
+    drawBottomCTA(ctx, dims.w, camera.y, dims.h);
+    
+    // Draw Trail
     drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);
     
     // Draw and progress player spritesheet animation
     playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, dtMs, blinkActive);
+    
+    ctx.restore();
     
     drawHud(ctx, player, dims.w, dims.h, fpsValue);
 

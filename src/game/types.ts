@@ -82,3 +82,34 @@ export interface InitOptions {
   /** Custom spritesheet path/URL dynamically resolved by the bundler. */
   spritesheetPath?: string;
 }
+
+export interface Camera {
+  y: number; // Viewport top coordinate in world-space [0, MAP_HEIGHT - viewportHeight]
+}
+
+export interface CollectibleItem {
+  id: string; // Slugified name of the skill
+  name: string;
+  category: 'technical' | 'qualitative';
+  biome: string;
+  x: number;
+  y: number;
+  radius: number;
+  collected: boolean;
+}
+
+export interface PlayerState {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  collectedSkills: Set<string>;
+}
+
+export interface GameStateUpdateEventPayload {
+  collectedCount: number;
+  totalCount: number;
+  lastCollected: string | null;
+  unlockedId: string; // The ID of the item just collected to unlock in DOM
+}
