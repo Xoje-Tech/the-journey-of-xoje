@@ -119,3 +119,9 @@ export interface GameHandle {
   getFps(): number;
   start(): void;
 }
+
+declare global {
+  interface Window {
+    gameHandle?: GameHandle;
+  }
+}

@@ -1,0 +1,83 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  biome: string;
+}
+
+const { id, name, biome } = Astro.props;
+---
+
+<div class="skill-card skill-locked" id={`skill-card-${id}`} data-skill-id={id}>
+  <span class="skill-lock-icon">🔒</span>
+  <span class="skill-unlock-badge">✅</span>
+  <div class="skill-details">
+    <span class="skill-name">{name}</span>
+    <span class="skill-biome">{biome}</span>
+  </div>
+</div>
+
+<style>
+  .skill-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: all 0.2s ease;
+  }
+
+  .skill-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .skill-biome {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+  }
+
+  /* Locked Skill Card */
+  .skill-card.skill-locked {
+    background: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .skill-card.skill-locked .skill-name {
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .skill-card.skill-locked .skill-unlock-badge {
+    display: none;
+  }
+
+  .skill-card.skill-locked .skill-lock-icon {
+    font-size: 13px;
+    opacity: 0.3;
+  }
+
+  /* Unlocked Skill Card */
+  .skill-card.skill-unlocked {
+    background: rgba(11, 102, 194, 0.08);
+    border-color: rgba(11, 102, 194, 0.35);
+  }
+
+  .skill-card.skill-unlocked .skill-name {
+    color: #ffffff;
+  }
+
+  .skill-card.skill-unlocked .skill-lock-icon {
+    display: none;
+  }
+
+  .skill-card.skill-unlocked .skill-unlock-badge {
+    font-size: 12px;
+  }
+</style>
