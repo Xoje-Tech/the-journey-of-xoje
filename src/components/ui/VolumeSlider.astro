@@ -1,0 +1,77 @@
+---
+import uiEs from '../../i18n/ui.es.json';
+import uiEn from '../../i18n/ui.en.json';
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div class="setting-item">
+  <label for="volume-slider">{ui.game.volumeSfx}</label>
+  <input type="range" id="volume-slider" min="0" max="100" class="retro-slider" />
+</div>
+
+<style>
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 13px;
+  }
+
+  label {
+    color: #a1a1aa;
+  }
+
+  .retro-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #09090b;
+    outline: none;
+    border: 1px solid #a1a1aa;
+  }
+
+  .retro-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #f4f4f5;
+    border: 2px solid #09090b;
+    cursor: pointer;
+  }
+
+  .retro-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #f4f4f5;
+    border: 2px solid #09090b;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  import { volumeStore } from '../../game/store';
+
+  const slider = document.getElementById('volume-slider') as HTMLInputElement | null;
+  if (slider) {
+    volumeStore.subscribe((vol) => {
+      if (slider.value !== String(vol)) {
+        slider.value = String(vol);
+      }
+    });
+
+    slider.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      volumeStore.set(Number(target.value));
+    });
+  }
+</script>

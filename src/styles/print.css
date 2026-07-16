@@ -33,6 +33,21 @@
  */
 
 @media print {
+  /* Hide the game canvas and any HUD in print mode — only the CV renders.
+   *
+   * Note on `.game-hud`: as of the slice-2 polish, the HUD is rendered via
+   * ctx.fillText inside src/game/init.ts → drawHud (no DOM element is ever
+   * created), so this selector matches nothing in the live page. The rule
+   * is retained because (a) it cost nothing to keep, and (b) if a future
+   * slice swaps the HUD to a real DOM element, the suppression is already
+   * in place — no chance of leaking canvas-rendered telemetry into the
+   * print PDF.
+   */
+  #game-canvas,
+  .game-hud {
+    display: none !important;
+  }
+
   /* Hide all `.no-print` elements (top nav, Print button, locale switch). */
   .no-print {
     display: none !important;

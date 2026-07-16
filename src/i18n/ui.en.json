@@ -6,5 +6,23 @@
   "actions": {
     "print": "Print CV",
     "switchLocale": "Espanol"
+  },
+  "game": {
+    "startTitle": "The Journey of Xoje",
+    "startTagline": "An interactive pixel-art CV",
+    "startGame": "Start Game",
+    "downloadCv": "Download CV",
+    "settings": "Settings",
+    "controls": "Controls Guide",
+    "settingsTitle": "Console Settings",
+    "volumeSfx": "SFX Volume",
+    "gamepadLabel": "Gamepad Status:",
+    "connected": "Connected",
+    "disconnected": "Not Connected",
+    "controlsTitle": "Controls Guide",
+    "dpadLabel": "D-Pad: Arrow Keys / WASD",
+    "startLabel": "Start: Start Game",
+    "buttonBLabel": "Button B: Shift (Dash/Run)",
+    "buttonALabel": "Button A: Space / Click (Jump)"
   }
 }

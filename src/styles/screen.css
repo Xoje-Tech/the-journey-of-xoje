@@ -100,3 +100,469 @@ article[data-locale] p,
 article[data-locale] li {
   font-size: 0.95rem;
 }
+
+@media screen {
+  article[data-locale] { display: none !important; }
+  #game-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0e0e10;
+    z-index: 10;
+  }
+  /*
+   * The HUD is drawn via ctx.fillText in src/game/init.ts → drawHud; no
+   * DOM element is ever created, so we deliberately do NOT add a HUD
+   * selector here. Adding one would be dead CSS and would also cause the
+   * selector literal to appear in the inlined <style> of
+   * dist/{es,en}/index.html (the slice-2 build contract forbids it).
+   * See tests/game-build.test.ts.
+   */
+
+  /* Backpack HUD Overlay */
+  .backpack-hud-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+  }
+
+  .backpack-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 35, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .backpack-btn:hover {
+    background: rgba(45, 45, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .backpack-btn:active {
+    transform: translateY(1px);
+  }
+
+  .bag-icon {
+    font-size: 16px;
+  }
+
+  .bag-label {
+    font-weight: 500;
+  }
+
+  .last-skill-toast {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: #0b66c2;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .last-skill-toast.toast-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Modal dialog styling */
+  #skill-matrix-modal {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    background: #141416;
+    color: #f4f4f7;
+    max-width: 550px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    z-index: 30;
+  }
+
+  #skill-matrix-modal::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 14px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-weight: bold;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .close-btn:hover {
+    color: #ffffff;
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .skills-grid-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .skill-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: all 0.2s ease;
+  }
+
+  .skill-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .skill-biome {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+  }
+
+  /* Locked Skill Card */
+  .skill-card.skill-locked {
+    background: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .skill-card.skill-locked .skill-name {
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .skill-card.skill-locked .skill-unlock-badge {
+    display: none;
+  }
+
+  .skill-card.skill-locked .skill-lock-icon {
+    font-size: 13px;
+    opacity: 0.3;
+  }
+
+  /* Unlocked Skill Card */
+  .skill-card.skill-unlocked {
+    background: rgba(11, 102, 194, 0.08);
+    border-color: rgba(11, 102, 194, 0.35);
+  }
+
+  .skill-card.skill-unlocked .skill-name {
+    color: #ffffff;
+  }
+
+  .skill-card.skill-unlocked .skill-lock-icon {
+    display: none;
+  }
+
+  .skill-card.skill-unlocked .skill-unlock-badge {
+    font-size: 12px;
+  }
+
+  /* Start Screen Overlay styling */
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #1c1c1f;
+    color: #f4f4f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 15;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    transition: transform 600ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Hardware-accelerated slide-up transition */
+  #start-screen.slide-up {
+    transform: translateY(-100%);
+  }
+
+  .start-content {
+    max-width: 600px;
+    padding: 24px;
+  }
+
+  .retro-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0 0 12px 0;
+    color: #f4f4f5;
+    letter-spacing: -0.02em;
+    text-shadow: 3px 3px 0px #09090b;
+  }
+
+  .retro-tagline {
+    font-size: 14px;
+    color: #a1a1aa;
+    margin-bottom: 32px;
+  }
+
+  .start-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  /* Blocky retro-buttons */
+  .retro-btn {
+    border-radius: 0 !important;
+    border: 2px solid #09090b !important;
+    background-color: #1c1c1f !important;
+    color: #f4f4f5 !important;
+    padding: 8px 16px !important;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0px #09090b !important;
+    transition: all 100ms ease;
+    user-select: none;
+  }
+
+  .retro-btn:hover {
+    background-color: #27272a !important;
+  }
+
+  .retro-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #09090b !important;
+    background-color: #3f3f46 !important;
+  }
+
+  /* Retro Modals */
+  .retro-modal {
+    border-radius: 0 !important;
+    border: 2px solid #09090b !important;
+    background-color: #1c1c1f !important;
+    color: #f4f4f5 !important;
+    box-shadow: 8px 8px 0px rgba(9, 9, 11, 0.5) !important;
+    z-index: 30 !important;
+  }
+
+  .retro-modal::backdrop {
+    background: rgba(9, 9, 11, 0.7);
+    backdrop-filter: blur(2px);
+  }
+
+  .retro-modal .modal-header h2 {
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: #f4f4f5;
+  }
+
+  .retro-modal .close-btn {
+    color: #a1a1aa;
+  }
+
+  .retro-modal .close-btn:hover {
+    color: #f4f4f5;
+  }
+
+  /* Setting Item & Slider styling */
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 13px;
+  }
+
+  .setting-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .setting-label {
+    color: #a1a1aa;
+  }
+
+  .gamepad-status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 1px 1px 0px #09090b;
+    transition: color 0.2s ease;
+  }
+
+  .retro-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #09090b;
+    outline: none;
+    border: 1px solid #a1a1aa;
+  }
+
+  .retro-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #f4f4f5;
+    border: 2px solid #09090b;
+    cursor: pointer;
+  }
+
+  .retro-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #f4f4f5;
+    border: 2px solid #09090b;
+    cursor: pointer;
+  }
+
+  /* NES Controller SVG Silhouette */
+  .svg-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #141416;
+    padding: 16px;
+    border: 1px solid #09090b;
+  }
+
+  .nes-controller-svg {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+  }
+
+  .controller-body {
+    fill: #27272a;
+    stroke: #09090b;
+    stroke-width: 2px;
+  }
+
+  .controller-inner {
+    fill: #1c1c1f;
+    stroke: #09090b;
+    stroke-width: 1px;
+  }
+
+  .dpad-button {
+    fill: #09090b;
+  }
+
+  .option-button {
+    fill: #71717a;
+  }
+
+  .action-button-a, .action-button-b {
+    fill: #ef4444;
+    stroke: #09090b;
+    stroke-width: 1.5px;
+  }
+
+  .controller-text {
+    fill: #a1a1aa;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 6px;
+    font-weight: bold;
+    text-anchor: middle;
+  }
+
+  .button-letter {
+    fill: #f4f4f5;
+    font-size: 8px;
+  }
+
+  .pointer-line {
+    stroke: #a1a1aa;
+    stroke-width: 1.5px;
+    stroke-dasharray: 3, 3;
+  }
+
+  .label-text {
+    fill: #f4f4f5;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .label-left {
+    text-anchor: end;
+  }
+
+  .label-right {
+    text-anchor: start;
+  }
+
+  .label-center {
+    text-anchor: middle;
+  }
+}

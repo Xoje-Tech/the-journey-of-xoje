@@ -1,18 +1,6 @@
 ---
-import LocaleSwitch from './LocaleSwitch.astro';
+import LocaleSwitch from '../LocaleSwitch.astro';
 
-// CvDocument renders the printable CV region. The header (site title + Print
-// button + LocaleSwitch) is OUTSIDE the article because the print stylesheet
-// hides it via `.no-print`.
-//
-// We render the markdown as a NAMED slot ("body") rather than a string prop:
-// Astro's content-collection's `entry.render()` returns a <Content /> component
-// that must be rendered in a .astro file (not as a string). The calling page
-// passes <Content /> via <slot name="body" />.
-//
-// Props
-//   locale: 'es' | 'en'
-//   ui:     the JSON dictionary for the current locale
 interface Props {
   locale: 'es' | 'en';
   ui: {
