@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 
 # Absolute paths based on project root
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-OUTPUT_PATH = os.path.join(PROJECT_ROOT, "public", "sprites", "player.png")
+OUTPUT_PATH = os.path.join(PROJECT_ROOT, "src", "assets", "player.png")
 
 # Palette constants for a gritty, melancholic "LISA: The Painful" aesthetic
 COLOR_TRANSPARENT = (0, 0, 0, 0)

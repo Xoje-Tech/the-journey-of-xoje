@@ -79,4 +79,6 @@ export interface InitOptions {
   acceleration?: number;
   /** Maximum absolute stick value that still counts as zero. */
   deadzone?: number;
+  /** Custom spritesheet path/URL dynamically resolved by the bundler. */
+  spritesheetPath?: string;
 }

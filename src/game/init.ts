@@ -106,7 +106,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   };
 
   /** Instantiate the clean architecture PlayerEntity and load spritesheet */
-  const playerEntity = new PlayerEntity('/sprites/player.png');
+  const playerEntity = new PlayerEntity(opts.spritesheetPath);
   playerEntity.load().catch((err) => {
     console.error("Failed to load player spritesheet asynchronously:", err);
   });

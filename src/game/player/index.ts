@@ -15,7 +15,7 @@ export class PlayerEntity {
   private spritesheetPath: string;
   private isLoaded = false;
 
-  constructor(spritesheetPath = '/sprites/player.png') {
+  constructor(spritesheetPath = '/src/assets/player.png') {
     this.spritesheetPath = spritesheetPath;
     this.animState = {
       pose: 'idle',
