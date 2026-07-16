@@ -47,7 +47,7 @@ The non-obvious bit — **wrap-around**: `x = ((x % w) + w) % w`. JavaScript's `
 | File | Action | Purpose |
 |------|--------|---------|
 | `src/game/types.ts` | Create | `Player`, `InputState`, `CanvasDims`, `InitOptions` interfaces |
-| `src/game/input.ts` | Create | `sampleInputs(state, canvas, w, h)` — keyboard + mouse + gamepad poll, deadzone 0.15 |
+| `src/game/input.ts` | Create | `sampleInputs(state, _canvas, w, h, stick?, dpad?, playerPos?)` — keyboard + mouse + gamepad poll, deadzone 0.15; the `_canvas` and trailing optional params are test seams for DOM-free vitest 1.6.1 (design deviation, see verify-report warning #1) |
 | `src/game/physics.ts` | Create | `wrapAround`, `applyFriction` — pure functions |
 | `src/game/render.ts` | Create | `drawGrid`, `drawPlayer` — 2D context draws |
 | `src/game/init.ts` | Create | `init(canvas, opts)` — public entry; RAF loop; resize w/ DPR; returns `{ stop() }` |
@@ -78,11 +78,34 @@ export interface InitOptions {
 ```
 
 ```ts
+// src/game/input.ts (test-extended signature — see deviation note below)
+// Design called for (state, canvas, w, h). The shipped implementation is
+// (state, _canvas, w, h, stick?, dpad?, playerPos?) — the extra params are
+// optional seams so vitest 1.6.1 can drive sampleInputs() without a DOM
+// environment (no jsdom/happy-dom per the no-new-deps rule). The return
+// type ({vx, vy}) and the precedence semantics (keyboard > mouse > gamepad)
+// are unchanged from this contract.
+export function sampleInputs(
+  state: InputState,
+  _canvas: HTMLCanvasElement | null,
+  w: number,
+  h: number,
+  stick?: { x: number; y: number },
+  dpad?: { up: boolean; down: boolean; left: boolean; right: boolean },
+  playerPos?: { x: number; y: number },
+): { vx: number; vy: number };
+```
+
+```ts
 // src/game/init.ts (public API)
 export function init(canvas: HTMLCanvasElement, opts?: InitOptions): { stop(): void };
 ```
 
 Vanilla TS (no class), matching the project's existing content-script style.
+
+### Design deviation: `sampleInputs` extended signature
+
+The original design called for a 4-arg `sampleInputs(state, canvas, w, h)`. The shipped implementation accepts three additional optional parameters (`stick`, `dpad`, `playerPos`) so the function can be unit-tested under vitest 1.6.1 without a DOM environment (the project policy is "no jsdom/happy-dom without explicit user OK"). The loop in `init.ts` polls `navigator.getGamepads()` itself and passes the readings down — the same data the production code would have read directly. Tests use these optional seams to inject synthetic gamepad readings; production code still calls `sampleInputs(state, canvas, dims.w, dims.h, stick, dpad, player)`. Return type `{vx, vy}` and precedence (keyboard > mouse > gamepad) are unchanged.
 
 ## Testing Strategy
 
