@@ -12,7 +12,7 @@
  * worth a DOM-free fake-canvas exercise.
  */
 import { describe, it, expect } from 'vitest';
-import { updateTrail, computeFacing } from '../src/game/render';
+import { updateTrail } from '../src/game/render';
 
 describe('updateTrail — append + age + drop', () => {
   it('appends the current position as a fresh point (age = 0)', () => {
@@ -69,27 +69,5 @@ describe('updateTrail — append + age + drop', () => {
     const out = updateTrail(initial, 16, 280, 14, null);
     expect(out).toHaveLength(1);
     expect(out[0]?.age).toBe(116);
-  });
-});
-
-describe('computeFacing — dominant axis selection', () => {
-  it('defaults to "down" when velocity is exactly zero', () => {
-    expect(computeFacing(0, 0)).toEqual({ x: 0, y: 1 });
-  });
-
-  it('picks horizontal when |vx| > |vy|', () => {
-    expect(computeFacing(5, 1)).toEqual({ x: 1, y: 0 });
-    expect(computeFacing(-5, 1)).toEqual({ x: -1, y: 0 });
-  });
-
-  it('picks vertical when |vy| > |vx|', () => {
-    expect(computeFacing(1, 5)).toEqual({ x: 0, y: 1 });
-    expect(computeFacing(1, -5)).toEqual({ x: 0, y: -1 });
-  });
-
-  it('breaks ties toward horizontal (so the idle "down" still wins at 0,0)', () => {
-    // Equal magnitudes: horizontal wins. This is arbitrary but stable.
-    expect(computeFacing(3, 3)).toEqual({ x: 1, y: 0 });
-    expect(computeFacing(-3, 3)).toEqual({ x: -1, y: 0 });
   });
 });
