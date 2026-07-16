@@ -111,6 +111,12 @@ const ui = locale === 'es' ? uiEs : uiEn;
     }
 
     if (startScreen) {
+      isStartedStore.subscribe((started) => {
+        if (started) {
+          startScreen.classList.add('slide-up');
+        }
+      });
+
       startScreen.addEventListener('transitionend', (e) => {
         if (e.target === startScreen && e.propertyName === 'transform') {
           startScreen.style.display = 'none';

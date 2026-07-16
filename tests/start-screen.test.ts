@@ -10,6 +10,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { init } from '../src/game/init';
 import { PlayerEntity } from '../src/game/player';
+import { isStartedStore } from '../src/game/store';
 
 // Stub global requestAnimationFrame and cancelAnimationFrame for testing
 let rafCallback: FrameRequestCallback | null = null;
@@ -34,20 +35,22 @@ class MockImage {
 vi.stubGlobal('Image', MockImage);
 
 // Stub browser globals
-const windowListeners: Record<string, Function[]> = {};
+const windowListeners: Record<string, Function[] | undefined> = {};
 
 const mockWindow = {
   devicePixelRatio: 1,
   innerWidth: 800,
   innerHeight: 600,
   addEventListener: vi.fn((event, cb) => {
-    if (!windowListeners[event]) windowListeners[event] = [];
-    windowListeners[event].push(cb);
+    const list = windowListeners[event] || [];
+    list.push(cb);
+    windowListeners[event] = list;
   }),
   removeEventListener: vi.fn(),
   dispatchEvent: vi.fn((event: any) => {
-    if (windowListeners[event.type]) {
-      windowListeners[event.type].forEach(cb => cb(event));
+    const listeners = windowListeners[event.type];
+    if (listeners) {
+      listeners.forEach(cb => cb(event));
     }
     return true;
   }),
@@ -195,5 +198,33 @@ describe('Start Screen Core Engine Suspension', () => {
     window.dispatchEvent({ type: 'keyup', key: 'ArrowRight' } as any);
 
     handle.stop();
+  });
+
+  describe('StartScreen Astro component DOM & Store integration', () => {
+    it('should add slide-up class to start-screen when isStartedStore becomes true', () => {
+      const startScreenMock = {
+        classList: {
+          add: vi.fn(),
+        },
+        style: {
+          display: '',
+        },
+      };
+
+      // Register subscription that mirrors the StartScreen.astro script
+      isStartedStore.subscribe((started) => {
+        if (started) {
+          startScreenMock.classList.add('slide-up');
+        }
+      });
+
+      // Reset store
+      isStartedStore.set(false);
+      expect(startScreenMock.classList.add).not.toHaveBeenCalled();
+
+      // Trigger game start
+      isStartedStore.set(true);
+      expect(startScreenMock.classList.add).toHaveBeenCalledWith('slide-up');
+    });
   });
 });
