@@ -96,6 +96,105 @@ const { locale, ui } = Astro.props;
   </div>
 </dialog>
 
+<!-- Start Screen splash overlay (screen-only) -->
+<div id="start-screen" class="no-print">
+  <div class="start-content">
+    <h1 class="retro-title">The Journey of Xoje</h1>
+    <p class="retro-tagline">{locale === 'es' ? 'Un CV interactivo en pixel-art' : 'An interactive pixel-art CV'}</p>
+    <div class="start-buttons">
+      <button id="start-game-btn" type="button" class="retro-btn">{locale === 'es' ? 'Comenzar Juego' : 'Start Game'}</button>
+      <button id="download-cv-btn" type="button" class="retro-btn">{locale === 'es' ? 'Descargar CV' : 'Download CV'}</button>
+      <button id="settings-btn" type="button" class="retro-btn">{locale === 'es' ? 'Ajustes' : 'Settings'}</button>
+      <button id="controls-btn" type="button" class="retro-btn">{locale === 'es' ? 'Controles' : 'Controls Guide'}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal (screen-only dialog) -->
+<dialog id="settings-modal" class="no-print retro-modal">
+  <div class="modal-content">
+    <header class="modal-header">
+      <h2>{locale === 'es' ? 'Ajustes de Consola' : 'Console Settings'}</h2>
+      <button id="close-settings-btn" type="button" aria-label="Close settings" class="close-btn">&times;</button>
+    </header>
+    <div class="modal-body">
+      <div class="setting-item">
+        <label for="volume-slider">{locale === 'es' ? 'Volumen SFX' : 'SFX Volume'}</label>
+        <input type="range" id="volume-slider" min="0" max="100" value="70" class="retro-slider" />
+      </div>
+      <div class="setting-item">
+        <span class="setting-label">{locale === 'es' ? 'Mando/Gamepad:' : 'Gamepad Status:'}</span>
+        <span id="gamepad-status-label" class="gamepad-status-indicator" 
+              data-text-connected={locale === 'es' ? 'Conectado' : 'Connected'} 
+              data-text-disconnected={locale === 'es' ? 'No Conectado' : 'Not Connected'}>
+          {locale === 'es' ? 'No Conectado' : 'Not Connected'}
+        </span>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Controls Modal (screen-only dialog) -->
+<dialog id="controls-modal" class="no-print retro-modal">
+  <div class="modal-content">
+    <header class="modal-header">
+      <h2>{locale === 'es' ? 'Guía de Controles' : 'Controls Guide'}</h2>
+      <button id="close-controls-btn" type="button" aria-label="Close controls" class="close-btn">&times;</button>
+    </header>
+    <div class="modal-body">
+      <div class="svg-container">
+        <svg viewBox="0 0 600 280" class="nes-controller-svg">
+          <!-- Outer shell -->
+          <rect x="160" y="85" width="280" height="110" rx="6" ry="6" class="controller-body" />
+          <!-- Inner section -->
+          <rect x="170" y="95" width="260" height="90" rx="3" ry="3" class="controller-inner" />
+          
+          <!-- D-PAD -->
+          <g class="dpad">
+            <rect x="200" y="135" width="30" height="10" class="dpad-button" />
+            <rect x="210" y="125" width="10" height="30" class="dpad-button" />
+            <rect x="210" y="135" width="10" height="10" class="dpad-button" />
+          </g>
+          
+          <!-- Select & Start buttons -->
+          <rect x="270" y="140" width="22" height="6" transform="rotate(-20 270 140)" class="option-button" />
+          <rect x="305" y="140" width="22" height="6" transform="rotate(-20 305 140)" class="option-button" />
+          
+          <!-- B & A Action buttons -->
+          <circle cx="370" cy="140" r="10" class="action-button-b" />
+          <circle cx="400" cy="140" r="10" class="action-button-a" />
+          
+          <!-- Labels inside controller -->
+          <text x="281" y="160" class="controller-text">SELECT</text>
+          <text x="316" y="160" class="controller-text">START</text>
+          <text x="370" y="162" class="controller-text button-letter">B</text>
+          <text x="400" y="162" class="controller-text button-letter">A</text>
+          
+          <!-- POINTER LINES -->
+          <!-- D-Pad Line -->
+          <line x1="200" y1="140" x2="80" y2="140" class="pointer-line" />
+          <!-- Start Line -->
+          <line x1="316" y1="135" x2="316" y2="45" class="pointer-line" />
+          <!-- B Line -->
+          <line x1="370" y1="145" x2="480" y2="190" class="pointer-line" />
+          <!-- A Line -->
+          <line x1="400" y1="135" x2="480" y2="90" class="pointer-line" />
+          
+          <!-- OUTSIDE TEXT LABELS -->
+          <!-- D-Pad Label -->
+          <text x="70" y="144" class="label-text label-left">{locale === 'es' ? 'Cruceta: Teclas Dirección / WASD' : 'D-Pad: Arrow Keys / WASD'}</text>
+          <!-- Start Label -->
+          <text x="316" y="35" class="label-text label-center">{locale === 'es' ? 'Start: Iniciar Juego' : 'Start: Start Game'}</text>
+          <!-- B Label -->
+          <text x="490" y="194" class="label-text label-right">{locale === 'es' ? 'Botón B: Shift (Correr)' : 'Button B: Shift (Dash/Run)'}</text>
+          <!-- A Label -->
+          <text x="490" y="94" class="label-text label-right">{locale === 'es' ? 'Botón A: Espacio / Click (Salto)' : 'Button A: Space / Click (Jump)'}</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <canvas id="game-canvas" aria-hidden="true" role="img"></canvas>
 
 <article data-locale={locale}>
@@ -105,39 +204,140 @@ const { locale, ui } = Astro.props;
 <script>
   // Wait for the DOM to be fully ready
   document.addEventListener('DOMContentLoaded', () => {
+    // Backpack elements
     const backpackBtn = document.getElementById('backpack-hud');
     const modal = document.getElementById('skill-matrix-modal') as HTMLDialogElement | null;
     const closeModalBtn = document.getElementById('close-modal-btn');
     const collectedCounter = document.getElementById('collected-counter');
     const lastSkillToast = document.getElementById('last-skill-toast');
 
-    if (!backpackBtn || !modal || !closeModalBtn) return;
+    // Start Screen and Modal elements
+    const startScreen = document.getElementById('start-screen');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const downloadCvBtn = document.getElementById('download-cv-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
+    const closeSettingsBtn = document.getElementById('close-settings-btn');
+    const controlsBtn = document.getElementById('controls-btn');
+    const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
+    const closeControlsBtn = document.getElementById('close-controls-btn');
+    const gamepadStatusLabel = document.getElementById('gamepad-status-label');
 
-    // Toggle Modal
-    backpackBtn.addEventListener('click', () => {
-      modal.showModal();
-      backpackBtn.setAttribute('aria-expanded', 'true');
-    });
+    // Toggle Backpack Modal
+    if (backpackBtn && modal && closeModalBtn) {
+      backpackBtn.addEventListener('click', () => {
+        modal.showModal();
+        backpackBtn.setAttribute('aria-expanded', 'true');
+      });
 
-    closeModalBtn.addEventListener('click', () => {
-      modal.close();
-      backpackBtn.setAttribute('aria-expanded', 'false');
-    });
-
-    // Close when clicking outside modal content
-    modal.addEventListener('click', (e) => {
-      const rect = modal.getBoundingClientRect();
-      const isInDialog = (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      );
-      if (!isInDialog) {
+      closeModalBtn.addEventListener('click', () => {
         modal.close();
         backpackBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
+      });
+
+      modal.addEventListener('click', (e) => {
+        const rect = modal.getBoundingClientRect();
+        if (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        ) {
+          modal.close();
+          backpackBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Toggle Settings Modal
+    if (settingsBtn && settingsModal && closeSettingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        settingsModal.showModal();
+      });
+      closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.close();
+      });
+      settingsModal.addEventListener('click', (e) => {
+        const rect = settingsModal.getBoundingClientRect();
+        if (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        ) {
+          settingsModal.close();
+        }
+      });
+    }
+
+    // Toggle Controls Modal
+    if (controlsBtn && controlsModal && closeControlsBtn) {
+      controlsBtn.addEventListener('click', () => {
+        controlsModal.showModal();
+      });
+      closeControlsBtn.addEventListener('click', () => {
+        controlsModal.close();
+      });
+      controlsModal.addEventListener('click', (e) => {
+        const rect = controlsModal.getBoundingClientRect();
+        if (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        ) {
+          controlsModal.close();
+        }
+      });
+    }
+
+    // Download CV logic
+    if (downloadCvBtn) {
+      downloadCvBtn.addEventListener('click', () => {
+        window.print();
+      });
+    }
+
+    // Start Game logic
+    if (startGameBtn && startScreen) {
+      startGameBtn.addEventListener('click', () => {
+        startScreen.classList.add('slide-up');
+        // Resume engine
+        if ((window as any).gameHandle && typeof (window as any).gameHandle.start === 'function') {
+          (window as any).gameHandle.start();
+        }
+      });
+
+      startScreen.addEventListener('transitionend', (e) => {
+        if (e.target === startScreen && e.propertyName === 'transform') {
+          startScreen.style.display = 'none';
+        }
+      });
+    }
+
+    // Gamepad Connection Status Polling
+    if (gamepadStatusLabel) {
+      const updateGamepadStatus = () => {
+        const gamepads = typeof navigator.getGamepads === 'function' ? navigator.getGamepads() : [];
+        let active = false;
+        for (let i = 0; i < gamepads.length; i++) {
+          if (gamepads[i]) {
+            active = true;
+            break;
+          }
+        }
+        if (active) {
+          gamepadStatusLabel.textContent = gamepadStatusLabel.getAttribute('data-text-connected') || 'Connected';
+          gamepadStatusLabel.style.color = '#eab308'; // active (golden-yellow highlight)
+        } else {
+          gamepadStatusLabel.textContent = gamepadStatusLabel.getAttribute('data-text-disconnected') || 'Not Connected';
+          gamepadStatusLabel.style.color = '#09090b'; // inactive (dark color)
+        }
+      };
+      
+      setInterval(updateGamepadStatus, 500);
+      updateGamepadStatus();
+    }
 
     // Handle CustomEvent from canvas game loop
     window.addEventListener('game-state-update', (e: Event) => {

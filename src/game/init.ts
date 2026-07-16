@@ -50,7 +50,7 @@ import {
 } from './render';
 import { formatHud } from './hud';
 import { PlayerEntity } from './player';
-import type { CanvasDims, InitOptions, InputState, Player, TrailPoint, Camera, CollectibleItem } from './types';
+import type { CanvasDims, InitOptions, InputState, Player, TrailPoint, Camera, CollectibleItem, GameHandle } from './types';
 
 // Phase 0 decisions, encoded as named constants so the values are greppable
 // and tests can reference them.
@@ -99,17 +99,8 @@ const BLINK_DURATION_MS = 120;
 const BLINK_MIN_INTERVAL_MS = 3000;
 const BLINK_MAX_INTERVAL_MS = 5000;
 
-export interface GameHandle {
-  /** Cancel the RAF loop and detach all listeners. */
-  stop(): void;
-  /**
-   * Current frames-per-second reading from the rolling 30-frame window.
-   * Updated once per RAF tick; returns 0 until the second frame lands.
-   */
-  getFps(): number;
-}
-
 export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHandle {
+  let started = false;
   const ctxOrNull = canvas.getContext('2d');
   if (!ctxOrNull) {
     throw new Error('[videogame-ui] could not acquire 2D context');
@@ -281,85 +272,87 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     }
     const blinkActive = now - blinkStart < BLINK_DURATION_MS;
 
-    // Pull the latest gamepad reading (axes 0/1 + dpad buttons). Polled
-    // here rather than from events so the value is exactly the stick's
-    // current state for this frame.
-    let stick: { x: number; y: number } | undefined;
-    let dpad: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined;
-    if (state.gamepadConnected && typeof navigator.getGamepads === 'function') {
-      const pads = navigator.getGamepads();
-      const pad = pads && pads[0];
-      if (pad) {
-        stick = { x: pad.axes[0] ?? 0, y: pad.axes[1] ?? 0 };
-        // Standard mapping: buttons 12/13/14/15 are the dpad on most pads.
-        dpad = {
-          up: !!pad.buttons[12]?.pressed,
-          down: !!pad.buttons[13]?.pressed,
-          left: !!pad.buttons[14]?.pressed,
-          right: !!pad.buttons[15]?.pressed,
-        };
+    if (started) {
+      // Pull the latest gamepad reading (axes 0/1 + dpad buttons). Polled
+      // here rather than from events so the value is exactly the stick's
+      // current state for this frame.
+      let stick: { x: number; y: number } | undefined;
+      let dpad: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined;
+      if (state.gamepadConnected && typeof navigator.getGamepads === 'function') {
+        const pads = navigator.getGamepads();
+        const pad = pads && pads[0];
+        if (pad) {
+          stick = { x: pad.axes[0] ?? 0, y: pad.axes[1] ?? 0 };
+          // Standard mapping: buttons 12/13/14/15 are the dpad on most pads.
+          dpad = {
+            up: !!pad.buttons[12]?.pressed,
+            down: !!pad.buttons[13]?.pressed,
+            left: !!pad.buttons[14]?.pressed,
+            right: !!pad.buttons[15]?.pressed,
+          };
+        }
       }
-    }
 
-    const v = sampleInputs(state, canvas, dims.w, dims.h, stick, dpad, player);
+      const v = sampleInputs(state, canvas, dims.w, dims.h, stick, dpad, player);
 
-    // Integrate: v = (v + input) * friction, then add to position.
-    player.vx = (player.vx + v.vx) * friction;
-    player.vy = (player.vy + v.vy) * friction;
-    // Snap-to-zero when velocity is below an epsilon to stop endless creep.
-    if (Math.abs(player.vx) < 1e-3) player.vx = 0;
-    if (Math.abs(player.vy) < 1e-3) player.vy = 0;
-    const prevX = player.x;
-    const prevY = player.y;
-    player.x += player.vx;
-    player.y += player.vy;
+      // Integrate: v = (v + input) * friction, then add to position.
+      player.vx = (player.vx + v.vx) * friction;
+      player.vy = (player.vy + v.vy) * friction;
+      // Snap-to-zero when velocity is below an epsilon to stop endless creep.
+      if (Math.abs(player.vx) < 1e-3) player.vx = 0;
+      if (Math.abs(player.vy) < 1e-3) player.vy = 0;
+      const prevX = player.x;
+      const prevY = player.y;
+      player.x += player.vx;
+      player.y += player.vy;
 
-    // 1. Clamping player vertically instead of wrapping
-    const clampedY = clampPlayerY(player.y, MAP_HEIGHT);
-    if (clampedY !== player.y) {
-      player.vy = 0;
-      player.y = clampedY;
-    }
+      // 1. Clamping player vertically instead of wrapping
+      const clampedY = clampPlayerY(player.y, MAP_HEIGHT);
+      if (clampedY !== player.y) {
+        player.vy = 0;
+        player.y = clampedY;
+      }
 
-    // 2. Horizontal wrapping
-    player.x = ((player.x % dims.w) + dims.w) % dims.w;
-    const didWrap = player.x !== prevX + player.vx;
+      // 2. Horizontal wrapping
+      player.x = ((player.x % dims.w) + dims.w) % dims.w;
+      const didWrap = player.x !== prevX + player.vx;
 
-    // 3. Viewport camera Y centers on player Y and clamps
-    camera.y = clampPlayerY(player.y - dims.h / 2, MAP_HEIGHT - dims.h);
+      // 3. Viewport camera Y centers on player Y and clamps
+      camera.y = clampPlayerY(player.y - dims.h / 2, MAP_HEIGHT - dims.h);
 
-    // Trail update: append the current position, age the buffer, drop
-    // old entries. Reset the trail when the player wraps around — a
-    // teleport from one edge to another would otherwise leave a streak
-    // across the canvas.
-    trail = updateTrail(
-      trail,
-      dtMs,
-      TRAIL_MAX_AGE_MS,
-      TRAIL_MAX_LEN,
-      didWrap ? null : { x: player.x, y: player.y },
-    );
-    if (didWrap) {
-      // After a wrap, drop the old buffer entirely so the next frame's
-      // trail starts fresh on the new edge.
-      trail = [];
-    }
+      // Trail update: append the current position, age the buffer, drop
+      // old entries. Reset the trail when the player wraps around — a
+      // teleport from one edge to another would otherwise leave a streak
+      // across the canvas.
+      trail = updateTrail(
+        trail,
+        dtMs,
+        TRAIL_MAX_AGE_MS,
+        TRAIL_MAX_LEN,
+        didWrap ? null : { x: player.x, y: player.y },
+      );
+      if (didWrap) {
+        // After a wrap, drop the old buffer entirely so the next frame's
+        // trail starts fresh on the new edge.
+        trail = [];
+      }
 
-    // Collisions check & Dispatch CustomEvent
-    for (const item of collectibles) {
-      if (!item.collected && checkCollision(player, item)) {
-        item.collected = true;
-        const collectedCount = collectibles.filter(c => c.collected).length;
-        const totalCount = collectibles.length;
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('game-state-update', {
-            detail: {
-              collectedCount,
-              totalCount,
-              lastCollected: item.name,
-              unlockedId: item.id,
-            }
-          }));
+      // Collisions check & Dispatch CustomEvent
+      for (const item of collectibles) {
+        if (!item.collected && checkCollision(player, item)) {
+          item.collected = true;
+          const collectedCount = collectibles.filter(c => c.collected).length;
+          const totalCount = collectibles.length;
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('game-state-update', {
+              detail: {
+                collectedCount,
+                totalCount,
+                lastCollected: item.name,
+                unlockedId: item.id,
+              }
+            }));
+          }
         }
       }
     }
@@ -377,14 +370,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     // Draw Biomes
     drawBiomes(ctx, dims.w, camera.y, dims.h);
     
-    // Draw Collectibles
-    drawCollectibles(ctx, collectibles, camera.y, dims.h);
-    
-    // Draw Bottom CTA
-    drawBottomCTA(ctx, dims.w, camera.y, dims.h);
-    
-    // Draw Trail
-    drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);
+    if (started) {
+      // Draw Collectibles
+      drawCollectibles(ctx, collectibles, camera.y, dims.h);
+      
+      // Draw Bottom CTA
+      drawBottomCTA(ctx, dims.w, camera.y, dims.h);
+      
+      // Draw Trail
+      drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);
+    }
     
     // Draw and progress player spritesheet animation
     playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, dtMs, blinkActive);
@@ -422,6 +417,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       document.removeEventListener('visibilitychange', onVisibility);
     },
     getFps,
+    start(): void {
+      started = true;
+    }
   };
 }
 

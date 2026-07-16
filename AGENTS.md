@@ -9,9 +9,10 @@
 ## Source of truth — what wins when there's a conflict
 
 1. **`SPEC.md`** — architectural contract. If you think it should change, propose a slice change in `dev-tracker`, do not edit the spec silently.
-2. **`~/.personal-brand/DATA/*.json`** — content truth for the CV. The agent MUST NOT invent content (G04). If a field is missing, leave it missing; ask the user.
-3. **`package.json`** `scripts` and `astro.config.mjs` — runtime/build truth.
-4. **`tests/*.test.ts`** — behavioral contract. If you change behavior, the tests should change with you.
+2. **`docs/visual-style.md`** — visual design and styling standards (colors, typography, sprite styles, retro buttons). Read this before writing any CSS or creating sprite assets.
+3. **`~/.personal-brand/DATA/*.json`** — content truth for the CV. The agent MUST NOT invent content (G04). If a field is missing, leave it missing; ask the user.
+4. **`package.json`** `scripts` and `astro.config.mjs` — runtime/build truth.
+5. **`tests/*.test.ts`** — behavioral contract. If you change behavior, the tests should change with you.
 
 When in doubt, the **SPEC + DATA** pair wins over any inline comment in the code.
 
