@@ -119,4 +119,210 @@ article[data-locale] li {
    * dist/{es,en}/index.html (the slice-2 build contract forbids it).
    * See tests/game-build.test.ts.
    */
+
+  /* Backpack HUD Overlay */
+  .backpack-hud-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+  }
+
+  .backpack-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 35, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .backpack-btn:hover {
+    background: rgba(45, 45, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .backpack-btn:active {
+    transform: translateY(1px);
+  }
+
+  .bag-icon {
+    font-size: 16px;
+  }
+
+  .bag-label {
+    font-weight: 500;
+  }
+
+  .last-skill-toast {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: #0b66c2;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .last-skill-toast.toast-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Modal dialog styling */
+  #skill-matrix-modal {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    background: #141416;
+    color: #f4f4f7;
+    max-width: 550px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    z-index: 30;
+  }
+
+  #skill-matrix-modal::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 14px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-weight: bold;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .close-btn:hover {
+    color: #ffffff;
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .skills-grid-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .skill-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: all 0.2s ease;
+  }
+
+  .skill-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .skill-biome {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+  }
+
+  /* Locked Skill Card */
+  .skill-card.skill-locked {
+    background: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .skill-card.skill-locked .skill-name {
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .skill-card.skill-locked .skill-unlock-badge {
+    display: none;
+  }
+
+  .skill-card.skill-locked .skill-lock-icon {
+    font-size: 13px;
+    opacity: 0.3;
+  }
+
+  /* Unlocked Skill Card */
+  .skill-card.skill-unlocked {
+    background: rgba(11, 102, 194, 0.08);
+    border-color: rgba(11, 102, 194, 0.35);
+  }
+
+  .skill-card.skill-unlocked .skill-name {
+    color: #ffffff;
+  }
+
+  .skill-card.skill-unlocked .skill-lock-icon {
+    display: none;
+  }
+
+  .skill-card.skill-unlocked .skill-unlock-badge {
+    font-size: 12px;
+  }
 }
