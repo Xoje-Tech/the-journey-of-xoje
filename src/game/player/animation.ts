@@ -62,9 +62,9 @@ export function pickFrame(
   }
 
   // Determine active walk pose based on dominant movement axis
-  let activePose: PoseType = 'walk-down';
-  let minFrame = 1;
-  let maxFrame = 2;
+  let activePose: PoseType;
+  let minFrame: number;
+  let maxFrame: number;
 
   if (Math.abs(vx) >= Math.abs(vy)) {
     // Horizontal dominates

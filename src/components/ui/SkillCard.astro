@@ -5,14 +5,14 @@ interface Props {
   biome: string;
 }
 
-const { id, name, biome } = Astro.props;
+const { id, name: skillName, biome } = Astro.props;
 ---
 
 <div class="skill-card skill-locked" id={`skill-card-${id}`} data-skill-id={id}>
   <span class="skill-lock-icon">🔒</span>
   <span class="skill-unlock-badge">✅</span>
   <div class="skill-details">
-    <span class="skill-name">{name}</span>
+    <span class="skill-name">{skillName}</span>
     <span class="skill-biome">{biome}</span>
   </div>
 </div>
