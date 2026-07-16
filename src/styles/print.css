@@ -33,6 +33,12 @@
  */
 
 @media print {
+  /* Hide the game canvas and any HUD in print mode — only the CV renders. */
+  #game-canvas,
+  .game-hud {
+    display: none !important;
+  }
+
   /* Hide all `.no-print` elements (top nav, Print button, locale switch). */
   .no-print {
     display: none !important;

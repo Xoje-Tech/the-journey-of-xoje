@@ -42,6 +42,8 @@ const { locale, ui } = Astro.props;
   </div>
 </header>
 
+<canvas id="game-canvas" aria-hidden="true" role="img"></canvas>
+
 <article data-locale={locale}>
   <slot name="body" />
 </article>
