@@ -1,0 +1,139 @@
+---
+import uiEs from '../../i18n/ui.es.json';
+import uiEn from '../../i18n/ui.en.json';
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div class="svg-container">
+  <svg viewBox="0 0 600 280" class="nes-controller-svg">
+    <!-- Outer shell -->
+    <rect x="160" y="85" width="280" height="110" rx="6" ry="6" class="controller-body" />
+    <!-- Inner section -->
+    <rect x="170" y="95" width="260" height="90" rx="3" ry="3" class="controller-inner" />
+    
+    <!-- D-PAD -->
+    <g class="dpad">
+      <rect x="200" y="135" width="30" height="10" class="dpad-button" />
+      <rect x="210" y="125" width="10" height="30" class="dpad-button" />
+      <rect x="210" y="135" width="10" height="10" class="dpad-button" />
+    </g>
+    
+    <!-- Select & Start buttons -->
+    <rect x="270" y="140" width="22" height="6" transform="rotate(-20 270 140)" class="option-button" />
+    <rect x="305" y="140" width="22" height="6" transform="rotate(-20 305 140)" class="option-button" />
+    
+    <!-- B & A Action buttons -->
+    <circle cx="370" cy="140" r="10" class="action-button-b" />
+    <circle cx="400" cy="140" r="10" class="action-button-a" />
+    
+    <!-- Labels inside controller -->
+    <text x="281" y="160" class="controller-text">SELECT</text>
+    <text x="316" y="160" class="controller-text">START</text>
+    <text x="370" y="162" class="controller-text button-letter">B</text>
+    <text x="400" y="162" class="controller-text button-letter">A</text>
+    
+    <!-- POINTER LINES -->
+    <!-- D-Pad Line -->
+    <line x1="200" y1="140" x2="80" y2="140" class="pointer-line" />
+    <!-- Start Line -->
+    <line x1="316" y1="135" x2="316" y2="45" class="pointer-line" />
+    <!-- B Line -->
+    <line x1="370" y1="145" x2="480" y2="190" class="pointer-line" />
+    <!-- A Line -->
+    <line x1="400" y1="135" x2="480" y2="90" class="pointer-line" />
+    
+    <!-- OUTSIDE TEXT LABELS -->
+    <text x="70" y="144" class="label-text label-left">{ui.game.dpadLabel}</text>
+    <text x="316" y="35" class="label-text label-center">{ui.game.startLabel}</text>
+    <text x="490" y="194" class="label-text label-right">{ui.game.buttonBLabel}</text>
+    <text x="490" y="94" class="label-text label-right">{ui.game.buttonALabel}</text>
+  </svg>
+</div>
+
+<style>
+  .svg-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #141416;
+    padding: 16px;
+    border: 1px solid #09090b;
+  }
+
+  .nes-controller-svg {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+  }
+
+  .controller-body {
+    fill: #27272a;
+    stroke: #09090b;
+    stroke-width: 2px;
+  }
+
+  .controller-inner {
+    fill: #1c1c1f;
+    stroke: #09090b;
+    stroke-width: 1px;
+  }
+
+  .dpad-button {
+    fill: #09090b;
+  }
+
+  .option-button {
+    fill: #71717a;
+  }
+
+  .action-button-a, .action-button-b {
+    fill: #ef4444;
+    stroke: #09090b;
+    stroke-width: 1.5px;
+  }
+
+  .controller-text {
+    fill: #a1a1aa;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 6px;
+    font-weight: bold;
+    text-anchor: middle;
+  }
+
+  .button-letter {
+    fill: #f4f4f5;
+    font-size: 8px;
+  }
+
+  .pointer-line {
+    stroke: #a1a1aa;
+    stroke-width: 1.5px;
+    stroke-dasharray: 3, 3;
+  }
+
+  .label-text {
+    fill: #f4f4f5;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .label-left {
+    text-anchor: end;
+  }
+
+  .label-right {
+    text-anchor: start;
+  }
+
+  .label-center {
+    text-anchor: middle;
+  }
+</style>

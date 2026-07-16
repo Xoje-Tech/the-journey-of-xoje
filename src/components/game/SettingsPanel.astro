@@ -1,0 +1,40 @@
+---
+import uiEs from '../../i18n/ui.es.json';
+import uiEn from '../../i18n/ui.en.json';
+import RetroModal from '../ui/RetroModal.astro';
+import VolumeSlider from '../ui/VolumeSlider.astro';
+import GamepadStatus from '../ui/GamepadStatus.astro';
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<RetroModal id="settings-modal" title={ui.game.settingsTitle} closeId="close-settings-btn">
+  <VolumeSlider locale={locale} />
+  <GamepadStatus locale={locale} />
+</RetroModal>
+
+<script>
+  import { gamepadConnectedStore } from '../../game/store';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const updateGamepadStatus = () => {
+      const gamepads = typeof navigator.getGamepads === 'function' ? navigator.getGamepads() : [];
+      let active = false;
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+          active = true;
+          break;
+        }
+      }
+      gamepadConnectedStore.set(active);
+    };
+
+    setInterval(updateGamepadStatus, 500);
+    updateGamepadStatus();
+  });
+</script>

@@ -36,7 +36,7 @@
  *
  * Return value: `{ stop() }` cancels the RAF loop and detaches listeners.
  */
-import { applyFriction, wrapAround, clampPlayerY, checkCollision } from './physics';
+import { applyFriction, clampPlayerY, checkCollision } from './physics';
 import { sampleInputs } from './input';
 import {
   drawGrid,
@@ -112,7 +112,6 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
   const friction = opts.friction ?? DEFAULT_FRICTION;
   const gridSize = opts.gridSize ?? DEFAULT_GRID_SIZE;
-  const accel = opts.acceleration ?? DEFAULT_ACCEL;
   const playerSize = DEFAULT_PLAYER_SIZE;
 
   const dims: CanvasDims = { w: 0, h: 0, dpr: 1 };
@@ -302,7 +301,6 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       if (Math.abs(player.vx) < 1e-3) player.vx = 0;
       if (Math.abs(player.vy) < 1e-3) player.vy = 0;
       const prevX = player.x;
-      const prevY = player.y;
       player.x += player.vx;
       player.y += player.vy;
 
