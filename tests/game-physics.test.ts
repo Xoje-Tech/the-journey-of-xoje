@@ -15,8 +15,8 @@ import { describe, it, expect } from 'vitest';
 // Production code that DOES NOT EXIST YET — importing it on a fresh checkout
 // would fail at module-resolution time, which is itself a valid RED signal.
 // The test runner will report the missing module as the failure.
-import { wrapAround, applyFriction } from '../src/game/physics';
-import type { Player } from '../src/game/types';
+import { wrapAround, applyFriction, clampPlayerY, checkCollision } from '../src/game/physics';
+import type { Player, CollectibleItem } from '../src/game/types';
 
 function makePlayer(x: number, y: number): Player {
   return { x, y, vx: 0, vy: 0, size: 10 };
@@ -100,5 +100,56 @@ describe('applyFriction — pure function', () => {
     const magIn = Math.hypot(v.vx, v.vy);
     const magOut = Math.hypot(out.vx, out.vy);
     expect(magOut).toBeLessThanOrEqual(magIn + 1e-9);
+  });
+});
+
+describe('clampPlayerY — pure function', () => {
+  it('keeps y unchanged if within bounds [0, max]', () => {
+    expect(clampPlayerY(150, 4000)).toBe(150);
+    expect(clampPlayerY(0, 4000)).toBe(0);
+    expect(clampPlayerY(4000, 4000)).toBe(4000);
+  });
+
+  it('clamps y to 0 if it is negative', () => {
+    expect(clampPlayerY(-10, 4000)).toBe(0);
+    expect(clampPlayerY(-100, 1000)).toBe(0);
+  });
+
+  it('clamps y to max if it exceeds max', () => {
+    expect(clampPlayerY(4050, 4000)).toBe(4000);
+    expect(clampPlayerY(1200, 1000)).toBe(1000);
+  });
+});
+
+describe('checkCollision — pure function', () => {
+  const item: CollectibleItem = {
+    id: 'typescript',
+    name: 'TypeScript',
+    category: 'technical',
+    biome: 'LCS Robotics',
+    x: 100,
+    y: 100,
+    radius: 15,
+    collected: false,
+  };
+
+  it('returns true if player overlaps with item', () => {
+    // Player size is 14, player half-size (radius equivalent for collision) is 7.
+    // Item radius is 15. Collision limit is 7 + 15 = 22.
+    // Distance here is 10.
+    const p = { x: 100, y: 110, vx: 0, vy: 0, size: 14 };
+    expect(checkCollision(p, item)).toBe(true);
+  });
+
+  it('returns false if player does not overlap with item', () => {
+    // Distance here is 30, which is > 22.
+    const p = { x: 100, y: 130, vx: 0, vy: 0, size: 14 };
+    expect(checkCollision(p, item)).toBe(false);
+  });
+
+  it('returns true on exact edge overlap boundary', () => {
+    // Distance here is 21.99, which is < 22.
+    const p = { x: 100, y: 121.9, vx: 0, vy: 0, size: 14 };
+    expect(checkCollision(p, item)).toBe(true);
   });
 });

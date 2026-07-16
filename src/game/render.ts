@@ -16,7 +16,7 @@
  * Visual language is deliberately minimal: the player is the only moving
  * thing on screen, so all the polish lives here.
  */
-import type { TrailPoint } from './types';
+import type { TrailPoint, CollectibleItem } from './types';
 
 /* ------------------------------------------------------------------ */
 /*  Constants — exported so init.ts and tests share the same numbers. */
@@ -126,6 +126,141 @@ export function drawTrail(
     ctx.fill();
   }
   ctx.restore();
+}
+
+/**
+ * Viewport culling helper: returns true if an entity with a center y and a radius/height
+ * overlaps with the current vertical viewport [cameraY, cameraY + viewportHeight].
+ */
+export function isWithinViewport(
+  y: number,
+  radius: number,
+  cameraY: number,
+  viewportHeight: number
+): boolean {
+  return y + radius >= cameraY && y - radius <= cameraY + viewportHeight;
+}
+
+/**
+ * Draw chronological career biome boundaries and labels in world space.
+ */
+export function drawBiomes(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  cameraY: number,
+  viewportH: number
+): void {
+  const biomes = [
+    { name: 'LCS Robotics', yStart: 0, yEnd: 1000 },
+    { name: 'Crmble', yStart: 1000, yEnd: 2000 },
+    { name: 'Twinny', yStart: 2000, yEnd: 3000 },
+    { name: 'RIDE ON', yStart: 3000, yEnd: 4000 },
+  ];
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.font = '12px ui-monospace, "JetBrains Mono", monospace';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+
+  for (const b of biomes) {
+    // Draw bottom border of biome if it's less than MAP_HEIGHT (4000)
+    if (b.yEnd < 4000) {
+      if (isWithinViewport(b.yEnd, 0, cameraY, viewportH)) {
+        ctx.beginPath();
+        ctx.moveTo(0, b.yEnd);
+        ctx.lineTo(w, b.yEnd);
+        ctx.stroke();
+      }
+    }
+
+    // Draw biome label near the top/start of the biome
+    const labelY = b.yStart + 30;
+    if (isWithinViewport(labelY, 10, cameraY, viewportH)) {
+      ctx.fillText(b.name.toUpperCase(), 16, labelY);
+    }
+  }
+  ctx.restore();
+}
+
+/**
+ * Draw collectible items that have not been collected yet and are inside the viewport.
+ */
+export function drawCollectibles(
+  ctx: CanvasRenderingContext2D,
+  items: CollectibleItem[],
+  cameraY: number,
+  viewportH: number
+): void {
+  ctx.save();
+  ctx.font = '10px ui-monospace, "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (const item of items) {
+    if (item.collected) continue;
+
+    if (!isWithinViewport(item.y, item.radius, cameraY, viewportH)) {
+      continue;
+    }
+
+    // Draw circular skill coin
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+    if (item.category === 'technical') {
+      ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
+      ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+    } else {
+      ctx.fillStyle = 'rgba(255, 180, 100, 0.2)';
+      ctx.strokeStyle = 'rgba(255, 180, 100, 0.8)';
+    }
+    ctx.lineWidth = 1.5;
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw skill name label above the circle
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(item.name, item.x, item.y - item.radius - 8);
+  }
+  ctx.restore();
+}
+
+/**
+ * Draw Journey End CTA at the bottom of the map.
+ */
+export function drawBottomCTA(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  cameraY: number,
+  viewportH: number
+): void {
+  const ctaY = 3900;
+  if (isWithinViewport(ctaY, 50, cameraY, viewportH)) {
+    ctx.save();
+    
+    // Draw a prominent finishing line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 5]);
+    ctx.beginPath();
+    ctx.moveTo(0, ctaY);
+    ctx.lineTo(w, ctaY);
+    ctx.stroke();
+
+    // Draw beautiful CTA text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px ui-monospace, "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✨ THE JOURNEY CONTINUES ✨', w / 2, ctaY + 30);
+    
+    ctx.font = '11px ui-monospace, "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fillText('You have reached the end of the timeline!', w / 2, ctaY + 55);
+    
+    ctx.restore();
+  }
 }
 
 

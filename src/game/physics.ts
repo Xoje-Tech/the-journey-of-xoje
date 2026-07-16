@@ -14,7 +14,7 @@
  *   which is in [0, 1] for normal gameplay; 1.0 means no friction.
  */
 
-import type { Player } from './types';
+import type { Player, CollectibleItem } from './types';
 
 /**
  * Wrap a player's position around the canvas. Returns a NEW player object
@@ -34,4 +34,20 @@ export function wrapAround(p: Player, w: number, h: number): Player {
  */
 export function applyFriction(v: { vx: number; vy: number }, f: number): { vx: number; vy: number } {
   return { vx: v.vx * f, vy: v.vy * f };
+}
+
+/**
+ * Clamps a player's vertical position to the range [0, max].
+ */
+export function clampPlayerY(y: number, max: number): number {
+  return Math.max(0, Math.min(y, max));
+}
+
+/**
+ * Circular collision detection: checks if the distance between player center
+ * and item center is less than (playerSize / 2 + itemRadius).
+ */
+export function checkCollision(p: Player, item: CollectibleItem): boolean {
+  const dist = Math.hypot(p.x - item.x, p.y - item.y);
+  return dist < (p.size / 2 + item.radius);
 }

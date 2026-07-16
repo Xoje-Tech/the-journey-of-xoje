@@ -12,7 +12,7 @@
  * worth a DOM-free fake-canvas exercise.
  */
 import { describe, it, expect } from 'vitest';
-import { updateTrail } from '../src/game/render';
+import { updateTrail, isWithinViewport } from '../src/game/render';
 
 describe('updateTrail — append + age + drop', () => {
   it('appends the current position as a fresh point (age = 0)', () => {
@@ -69,5 +69,37 @@ describe('updateTrail — append + age + drop', () => {
     const out = updateTrail(initial, 16, 280, 14, null);
     expect(out).toHaveLength(1);
     expect(out[0]?.age).toBe(116);
+  });
+});
+
+describe('isWithinViewport — frustum culling helper', () => {
+  it('returns true if the item is entirely inside the viewport', () => {
+    // Viewport is [1000, 1800]
+    // Item is at y = 1400 with radius = 15. Overlaps [1385, 1415].
+    expect(isWithinViewport(1400, 15, 1000, 800)).toBe(true);
+  });
+
+  it('returns true if the item overlaps with the top boundary', () => {
+    // Viewport is [1000, 1800]
+    // Item is at y = 990 with radius = 15. Overlaps [975, 1005], which intersects viewport at [1000, 1005].
+    expect(isWithinViewport(990, 15, 1000, 800)).toBe(true);
+  });
+
+  it('returns true if the item overlaps with the bottom boundary', () => {
+    // Viewport is [1000, 1800]
+    // Item is at y = 1810 with radius = 15. Overlaps [1795, 1825], which intersects viewport at [1795, 1800].
+    expect(isWithinViewport(1810, 15, 1000, 800)).toBe(true);
+  });
+
+  it('returns false if the item is completely above the viewport', () => {
+    // Viewport is [1000, 1800]
+    // Item is at y = 950 with radius = 15. Overlaps [935, 965], completely above 1000.
+    expect(isWithinViewport(950, 15, 1000, 800)).toBe(false);
+  });
+
+  it('returns false if the item is completely below the viewport', () => {
+    // Viewport is [1000, 1800]
+    // Item is at y = 1850 with radius = 15. Overlaps [1835, 1865], completely below 1800.
+    expect(isWithinViewport(1850, 15, 1000, 800)).toBe(false);
   });
 });
