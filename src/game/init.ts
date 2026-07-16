@@ -40,17 +40,13 @@ import { applyFriction, wrapAround } from './physics';
 import { sampleInputs } from './input';
 import {
   drawGrid,
-  drawPlayerCapsule,
   drawTrail,
   updateTrail,
-  computeFacing,
   TRAIL_MAX_AGE_MS,
   TRAIL_MAX_LEN,
-  BLINK_DURATION_MS,
-  BLINK_MIN_INTERVAL_MS,
-  BLINK_MAX_INTERVAL_MS,
 } from './render';
 import { formatHud } from './hud';
+import { PlayerEntity } from './player';
 import type { CanvasDims, InitOptions, InputState, Player, TrailPoint } from './types';
 
 // Phase 0 decisions, encoded as named constants so the values are greppable
@@ -68,6 +64,11 @@ const HUD_PAD_Y = 16; // logical px from the top edge
 const HUD_FONT = '14px ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace';
 const HUD_COLOR = '#cfcfd0';
 const HUD_LINE_HEIGHT = 18; // logical px per line at 14px font + line-height ~1.3
+
+// Blink duration matching the visual specs (120ms parpadeo)
+const BLINK_DURATION_MS = 120;
+const BLINK_MIN_INTERVAL_MS = 3000;
+const BLINK_MAX_INTERVAL_MS = 5000;
 
 export interface GameHandle {
   /** Cancel the RAF loop and detach all listeners. */
@@ -102,8 +103,13 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     vx: 0,
     vy: 0,
     size: playerSize,
-    facing: { x: 0, y: 1 }, // default "down"; updated each frame from vx/vy
   };
+
+  /** Instantiate the clean architecture PlayerEntity and load spritesheet */
+  const playerEntity = new PlayerEntity('/sprites/player.png');
+  playerEntity.load().catch((err) => {
+    console.error("Failed to load player spritesheet asynchronously:", err);
+  });
 
   /** Ring buffer of trail points. Mutated by `updateTrail` per frame. */
   let trail: TrailPoint[] = [];
@@ -262,12 +268,6 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     player.x = wrapped.x;
     player.y = wrapped.y;
 
-    // Update facing from velocity each frame so the capsule "looks" the
-    // way it is moving. Idle (both zero) keeps the prior facing.
-    if (player.vx !== 0 || player.vy !== 0) {
-      player.facing = computeFacing(player.vx, player.vy);
-    }
-
     // Trail update: append the current position, age the buffer, drop
     // old entries. Reset the trail when the player wraps around — a
     // teleport from one edge to another would otherwise leave a streak
@@ -289,7 +289,10 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     ctx.clearRect(0, 0, dims.w, dims.h);
     drawGrid(ctx, dims.w, dims.h, gridSize);
     drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);
-    drawPlayerCapsule(ctx, player, blinkActive);
+    
+    // Draw and progress player spritesheet animation
+    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, dtMs, blinkActive);
+    
     drawHud(ctx, player, dims.w, dims.h, fpsValue);
 
     if (!paused) rafId = requestAnimationFrame(loop);

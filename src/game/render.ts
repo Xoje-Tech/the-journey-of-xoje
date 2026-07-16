@@ -1,27 +1,22 @@
 /**
  * src/game/render.ts
  *
- * Canvas 2D drawing primitives for the videogame-ui slice, plus two pure
- * helpers (`updateTrail`, `computeFacing`) so the determinstic parts of
- * the capsule + trail animation can be unit-tested without a DOM.
+ * Canvas 2D drawing primitives for the videogame-ui slice, plus a pure
+ * helper (`updateTrail`) so the deterministic parts of
+ * the trail animation can be unit-tested without a DOM.
  *
  * Exports:
  *   - `drawGrid(ctx, w, h, gridSize)` — light grid lines so the player can
  *      perceive displacement against a stationary background.
  *   - `drawTrail(ctx, trail, maxAgeMs)` — small fading dots behind the
  *      player (P3, see design).
- *   - `drawPlayerCapsule(ctx, player, blinkActive)` — vertical pill
- *      sprite, 10x16 logical px (P1, see design). Optional "blink" line
- *      on the top arc.
  *   - `updateTrail(...)` — pure: age + drop + append for the trail buffer.
- *   - `computeFacing(vx, vy)` — pure: dominant-axis facing vector.
- *   - Constants: `TRAIL_MAX_AGE_MS`, `TRAIL_MAX_LEN`, `CAPSULE_W`, `CAPSULE_H`,
- *     `BLINK_DURATION_MS`, `BLINK_MIN_INTERVAL_MS`, `BLINK_MAX_INTERVAL_MS`.
+ *   - Constants: `TRAIL_MAX_AGE_MS`, `TRAIL_MAX_LEN`.
  *
  * Visual language is deliberately minimal: the player is the only moving
  * thing on screen, so all the polish lives here.
  */
-import type { Player, TrailPoint } from './types';
+import type { TrailPoint } from './types';
 
 /* ------------------------------------------------------------------ */
 /*  Constants — exported so init.ts and tests share the same numbers. */
@@ -33,40 +28,9 @@ export const TRAIL_MAX_AGE_MS = 280;
 /** Maximum number of trail points retained in the buffer (ring-style). */
 export const TRAIL_MAX_LEN = 14;
 
-/** Capsule sprite width in logical px. */
-export const CAPSULE_W = 10;
-/** Capsule sprite height in logical px. */
-export const CAPSULE_H = 16;
-
-/** How long a blink is visible (ms). */
-export const BLINK_DURATION_MS = 120;
-/** Lower bound for the random interval between blinks (ms). */
-export const BLINK_MIN_INTERVAL_MS = 3000;
-/** Upper bound for the random interval between blinks (ms). */
-export const BLINK_MAX_INTERVAL_MS = 5000;
-
 /* ------------------------------------------------------------------ */
 /*  Pure helpers                                                      */
 /* ------------------------------------------------------------------ */
-
-/**
- * Compute the dominant-axis facing vector for the capsule sprite.
- *
- * Tie-breaker: equal magnitudes favor horizontal. At rest (both zero)
- * the result is `{x: 0, y: 1}` ("down") — matches the slice-1 visual.
- */
-export function computeFacing(
-  vx: number,
-  vy: number,
-): { x: -1 | 0 | 1; y: -1 | 0 | 1 } {
-  const ax = Math.abs(vx);
-  const ay = Math.abs(vy);
-  if (ax === 0 && ay === 0) return { x: 0, y: 1 };
-  if (ax >= ay) {
-    return { x: vx > 0 ? 1 : vx < 0 ? -1 : 0, y: 0 };
-  }
-  return { x: 0, y: vy > 0 ? 1 : vy < 0 ? -1 : 0 };
-}
 
 /**
  * Advance the trail buffer by one frame: age every existing point by
@@ -164,53 +128,4 @@ export function drawTrail(
   ctx.restore();
 }
 
-/**
- * Draw the player as a vertical pill capsule, centered on `player.x/y`.
- *
- * Visual: white fill, subtle dark stroke. When `blinkActive` is true, a
- * thin dark horizontal line is drawn across the top arc — the "blink"
- * animation.
- */
-export function drawPlayerCapsule(
-  ctx: CanvasRenderingContext2D,
-  player: Player,
-  blinkActive: boolean,
-): void {
-  // Fallback to "down" facing when the optional `facing` field is absent
-  // (older callers / test fixtures that build minimal Player objects).
-  const facing = player.facing ?? { x: 0, y: 1 };
-  void facing; // currently the capsule is symmetric; reserved for future pose work.
 
-  const w = CAPSULE_W;
-  const h = CAPSULE_H;
-  const left = player.x - w / 2;
-  const top = player.y - h / 2;
-  const radius = w / 2; // semicircle ends → true pill shape
-
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#1a1a1f';
-  ctx.lineWidth = 1.5;
-
-  // Pill = rectangle with semicircular caps on top/bottom.
-  ctx.beginPath();
-  ctx.moveTo(left + radius, top);
-  ctx.lineTo(left + w - radius, top);
-  ctx.arc(left + w - radius, top + radius, radius, -Math.PI / 2, Math.PI / 2, false);
-  ctx.lineTo(left + radius, top + h - radius);
-  ctx.arc(left + radius, top + h - radius, radius, Math.PI / 2, -Math.PI / 2, false);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // Blink overlay: thin horizontal line across the top arc.
-  if (blinkActive) {
-    ctx.beginPath();
-    ctx.strokeStyle = '#1a1a1f';
-    ctx.lineWidth = 1.5;
-    ctx.moveTo(left + 2, top + radius);
-    ctx.lineTo(left + w - 2, top + radius);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
