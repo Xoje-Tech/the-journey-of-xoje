@@ -6,7 +6,8 @@ import { defineConfig } from 'astro/config';
 // Slice 1 contract: every URL is locale-prefixed, no bare `/` rendering.
 // `pages/index.astro` redirects `/` → `/es/`.
 export default defineConfig({
-  site: 'https://xoje.dev',
+  site: 'https://xoje-tech.github.io',
+  base: '/the-journey-of-xoje',
   output: 'static',
   i18n: {
     defaultLocale: 'es',
