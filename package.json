@@ -8,6 +8,7 @@
     "build:cv": "node scripts/build-cv-static.mjs",
     "predev": "node scripts/build-cv-static.mjs",
     "dev": "astro dev",
+    "generate-sprites": "scripts/.venv/bin/python scripts/generate-sprites.py",
     "build:astro": "astro build",
     "prebuild": "node scripts/build-cv-static.mjs",
     "build": "pnpm build:cv && astro build",

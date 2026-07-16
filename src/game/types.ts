@@ -25,6 +25,17 @@ export interface Player {
 }
 
 /**
+ * One snapshot of the player's position on the motion trail.
+ * `age` is milliseconds since the point was recorded; the renderer
+ * fades points to zero alpha as age approaches `TRAIL_MAX_AGE_MS`.
+ */
+export interface TrailPoint {
+  x: number;
+  y: number;
+  age: number;
+}
+
+/**
  * Mutable input snapshot. Lives across frames — the game loop reads it
  * every tick, then clears the one-shot `mouseTarget` via
  * `clearMouseTarget()` once the player arrives at the click point (per OQ2).
@@ -68,4 +79,6 @@ export interface InitOptions {
   acceleration?: number;
   /** Maximum absolute stick value that still counts as zero. */
   deadzone?: number;
+  /** Custom spritesheet path/URL dynamically resolved by the bundler. */
+  spritesheetPath?: string;
 }

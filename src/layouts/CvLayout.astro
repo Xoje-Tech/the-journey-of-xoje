@@ -27,6 +27,10 @@ const { locale } = Astro.props;
 
 <script>
   import { init } from '../game/init.ts';
+  import playerSpritesheet from '../assets/player.png';
+  
   const c = document.getElementById('game-canvas');
-  if (c instanceof HTMLCanvasElement) init(c);
+  if (c instanceof HTMLCanvasElement) {
+    init(c, { spritesheetPath: playerSpritesheet.src });
+  }
 </script>
