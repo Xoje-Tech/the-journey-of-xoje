@@ -1,7 +1,13 @@
 ---
 import { getCollection, render } from 'astro:content';
 import CvLayout from '../../layouts/CvLayout.astro';
-import CvDocument from '../../components/CvDocument.astro';
+import CvDocument from '../../components/cv/CvDocument.astro';
+import GameViewport from '../../components/game/GameViewport.astro';
+import StartScreen from '../../components/game/StartScreen.astro';
+import SettingsPanel from '../../components/game/SettingsPanel.astro';
+import ControlsGuide from '../../components/game/ControlsGuide.astro';
+import BackpackButton from '../../components/game/BackpackButton.astro';
+import BackpackInventory from '../../components/game/BackpackInventory.astro';
 import uiEs from '../../i18n/ui.es.json';
 import uiEn from '../../i18n/ui.en.json';
 
@@ -12,7 +18,6 @@ export async function getStaticPaths() {
   ];
 }
 
-// `Astro.params.locale` is typed loosely by Astro; we narrow here.
 const rawLocale = Astro.params.locale;
 if (rawLocale !== 'es' && rawLocale !== 'en') {
   throw new Error(`Unsupported locale: ${rawLocale}`);
@@ -20,8 +25,6 @@ if (rawLocale !== 'es' && rawLocale !== 'en') {
 const locale = rawLocale;
 const ui = locale === 'es' ? uiEs : uiEn;
 
-// Content-collection lookup. The collection loader is `glob({ pattern: 'cv.*.md' })`,
-// so the entry id is exactly `cv.es.md` or `cv.en.md`.
 const entries = await getCollection('cv');
 const targetId = `cv.${locale}.md`;
 const entry = entries.find((e) => e.id === targetId);
@@ -34,13 +37,19 @@ if (!entry) {
   );
 }
 
-// Astro 6: `render(entry)` is the new top-level API for markdown entries.
-// The legacy `entry.render()` is no longer attached on collection entries
-// produced by the `glob` loader.
 const { Content } = await render(entry);
 ---
 
 <CvLayout locale={locale}>
+  <!-- Game engine viewport and retro screen-only overlays -->
+  <GameViewport />
+  <StartScreen locale={locale} />
+  <SettingsPanel locale={locale} />
+  <ControlsGuide locale={locale} />
+  <BackpackButton />
+  <BackpackInventory />
+
+  <!-- Clean, print-ready CV layout (fully decoupled from game layers) -->
   <CvDocument locale={locale} ui={ui}>
     <Content slot="body" />
   </CvDocument>

@@ -23,7 +23,8 @@
   },
   "packageManager": "pnpm@11.9.0",
   "dependencies": {
-    "astro": "^6.0.0"
+    "astro": "^6.0.0",
+    "nanostores": "1.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -1,0 +1,41 @@
+---
+// GameViewport encapsulates the canvas and engine lifecycle.
+---
+
+<canvas id="game-canvas" aria-hidden="true" role="img"></canvas>
+
+<script>
+  import { init } from '../../game/init';
+  import playerSpritesheet from '../../assets/player.png';
+  import { isStartedStore, collectedSkillsStore } from '../../game/store';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const c = document.getElementById('game-canvas');
+    if (c instanceof HTMLCanvasElement) {
+      const handle = init(c, { spritesheetPath: playerSpritesheet.src });
+      (window as any).gameHandle = handle;
+
+      // Subscribe to isStartedStore to run handle.start() when started
+      isStartedStore.subscribe((started) => {
+        if (started && typeof handle.start === 'function') {
+          handle.start();
+        }
+      });
+
+      // Bridge game-state-update events into the Nanostore
+      window.addEventListener('game-state-update', (e: Event) => {
+        const customEvent = e as CustomEvent<{
+          collectedCount: number;
+          totalCount: number;
+          lastCollected: string | null;
+          unlockedId: string;
+        }>;
+        const { unlockedId } = customEvent.detail;
+        const current = collectedSkillsStore.get();
+        if (!current.includes(unlockedId)) {
+          collectedSkillsStore.set([...current, unlockedId]);
+        }
+      });
+    }
+  });
+</script>

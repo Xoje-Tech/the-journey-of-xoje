@@ -1,0 +1,54 @@
+---
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+---
+
+<div class="setting-item">
+  <span class="setting-label">{locale === 'es' ? 'Mando/Gamepad:' : 'Gamepad Status:'}</span>
+  <span id="gamepad-status-label" class="gamepad-status-indicator" 
+        data-text-connected={locale === 'es' ? 'Conectado' : 'Connected'} 
+        data-text-disconnected={locale === 'es' ? 'No Conectado' : 'Not Connected'}>
+    {locale === 'es' ? 'No Conectado' : 'Not Connected'}
+  </span>
+</div>
+
+<style>
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 13px;
+  }
+
+  .setting-label {
+    color: #a1a1aa;
+  }
+
+  .gamepad-status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 1px 1px 0px #09090b;
+    transition: color 0.2s ease;
+    color: #09090b; /* default inactive */
+  }
+</style>
+
+<script>
+  import { gamepadConnectedStore } from '../../game/store';
+
+  const label = document.getElementById('gamepad-status-label');
+  if (label) {
+    gamepadConnectedStore.subscribe((connected) => {
+      const textConnected = label.getAttribute('data-text-connected') || 'Connected';
+      const textDisconnected = label.getAttribute('data-text-disconnected') || 'Not Connected';
+      
+      label.textContent = connected ? textConnected : textDisconnected;
+      label.style.color = connected ? '#eab308' : '#09090b';
+    });
+  }
+</script>
