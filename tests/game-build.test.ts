@@ -111,6 +111,22 @@ describe('videogame-ui build contract', () => {
     expect(html).toContain('<canvas id="game-canvas"');
   });
 
+  it('dist/es/index.html does NOT use game-hud as a DOM element class (slice-2 polish)', () => {
+    // The HUD is rendered via ctx.fillText in src/game/init.ts → drawHud;
+    // no DOM element with class `game-hud` is ever created. We assert
+    // against the HTML class-attribute surface (not the CSS selector) so
+    // the pre-planned print.css suppression selector (slice 1) is allowed
+    // to remain — its presence is dead CSS, not a HUD leak. If a future
+    // change introduces a DOM-based HUD with that class, this test fires.
+    const html = readFileSync(ES_HTML, 'utf8');
+    expect(html).not.toMatch(/class="[^"]*\bgame-hud\b[^"]*"/);
+  });
+
+  it('dist/en/index.html does NOT use game-hud as a DOM element class (slice-2 polish)', () => {
+    const html = readFileSync(EN_HTML, 'utf8');
+    expect(html).not.toMatch(/class="[^"]*\bgame-hud\b[^"]*"/);
+  });
+
   it.each(PRINT_CONTRACT_SUBSTRINGS)(
     'slice-1 print contract substring still present in emitted bundle: %s',
     (_label, needle) => {

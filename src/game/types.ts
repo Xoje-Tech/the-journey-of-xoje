@@ -22,6 +22,27 @@ export interface Player {
   vy: number;
   /** Player square edge length in logical px. */
   size: number;
+  /**
+   * Dominant-axis facing direction for the capsule sprite. Each component
+   * is in `{-1, 0, 1}`. Updated each frame from `vx`/`vy` so the capsule
+   * "looks" the way it is moving.
+   *
+   * Optional so the slice-1 test helpers (which construct minimal `Player`
+   * objects) keep compiling without modification. When omitted, render
+   * code falls back to `{x: 0, y: 1}` ("down") — matches the slice-1 visual.
+   */
+  facing?: { x: -1 | 0 | 1; y: -1 | 0 | 1 };
+}
+
+/**
+ * One snapshot of the player's position on the motion trail.
+ * `age` is milliseconds since the point was recorded; the renderer
+ * fades points to zero alpha as age approaches `TRAIL_MAX_AGE_MS`.
+ */
+export interface TrailPoint {
+  x: number;
+  y: number;
+  age: number;
 }
 
 /**

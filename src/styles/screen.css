@@ -111,4 +111,12 @@ article[data-locale] li {
     background: #0e0e10;
     z-index: 10;
   }
+  /*
+   * The HUD is drawn via ctx.fillText in src/game/init.ts → drawHud; no
+   * DOM element is ever created, so we deliberately do NOT add a HUD
+   * selector here. Adding one would be dead CSS and would also cause the
+   * selector literal to appear in the inlined <style> of
+   * dist/{es,en}/index.html (the slice-2 build contract forbids it).
+   * See tests/game-build.test.ts.
+   */
 }
