@@ -1,5 +1,6 @@
 ---
 import LocaleSwitch from './LocaleSwitch.astro';
+import { SKILL_TEMPLATES } from '../game/init';
 
 // CvDocument renders the printable CV region. The header (site title + Print
 // button + LocaleSwitch) is OUTSIDE the article because the print stylesheet
@@ -42,8 +43,143 @@ const { locale, ui } = Astro.props;
   </div>
 </header>
 
+<!-- Backpack HUD Overlay (screen-only) -->
+<div class="backpack-hud-container no-print">
+  <button id="backpack-hud" type="button" aria-haspopup="dialog" aria-expanded="false" class="backpack-btn">
+    <span class="bag-icon">🎒</span>
+    <span class="bag-label">Skills: <strong id="collected-counter">0/15</strong></span>
+    <span id="last-skill-toast" class="last-skill-toast"></span>
+  </button>
+</div>
+
+<!-- Accessible Skill-Matrix Modal (screen-only dialog) -->
+<dialog id="skill-matrix-modal" class="no-print">
+  <div class="modal-content">
+    <header class="modal-header">
+      <h2>Backpack — Collected Skills</h2>
+      <button id="close-modal-btn" type="button" aria-label="Close modal" class="close-btn">&times;</button>
+    </header>
+    
+    <div class="modal-body">
+      <section class="skills-grid-section">
+        <h3>Technical Skills</h3>
+        <div class="skills-grid" id="tech-skills-grid">
+          {SKILL_TEMPLATES.filter(s => s.category === 'technical').map(s => (
+            <div class="skill-card skill-locked" id={`skill-card-${s.id}`} data-skill-id={s.id}>
+              <span class="skill-lock-icon">🔒</span>
+              <span class="skill-unlock-badge">✅</span>
+              <div class="skill-details">
+                <span class="skill-name">{s.name}</span>
+                <span class="skill-biome">{s.biome}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="skills-grid-section">
+        <h3>Qualitative Skills</h3>
+        <div class="skills-grid" id="qual-skills-grid">
+          {SKILL_TEMPLATES.filter(s => s.category === 'qualitative').map(s => (
+            <div class="skill-card skill-locked" id={`skill-card-${s.id}`} data-skill-id={s.id}>
+              <span class="skill-lock-icon">🔒</span>
+              <span class="skill-unlock-badge">✅</span>
+              <div class="skill-details">
+                <span class="skill-name">{s.name}</span>
+                <span class="skill-biome">{s.biome}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</dialog>
+
 <canvas id="game-canvas" aria-hidden="true" role="img"></canvas>
 
 <article data-locale={locale}>
   <slot name="body" />
 </article>
+
+<script>
+  // Wait for the DOM to be fully ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const backpackBtn = document.getElementById('backpack-hud');
+    const modal = document.getElementById('skill-matrix-modal') as HTMLDialogElement | null;
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const collectedCounter = document.getElementById('collected-counter');
+    const lastSkillToast = document.getElementById('last-skill-toast');
+
+    if (!backpackBtn || !modal || !closeModalBtn) return;
+
+    // Toggle Modal
+    backpackBtn.addEventListener('click', () => {
+      modal.showModal();
+      backpackBtn.setAttribute('aria-expanded', 'true');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.close();
+      backpackBtn.setAttribute('aria-expanded', 'false');
+    });
+
+    // Close when clicking outside modal content
+    modal.addEventListener('click', (e) => {
+      const rect = modal.getBoundingClientRect();
+      const isInDialog = (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      );
+      if (!isInDialog) {
+        modal.close();
+        backpackBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Handle CustomEvent from canvas game loop
+    window.addEventListener('game-state-update', (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        collectedCount: number;
+        totalCount: number;
+        lastCollected: string | null;
+        unlockedId: string;
+      }>;
+      
+      const { collectedCount, totalCount, lastCollected, unlockedId } = customEvent.detail;
+
+      // Update counter
+      if (collectedCounter) {
+        collectedCounter.textContent = `${collectedCount}/${totalCount}`;
+      }
+
+      // Unlock skill card in DOM
+      const card = document.getElementById(`skill-card-${unlockedId}`);
+      if (card) {
+        card.classList.remove('skill-locked');
+        card.classList.add('skill-unlocked');
+      }
+
+      // Show temporary toast notification for the collected skill
+      if (lastSkillToast && lastCollected) {
+        lastSkillToast.textContent = `+ ${lastCollected}!`;
+        lastSkillToast.classList.add('toast-active');
+        
+        // Remove toast-active after some time
+        const currentToast = lastSkillToast;
+        const timerId = currentToast.getAttribute('data-timer-id');
+        if (timerId) {
+          clearTimeout(parseInt(timerId, 10));
+        }
+        
+        const newTimerId = window.setTimeout(() => {
+          currentToast.classList.remove('toast-active');
+        }, 2500);
+        
+        currentToast.setAttribute('data-timer-id', newTimerId.toString());
+      }
+    });
+  });
+</script>
