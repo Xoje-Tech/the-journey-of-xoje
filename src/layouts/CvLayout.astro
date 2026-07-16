@@ -24,3 +24,9 @@ const { locale } = Astro.props;
     <slot />
   </body>
 </html>
+
+<script>
+  import { init } from '../game/init.ts';
+  const c = document.getElementById('game-canvas');
+  if (c instanceof HTMLCanvasElement) init(c);
+</script>

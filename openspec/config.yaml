@@ -1,0 +1,38 @@
+# openspec/config.yaml
+# Generated for the-journey-of-xoje — mirror of Engram spec (videogame-ui change).
+schema: spec-driven
+
+context: |
+  Project: the-journey-of-xoje (static portfolio site)
+  Tech stack: Astro 6, vanilla JS, TypeScript (strict), pnpm workspaces, @personal-brand/cv (workspace dependency), Vitest 4
+  Architecture: Static site, zero backend. Content collection via `glob` loader (Astro 6, `astro/loaders`) with `generateId` workaround to preserve locale-suffixed slugs. Build-time only. i18n via `[locale]/index.astro` (locales: es, en; defaultLocale: es; prefixDefaultLocale: true).
+  Testing: Vitest 4 unit tests (print-contract test, build-cv test). Manual print acceptance via `chromium --headless` PDF generation (`scripts/print-preview-headless.mjs`). No Playwright (doctrine is lightweight).
+  Style: CSS split into `src/styles/screen.css` and `src/styles/print.css`. Print contract: `@page { size: A4; margin: 1.6cm 2cm; }`, Charter/Source Serif Pro serif typography, `.no-print { display: none !important; }`. Prettier config in `.prettierrc`.
+  Source of truth: `SPEC.md` (architectural contract), `~/.personal-brand/DATA/*.json` (CV content — never invent per G04 guardrail), `package.json` + `astro.config.mjs` (runtime/build).
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Reference pre-change baseline explicitly when proposing visual or media-query swaps
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing code patterns (Astro 6 content collection patterns, CSS-split convention)
+      - Respect Astro 6 gotchas (glob from astro/loaders, omit schema key, generateId preserves slug, render() top-level import)
+    tdd: false           # sdd-apply controls TDD mode at the per-phase level — global TDD stays off
+    test_command: "pnpm test"
+  verify:
+    test_command: "pnpm test"
+    build_command: "pnpm build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+    - Confirm pre-change Harvard-style baseline preserved before archiving visual changes
