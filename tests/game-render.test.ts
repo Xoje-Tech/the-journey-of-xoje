@@ -11,8 +11,9 @@
  * deterministic part. Drawing the trail is a `ctx.arc` loop that is not
  * worth a DOM-free fake-canvas exercise.
  */
-import { describe, it, expect } from 'vitest';
-import { updateTrail, isWithinViewport } from '../src/game/render';
+import { describe, it, expect, vi } from 'vitest';
+import { updateTrail, isWithinViewport, drawCollectibles } from '../src/game/render';
+import type { CollectibleItem } from '../src/game/types';
 
 describe('updateTrail — append + age + drop', () => {
   it('appends the current position as a fresh point (age = 0)', () => {
@@ -101,5 +102,52 @@ describe('isWithinViewport — frustum culling helper', () => {
     // Viewport is [1000, 1800]
     // Item is at y = 1850 with radius = 15. Overlaps [1835, 1865], completely below 1800.
     expect(isWithinViewport(1850, 15, 1000, 800)).toBe(false);
+  });
+});
+
+describe('drawCollectibles — NPC rendering checks', () => {
+  it('should render NPCs with yellow circles, their capital initials, and name tags', () => {
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      fillText: vi.fn(),
+      font: '',
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 0,
+      textAlign: '',
+      textBaseline: '',
+    } as any;
+
+    const items: CollectibleItem[] = [
+      {
+        id: 'international-ops',
+        name: 'Operacion en entorno internacional',
+        category: 'qualitative',
+        biome: 'LCS Robotics',
+        x: 100,
+        y: 500,
+        radius: 12,
+        collected: false,
+        npc: {
+          name: 'Héctor',
+          initial: 'H',
+          dialogue: { es: '¡Ey!', en: 'Hey!' },
+        },
+      },
+    ];
+
+    drawCollectibles(ctx, items, 0, 800);
+
+    // Verify NPC custom drawing calls
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.arc).toHaveBeenCalledWith(100, 500, 12, 0, Math.PI * 2);
+    expect(ctx.fillStyle).toBe('#ffffff'); // name label or initial fill color
+    expect(ctx.fillText).toHaveBeenCalledWith('H', 100, 500); // Initial
+    expect(ctx.fillText).toHaveBeenCalledWith('Héctor (NPC)', 100, 480); // Name label (y - radius - 8)
   });
 });
