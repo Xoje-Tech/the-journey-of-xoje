@@ -13,7 +13,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     const c = document.getElementById('game-canvas');
     if (c instanceof HTMLCanvasElement) {
-      const handle = init(c, { spritesheetPath: playerSpritesheet.src });
+      const locale = document.body.getAttribute('data-locale') as 'es' | 'en' || 'es';
+      const handle = init(c, { spritesheetPath: playerSpritesheet.src, locale });
       window.gameHandle = handle;
 
       // Subscribe to isStartedStore to run handle.start() when started

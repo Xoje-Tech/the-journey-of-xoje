@@ -205,15 +205,41 @@ export function drawCollectibles(
       continue;
     }
 
+    if (item.npc) {
+      // Draw circular yellow NPC coin
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(241, 196, 15, 0.25)';
+      ctx.strokeStyle = 'rgba(241, 196, 15, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw NPC initial inside the circle
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px ui-monospace, "JetBrains Mono", monospace';
+      ctx.fillText(item.npc.initial, item.x, item.y);
+      ctx.restore();
+
+      // Draw NPC name label above the circle
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`${item.npc.name} (NPC)`, item.x, item.y - item.radius - 8);
+      continue;
+    }
+
     // Draw circular skill coin
     ctx.beginPath();
     ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
     if (item.category === 'technical') {
       ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
       ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
-    } else {
+    } else if (item.category === 'qualitative') {
       ctx.fillStyle = 'rgba(255, 180, 100, 0.2)';
       ctx.strokeStyle = 'rgba(255, 180, 100, 0.8)';
+    } else {
+      ctx.fillStyle = 'rgba(100, 255, 100, 0.2)';
+      ctx.strokeStyle = 'rgba(100, 255, 100, 0.8)';
     }
     ctx.lineWidth = 1.5;
     ctx.fill();

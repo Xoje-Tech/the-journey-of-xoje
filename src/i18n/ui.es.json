@@ -23,6 +23,15 @@
     "dpadLabel": "Cruceta: Teclas Dirección / WASD",
     "startLabel": "Start: Iniciar Juego",
     "buttonBLabel": "Botón B: Shift (Correr)",
-    "buttonALabel": "Botón A: Espacio / Clic (Salto)"
+    "buttonALabel": "Botón A: Espacio / Clic (Salto)",
+    "pauseButton": "Pausa",
+    "resumeGame": "Reanudar Juego",
+    "techBagLabel": "Tech: ",
+    "techBagTitle": "Habilidades Técnicas",
+    "qualBagLabel": "Comp: ",
+    "qualBagTitle": "Habilidades Cualitativas",
+    "softBagLabel": "Soft: ",
+    "softBagTitle": "Habilidades Blandas",
+    "dialogContinue": "Espacio / Clic para continuar"
   }
 }

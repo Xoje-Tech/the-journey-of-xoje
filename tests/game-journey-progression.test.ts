@@ -11,14 +11,14 @@ import { SKILL_TEMPLATES, MAP_HEIGHT } from '../src/game/init';
 import type { Player, CollectibleItem } from '../src/game/types';
 
 describe('Journey Progression Integration', () => {
-  it('SKILL_TEMPLATES defines exactly 15 collectibles distributed across 4 biomes', () => {
-    expect(SKILL_TEMPLATES).toHaveLength(15);
+  it('SKILL_TEMPLATES defines exactly 19 collectibles distributed across 4 biomes', () => {
+    expect(SKILL_TEMPLATES).toHaveLength(19);
 
     const biomes = SKILL_TEMPLATES.map(t => t.biome);
-    expect(biomes.filter(b => b === 'LCS Robotics')).toHaveLength(3);
-    expect(biomes.filter(b => b === 'Crmble')).toHaveLength(4);
-    expect(biomes.filter(b => b === 'Twinny')).toHaveLength(4);
-    expect(biomes.filter(b => b === 'RIDE ON')).toHaveLength(4);
+    expect(biomes.filter(b => b === 'LCS Robotics')).toHaveLength(4);
+    expect(biomes.filter(b => b === 'Crmble')).toHaveLength(5);
+    expect(biomes.filter(b => b === 'Twinny')).toHaveLength(5);
+    expect(biomes.filter(b => b === 'RIDE ON')).toHaveLength(5);
 
     // Assert chronological vertical order
     for (let i = 0; i < SKILL_TEMPLATES.length - 1; i++) {

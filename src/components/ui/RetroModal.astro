@@ -4,12 +4,13 @@ interface Props {
   title: string;
   closeId: string;
   class?: string;
+  triggerId?: string;
 }
 
-const { id, title, closeId, class: className = '' } = Astro.props;
+const { id, title, closeId, class: className = '', triggerId } = Astro.props;
 ---
 
-<dialog id={id} class={`no-print retro-modal ${className}`}>
+<dialog id={id} class={`no-print retro-modal ${className}`} data-trigger-id={triggerId}>
   <div class="modal-content">
     <header class="modal-header">
       <h2>{title}</h2>
@@ -90,6 +91,18 @@ const { id, title, closeId, class: className = '' } = Astro.props;
     const modals = document.querySelectorAll('.retro-modal');
     modals.forEach((m) => {
       const modal = m as HTMLDialogElement;
+
+      const handleClose = () => {
+        const triggerId = modal.getAttribute('data-trigger-id');
+        if (triggerId) {
+          const trigger = document.getElementById(triggerId);
+          if (trigger) {
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.focus();
+          }
+        }
+      };
+
       modal.addEventListener('click', (e) => {
         const rect = modal.getBoundingClientRect();
         if (
@@ -99,10 +112,7 @@ const { id, title, closeId, class: className = '' } = Astro.props;
           e.clientY > rect.bottom
         ) {
           modal.close();
-          const backpackBtn = document.getElementById('backpack-hud');
-          if (backpackBtn && modal.id === 'skill-matrix-modal') {
-            backpackBtn.setAttribute('aria-expanded', 'false');
-          }
+          handleClose();
         }
       });
 
@@ -110,10 +120,7 @@ const { id, title, closeId, class: className = '' } = Astro.props;
       if (closeBtn) {
         closeBtn.addEventListener('click', () => {
           modal.close();
-          const backpackBtn = document.getElementById('backpack-hud');
-          if (backpackBtn && modal.id === 'skill-matrix-modal') {
-            backpackBtn.setAttribute('aria-expanded', 'false');
-          }
+          handleClose();
         });
       }
     });
