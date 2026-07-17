@@ -7,13 +7,13 @@ import { defineConfig } from 'astro/config';
 // `pages/index.astro` redirects `/` → `/es/`.
 export default defineConfig({
   site: 'https://xoje-tech.github.io',
-  base: '/the-journey-of-xoje',
+  base: process.env.NODE_ENV === 'production' ? '/the-journey-of-xoje' : '/',
   output: 'static',
   i18n: {
     defaultLocale: 'es',
     locales: ['es', 'en'],
     routing: {
-      prefixDefaultLocale: true,
+      prefixDefaultLocale: false,
     },
   },
   build: {

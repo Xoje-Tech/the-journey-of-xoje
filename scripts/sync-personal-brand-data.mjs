@@ -619,6 +619,7 @@ async function main() {
     console.error('[sync] To accept the source-of-truth overwrite, re-run with --apply --force.');
     process.exit(4);
   }
+  const expOk = expDrift ? applyDraft(DRAFT_EXPERIENCE, join(DATA_DIR, 'experience.json'), 'experience') : true;
   const skOk = skDrift ? applyDraft(DRAFT_SKILLS, join(DATA_DIR, 'skills.json'), 'skills') : true;
   if (!expOk || !skOk) {
     console.error('[sync] apply FAILED');

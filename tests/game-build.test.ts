@@ -38,7 +38,7 @@ import { resolve, join } from 'node:path';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DIST = resolve(PROJECT_ROOT, 'dist');
-const ES_HTML = resolve(DIST, 'es/index.html');
+const ES_HTML = resolve(DIST, 'index.html');
 const EN_HTML = resolve(DIST, 'en/index.html');
 
 // Match `tests/print-contract.test.ts` exactly — keep these in sync if

@@ -12,7 +12,10 @@ interface Props {
 const { currentLocale, targetSwitchLabel } = Astro.props;
 const here = (Astro.currentLocale ?? currentLocale ?? 'es') as 'es' | 'en';
 const target: 'es' | 'en' = here === 'es' ? 'en' : 'es';
-const href = `/${target}/`;
+const baseUrl = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : import.meta.env.BASE_URL + '/';
+const href = target === 'es' ? baseUrl : `${baseUrl}${target}/`;
 ---
 
 <a href={href} class="lang-switch__link" rel="alternate" hreflang={target} lang={target}>
