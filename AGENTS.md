@@ -99,8 +99,26 @@ src/content/cv.{es,en}.md  │ BLOCKER on G04 (no invented metrics)
 src/pages/[locale]/index.astro
         │
         ▼
-dist/{es,en}/index.html
+dist/index.html         (ES, default locale, no prefix)
+dist/en/index.html      (EN, locale-prefixed)
 ```
+
+### i18n routing — `prefixDefaultLocale: false`
+
+`astro.config.mjs` ships with `routing.prefixDefaultLocale: false` (changed from the
+original `true` in PR #17, merged 2026-07-16, commit `d3a31a9`).
+
+Consequences that surprised us and may surprise the next agent:
+
+- `/` resolves to the **ES** version (default locale, served bare from the root).
+- `/en/` resolves to the **EN** version (locale-prefixed).
+- `dist/` ends up with `index.html` + `en/index.html`, **not** `es/index.html` + `en/index.html`.
+- A grep for `dist/es/index.html` will fail; use `dist/index.html` for ES instead.
+- The `src/pages/[locale]/index.astro` dynamic route still owns both — `prefixDefaultLocale: false` does not break dynamic routing, it only skips the prefix in the URL for the default locale.
+
+If you ever need to flip it back to `true` (e.g. to comply with a future spec change),
+expect a ripple effect across `src/pages/index.astro` (currently a thin redirect) and
+the base-path logic in `astro.config.mjs` — both encode the "ES lives at `/`" assumption.
 
 If the DATA changes, just re-run `pnpm dev` (or `pnpm build`). The `predev` / `build:cv` hook regenerates the markdown files automatically.
 
@@ -139,7 +157,7 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 
 ## Slice-1 deliverables (already done)
 
-- ✅ `astro.config.mjs` — i18n config: `defaultLocale: 'es'`, `prefixDefaultLocale: true`
+- ✅ `astro.config.mjs` — i18n config: `defaultLocale: 'es'`, `prefixDefaultLocale: false` (PR #17 flipped this from `true`; see "i18n routing" below)
 - ✅ `src/content.config.ts` — Astro 6 content collection with `glob` + `generateId` workaround
 - ✅ `src/pages/[locale]/index.astro` — render API using top-level `render(entry)`
 - ✅ `src/styles/print.css` — Harvard contract enforced by tests
@@ -153,19 +171,27 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 
 ---
 
-## Slice-2 deliverables (in progress)
+## Slice-2 deliverables (closed)
 
-Closing the slice-1 debts before any deploy:
+Quality/debt closure before deploy:
 
 - [x] `README.md` — entry point for humans
 - [x] `AGENTS.md` — this file
 - [x] `.gitignore` — `node_modules`, `dist`, `.astro`, generated `cv.*.md`, `tmp/`
-- [ ] DATA complete — load all 4 experience entries (RIDE ON, Twinny, Crmble, LCS Robotics) + qualitative/technical skills into `~/.personal-brand/DATA/`
-- [ ] Re-run `build-cv.mjs` with full DATA and re-validate print preview
-- [ ] Confirm `tests/build-cv.test.ts` still passes with the full DATA
-- [ ] Clean up `/tmp/portfolio-cleanup-*` (24h TTL from 2026-07-14, should have expired)
+- [x] DATA complete — all 4 experience entries (RIDE ON 2026 + 2025, Twinny, Crmble, LCS Robotics) + 28 skills in `~/.personal-brand/DATA/`
+- [x] `build-cv.mjs` re-run with full DATA, print preview re-validated
+- [x] `tests/build-cv.test.ts` still passes with full DATA (110/110 green as of 2026-07-17)
+- [x] `/tmp/portfolio-cleanup-*` expired (24h TTL passed)
+- [x] Atomic Design refactor (PR #10)
+- [x] Code-review fixes: `as any` removed, i18n JSON centralised, SkillCard + NesController extracted as atoms (commit `bb01ad4`)
+- [x] i18n routing fix (PR #17) — flipped to `prefixDefaultLocale: false`
 
-Slice 3 (deploy) is **not** part of slice 2 — deploy is the last thing, after the user OK.
+## Slice-3 — Deploy (closed)
+
+- [x] `astro build` exit 0, `dist/index.html` + `dist/en/index.html`
+- [x] GitHub Pages deploy via `.github/workflows/`
+- [x] Custom 404 + BASE_PATH handling resolved (PR #12 + i18n fix PR #17)
+- [x] Live at https://xoje-tech.github.io/the-journey-of-xoje/
 
 ---
 
