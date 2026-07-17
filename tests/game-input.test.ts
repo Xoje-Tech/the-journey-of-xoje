@@ -19,8 +19,8 @@
  * the caller owns, which is how we keep tests DOM-free.
  */
 import { describe, it, expect } from 'vitest';
-import { sampleInputs } from '../src/game/input';
-import type { InputState, CanvasDims } from '../src/game/types';
+import { sampleInputs } from '../src/modules/game/application/input';
+import type { InputState, CanvasDims } from '../src/modules/game/domain/types';
 
 function makeState(overrides: Partial<InputState> = {}): InputState {
   const state: InputState = {

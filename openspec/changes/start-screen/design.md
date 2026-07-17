@@ -8,18 +8,18 @@ Introduce a screen-only splash overlay `#start-screen` inside `CvDocument.astro`
 
 ### Decision: Suspension of Game Loop State
 
-| Option | Tradeoff | Decision |
-|--------|----------|----------|
-| Full loop freeze (`cancelAnimationFrame`) | Canvas is totally static; player and background animations freeze, appearing dead. | Rejected |
+| Option                                              | Tradeoff                                                                             | Decision     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------ |
+| Full loop freeze (`cancelAnimationFrame`)           | Canvas is totally static; player and background animations freeze, appearing dead.   | Rejected     |
 | Conditional update in loop (Run loop, skip physics) | Standard rendering (grid, biomes, idle spritesheet) runs, but inputs/physics freeze. | **Selected** |
 
 **Rationale**: We want the player character to blink and stand idle, and background elements to render, so the splash screen feels organically active before full controls are unlocked.
 
 ### Decision: Overlay Transition Mechanics
 
-| Option | Tradeoff | Decision |
-|--------|----------|----------|
-| JS-driven position animation | CPU heavy, prone to stuttering, relies on JS frame timing. | Rejected |
+| Option                                            | Tradeoff                                                              | Decision     |
+| ------------------------------------------------- | --------------------------------------------------------------------- | ------------ |
+| JS-driven position animation                      | CPU heavy, prone to stuttering, relies on JS frame timing.            | Rejected     |
 | Hardware-accelerated CSS transition (`transform`) | Performs beautifully at 60fps; clean division of styles and behavior. | **Selected** |
 
 **Rationale**: Transitioning `translateY(-100%)` with a `cubic-bezier(0.25, 1, 0.5, 1)` solid ease over 600ms is highly performant. A standard `transitionend` event listener sets `display: none` after completion.
@@ -46,12 +46,12 @@ Introduce a screen-only splash overlay `#start-screen` inside `CvDocument.astro`
 
 ## File Changes
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/game/types.ts` | Modify | Update `GameHandle` interface to expose the `start()` function. |
-| `src/game/init.ts` | Modify | Add `started: boolean = false` state and export `start()` inside `init()`. Skip input polling, physics updates, collisions, trail updates, and camera motion in `loop()` when `!started`. |
+| File                              | Action | Description                                                                                                                                                                                                                                                                                         |
+| --------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/game/types.ts`               | Modify | Update `GameHandle` interface to expose the `start()` function.                                                                                                                                                                                                                                     |
+| `src/game/init.ts`                | Modify | Add `started: boolean = false` state and export `start()` inside `init()`. Skip input polling, physics updates, collisions, trail updates, and camera motion in `loop()` when `!started`.                                                                                                           |
 | `src/components/CvDocument.astro` | Modify | Add `#start-screen` overlay and sub-modals. Wire "Start Game", "Print", "Settings", and "Controls" click handlers. Monitor gamepad connection status dynamically. Controls guide displays an SVG silhouette of a retro NES controller with pointer lines mapping keyboard/mouse and gamepad inputs. |
-| `src/styles/screen.css` | Modify | Style `#start-screen`, modals, sliders, retro-buttons (zero rounded corners, 2px border, block shadow), the `.slide-up` class, and the NES controller SVG silhouette background/indicators. |
+| `src/styles/screen.css`           | Modify | Style `#start-screen`, modals, sliders, retro-buttons (zero rounded corners, 2px border, block shadow), the `.slide-up` class, and the NES controller SVG silhouette background/indicators.                                                                                                         |
 
 ## Interfaces / Contracts
 
@@ -77,11 +77,11 @@ return {
 
 ## Testing Strategy
 
-| Layer | What to Test | Approach |
-|-------|-------------|----------|
-| Unit | `init()` return shape | Assert returned handle matches updated `GameHandle` structure with `start` function. |
-| Integration | Suspended physics | Assert loop does not change player positions or process inputs when `started === false`. |
-| Integration | Activation trigger | Call `start()` and assert that player velocities, inputs, and coordinates begin updating. |
+| Layer       | What to Test          | Approach                                                                                  |
+| ----------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| Unit        | `init()` return shape | Assert returned handle matches updated `GameHandle` structure with `start` function.      |
+| Integration | Suspended physics     | Assert loop does not change player positions or process inputs when `started === false`.  |
+| Integration | Activation trigger    | Call `start()` and assert that player velocities, inputs, and coordinates begin updating. |
 
 ## Threat Matrix
 

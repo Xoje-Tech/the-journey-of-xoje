@@ -2,14 +2,14 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|---|---|
-| Estimated changed lines | 400-500 lines |
-| 400-line budget risk | High |
-| Chained PRs recommended | Yes |
-| Suggested split | PR 1 (Core) → PR 2 (DOM HUD/Modal) |
-| Chain strategy | stacked-to-main |
-| Delivery strategy | ask-on-risk |
+| Field                   | Value                              |
+| ----------------------- | ---------------------------------- |
+| Estimated changed lines | 400-500 lines                      |
+| 400-line budget risk    | High                               |
+| Chained PRs recommended | Yes                                |
+| Suggested split         | PR 1 (Core) → PR 2 (DOM HUD/Modal) |
+| Chain strategy          | stacked-to-main                    |
+| Delivery strategy       | ask-on-risk                        |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
@@ -18,10 +18,10 @@ Chain strategy: stacked-to-main
 
 ### Suggested Work Units
 
-| Unit | Goal | Likely PR | Focused test command | Runtime harness | Rollback boundary |
-|---|---|---|---|---|---|
-| 1 | Core physics, types, camera clamping, culling & spawning | PR 1 | `pnpm test tests/game-physics` | N/A: pure physics/engine testing | Revert engine files (init.ts, physics.ts, render.ts) |
-| 2 | HUD overlay, accessible modal in Astro/DOM, CustomEvent dispatching, CTA & styles | PR 2 | `pnpm test tests/print-contract` | `pnpm dev` & visual check | Revert CV component and screen.css |
+| Unit | Goal                                                                              | Likely PR | Focused test command             | Runtime harness                  | Rollback boundary                                    |
+| ---- | --------------------------------------------------------------------------------- | --------- | -------------------------------- | -------------------------------- | ---------------------------------------------------- |
+| 1    | Core physics, types, camera clamping, culling & spawning                          | PR 1      | `pnpm test tests/game-physics`   | N/A: pure physics/engine testing | Revert engine files (init.ts, physics.ts, render.ts) |
+| 2    | HUD overlay, accessible modal in Astro/DOM, CustomEvent dispatching, CTA & styles | PR 2      | `pnpm test tests/print-contract` | `pnpm dev` & visual check        | Revert CV component and screen.css                   |
 
 ## Phase 1: Foundation
 

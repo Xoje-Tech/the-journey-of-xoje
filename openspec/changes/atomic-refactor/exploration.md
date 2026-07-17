@@ -1,7 +1,9 @@
 ## Exploration: Atomic Refactoring of CvDocument
 
 ### Current State
+
 Currently, `src/components/CvDocument.astro` is a large, monolithic component (384 lines) that houses both static printable document structures and interactive pixel-art game layers. It mixes:
+
 1. Printable CV header layout (title, tagline, print button, and language selector).
 2. Backpack HUD overlay button.
 3. Accessible Skill-Matrix modal dialog (generating locked/unlocked cards for each skill).
@@ -14,12 +16,14 @@ Currently, `src/components/CvDocument.astro` is a large, monolithic component (3
 This coupling violates the Single Responsibility Principle, cluttering the CV layout with complex game UI.
 
 ### Affected Areas
+
 - `src/components/CvDocument.astro` — Will be stripped down to focus exclusively on rendering the CV header and the semantic `<article>` container slot.
 - `src/layouts/CvLayout.astro` — Currently handles the canvas DOM element check and runs the game `init.ts` script. This responsibility can be moved into a specialized `GameViewport.astro` component, making `CvLayout` purely a document frame.
 - `src/pages/[locale]/index.astro` — Unmodified consumption interface, but will render the cleaner version of `CvDocument`.
 - `src/styles/screen.css` — Contains styles for overlays, buttons, modals, and sliders. Since styles are global, we will continue to leverage `screen.css` for visual consistency during this structural refactor, ensuring zero style regressions.
 
 ### Approaches
+
 1. **Atomic & Domain-Driven Design (DDD) Split (Recommended)**
    - **Description**: Divide the monolith into stateless UI atoms/molecules and domain-specific organisms. Under `src/components/ui/`, extract `RetroButton.astro`, `GamepadStatus.astro`, `VolumeSlider.astro`, and `RetroModal.astro`. Under `src/components/game/`, extract `BackpackButton.astro`, `BackpackInventory.astro`, `StartScreen.astro`, `SettingsPanel.astro`, `ControlsGuide.astro`, and `GameViewport.astro`. The original `CvDocument` is kept strictly for CV content layout.
    - **Pros**:
@@ -42,12 +46,15 @@ This coupling violates the Single Responsibility Principle, cluttering the CV la
    - **Effort**: Low
 
 ### Recommendation
+
 We recommend **Approach 1 (Atomic & DDD Component Split)**. It represents a proper modern architecture refactor, creating clear structural boundaries between game mechanics and document presentation.
 
 ### Risks
+
 - **DOM Selector & Script Synchronization**: Splitting components could break client-side scripts if elements are queried before they are present or if IDs/classes change. We must maintain exact matches and load scripts with Astro's standard client-side behavior.
 - **TypeScript Loose Typing on Global Objects**: `window.gameHandle` must be safely declared or type-cast to avoid compilation failures.
 - **Vitest Environment Compatibility**: Existing tests (such as `tests/start-screen.test.ts`) might stub or expect certain structures. The refactor must keep the overall DOM query structure identical to avoid breaking test stubs.
 
 ### Ready for Proposal
+
 Yes. The refactor path is well-defined, safe, and will result in zero behavior change.

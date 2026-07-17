@@ -2,14 +2,14 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
+| Field                   | Value                                                  |
+| ----------------------- | ------------------------------------------------------ |
 | Estimated changed lines | ~280–380 (modules ~150, tests ~120, CSS/component ~50) |
-| 400-line budget risk | Low (approaching but under 400) |
-| Chained PRs recommended | No |
-| Suggested split | single PR |
-| Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| 400-line budget risk    | Low (approaching but under 400)                        |
+| Chained PRs recommended | No                                                     |
+| Suggested split         | single PR                                              |
+| Delivery strategy       | ask-on-risk                                            |
+| Chain strategy          | pending                                                |
 
 Decision needed before apply: Yes
 Chained PRs recommended: No

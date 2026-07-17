@@ -8,17 +8,20 @@
  *   3. Calling start() unfreezes inputs and lets player move and update positions.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { init } from '../src/game/init';
-import { PlayerEntity } from '../src/game/player';
-import { isStartedStore } from '../src/game/store';
+import { init } from "../src/modules/game/infrastructure/init";
+import { PlayerEntity } from "../src/modules/game/application/player";
+import { isStartedStore } from "../src/modules/game/application/store";
 
 // Stub global requestAnimationFrame and cancelAnimationFrame for testing
 let rafCallback: FrameRequestCallback | null = null;
 
-vi.stubGlobal('requestAnimationFrame', vi.fn((cb) => {
-  rafCallback = cb;
-  return 123;
-}));
+vi.stubGlobal(
+  'requestAnimationFrame',
+  vi.fn((cb) => {
+    rafCallback = cb;
+    return 123;
+  }),
+);
 
 vi.stubGlobal('cancelAnimationFrame', vi.fn());
 
@@ -50,7 +53,7 @@ const mockWindow = {
   dispatchEvent: vi.fn((event: any) => {
     const listeners = windowListeners[event.type];
     if (listeners) {
-      listeners.forEach(cb => cb(event));
+      listeners.forEach((cb) => cb(event));
     }
     return true;
   }),
@@ -72,7 +75,7 @@ vi.stubGlobal('navigator', mockNavigator);
 
 const makeFakeCanvas = () => {
   const canvasListeners: Record<string, Function[]> = {};
-  
+
   const ctx = {
     setTransform: vi.fn(),
     setLineDash: vi.fn(),
@@ -158,9 +161,9 @@ describe('Start Screen Core Engine Suspension', () => {
     expect(spy).toHaveBeenCalled();
     const lastCall = spy.mock.calls[spy.mock.calls.length - 1]!;
     expect(lastCall[1]).toBe(400); // Horizontally centered (800 / 2 = 400)
-    expect(lastCall[2]).toBe(14);  // Vertically at top (playerSize = 14)
-    expect(lastCall[3]).toBe(0);   // vx is 0
-    expect(lastCall[4]).toBe(0);   // vy is 0
+    expect(lastCall[2]).toBe(14); // Vertically at top (playerSize = 14)
+    expect(lastCall[3]).toBe(0); // vx is 0
+    expect(lastCall[4]).toBe(0); // vy is 0
 
     // Simulate keyup
     window.dispatchEvent({ type: 'keyup', key: 'ArrowRight' } as any);
@@ -192,7 +195,7 @@ describe('Start Screen Core Engine Suspension', () => {
     expect(spy).toHaveBeenCalled();
     const lastCall = spy.mock.calls[spy.mock.calls.length - 1]!;
     expect(lastCall[1]).toBeGreaterThan(400); // player.x should have advanced to the right
-    expect(lastCall[3]).toBeGreaterThan(0);    // player.vx should be positive
+    expect(lastCall[3]).toBeGreaterThan(0); // player.vx should be positive
 
     // Simulate keyup
     window.dispatchEvent({ type: 'keyup', key: 'ArrowRight' } as any);

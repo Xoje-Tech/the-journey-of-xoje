@@ -1,0 +1,35 @@
+---
+import LocaleSwitch from "@/shared/components/LocaleSwitch.astro";
+
+interface Props {
+  locale: 'es' | 'en';
+  ui: {
+    site: { title: string; tagline: string };
+    actions: { print: string; switchLocale: string };
+  };
+}
+
+const { locale, ui } = Astro.props;
+---
+
+<header class="no-print" role="banner">
+  <h1 class="site-title">{ui.site.title}</h1>
+  <p class="site-tagline">{ui.site.tagline}</p>
+  <div class="header-actions">
+    <nav aria-label="primary" class="lang-switch">
+      <LocaleSwitch currentLocale={locale} targetSwitchLabel={ui.actions.switchLocale} />
+    </nav>
+    <button
+      type="button"
+      class="print-btn no-print"
+      onclick="window.print()"
+      aria-label={ui.actions.print}
+    >
+      {ui.actions.print}
+    </button>
+  </div>
+</header>
+
+<article data-locale={locale}>
+  <slot name="body" />
+</article>

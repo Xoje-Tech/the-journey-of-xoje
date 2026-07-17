@@ -5,8 +5,8 @@
  * Exclusively tests the pure helper function `pickFrame(...)` with 0 canvas or DOM dependencies.
  */
 import { describe, it, expect } from 'vitest';
-import { pickFrame } from '../src/game/player/animation';
-import type { AnimState } from '../src/game/player/types';
+import { pickFrame } from '../src/modules/game/application/player/animation';
+import type { AnimState } from '../src/modules/game/domain/player/types';
 
 const createInitialState = (overrides: Partial<AnimState> = {}): AnimState => ({
   pose: 'idle',
@@ -28,7 +28,7 @@ describe('Player Animation - pickFrame (Pure Logic)', () => {
 
   it('triggers walk-down and alternates frames 1 and 2 based on time', () => {
     const state = createInitialState({ pose: 'walk-down', frameIndex: 1 });
-    
+
     // speed is 2.0. Frame duration formula: 240 - 2 * 30 = 180ms.
     // Progressing by 100ms should NOT trigger a frame swap.
     let next = pickFrame(0, 2.0, 100, state);
@@ -55,7 +55,7 @@ describe('Player Animation - pickFrame (Pure Logic)', () => {
     let next = pickFrame(0, -2.0, 190, state);
     expect(next.pose).toBe('walk-up');
     expect(next.frameIndex).toBe(4);
-    
+
     next = pickFrame(0, -2.0, 190, next);
     expect(next.pose).toBe('walk-up');
     expect(next.frameIndex).toBe(3);
@@ -67,7 +67,7 @@ describe('Player Animation - pickFrame (Pure Logic)', () => {
     let next = pickFrame(-3.0, 0, 160, state);
     expect(next.pose).toBe('walk-left');
     expect(next.frameIndex).toBe(6);
-    
+
     next = pickFrame(-3.0, 0, 160, next);
     expect(next.pose).toBe('walk-left');
     expect(next.frameIndex).toBe(5);
@@ -99,9 +99,9 @@ describe('Player Animation - pickFrame (Pure Logic)', () => {
     const state = createInitialState({
       pose: 'walk-left',
       frameIndex: 6,
-      lastWalkPose: 'walk-left'
+      lastWalkPose: 'walk-left',
     });
-    
+
     const next = pickFrame(0, 0, 16, state);
     expect(next.pose).toBe('idle');
     expect(next.frameIndex).toBe(5); // first frame of walk-left is the idle-left representation

@@ -7,14 +7,14 @@ Chained PRs recommended: No
 Chain strategy: pending
 400-line budget risk: Low
 
-| Field | Value |
-|---|---|
+| Field                   | Value       |
+| ----------------------- | ----------- |
 | Estimated changed lines | 60-95 lines |
-| 400-line budget risk | Low |
-| Chained PRs recommended | No |
-| Suggested split | Single PR |
-| Delivery strategy | single-pr |
-| Chain strategy | pending |
+| 400-line budget risk    | Low         |
+| Chained PRs recommended | No          |
+| Suggested split         | Single PR   |
+| Delivery strategy       | single-pr   |
+| Chain strategy          | pending     |
 
 ## Phase 1: Setup & Localization
 
