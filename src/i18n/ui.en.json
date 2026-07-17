@@ -25,6 +25,12 @@
     "buttonBLabel": "Button B: Shift (Dash/Run)",
     "buttonALabel": "Button A: Space / Click (Jump)",
     "pauseButton": "Pause",
-    "resumeGame": "Resume Game"
+    "resumeGame": "Resume Game",
+    "techBagLabel": "Tech: ",
+    "techBagTitle": "Technical Skills",
+    "qualBagLabel": "Qual: ",
+    "qualBagTitle": "Qualitative Skills",
+    "softBagLabel": "Soft: ",
+    "softBagTitle": "Soft Skills"
   }
 }

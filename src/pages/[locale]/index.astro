@@ -6,9 +6,10 @@ import GameViewport from '../../components/game/GameViewport.astro';
 import StartScreen from '../../components/game/StartScreen.astro';
 import SettingsPanel from '../../components/game/SettingsPanel.astro';
 import ControlsGuide from '../../components/game/ControlsGuide.astro';
-import BackpackButton from '../../components/game/BackpackButton.astro';
-import BackpackInventory from '../../components/game/BackpackInventory.astro';
 import PauseButton from '../../components/game/PauseButton.astro';
+import TechBag from '../../components/game/TechBag.astro';
+import QualBag from '../../components/game/QualBag.astro';
+import SoftBag from '../../components/game/SoftBag.astro';
 import uiEs from '../../i18n/ui.es.json';
 import uiEn from '../../i18n/ui.en.json';
 
@@ -47,12 +48,36 @@ const { Content } = await render(entry);
   <StartScreen locale={locale} />
   <SettingsPanel locale={locale} />
   <ControlsGuide locale={locale} />
-  <PauseButton locale={locale} />
-  <BackpackButton />
-  <BackpackInventory />
+
+  <!-- Top-right HUD buttons container -->
+  <div class="hud-top-right no-print">
+    <PauseButton locale={locale} />
+    <SoftBag locale={locale} />
+    <QualBag locale={locale} />
+    <TechBag locale={locale} />
+  </div>
 
   <!-- Clean, print-ready CV layout (fully decoupled from game layers) -->
   <CvDocument locale={locale} ui={ui}>
     <Content slot="body" />
   </CvDocument>
 </CvLayout>
+
+<style>
+  .hud-top-right {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  @media (max-width: 480px) {
+    .hud-top-right :global(.hud-label),
+    .hud-top-right :global(.pause-label) {
+      display: none !important;
+    }
+  }
+</style>

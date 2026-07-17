@@ -211,9 +211,12 @@ export function drawCollectibles(
     if (item.category === 'technical') {
       ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
       ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
-    } else {
+    } else if (item.category === 'qualitative') {
       ctx.fillStyle = 'rgba(255, 180, 100, 0.2)';
       ctx.strokeStyle = 'rgba(255, 180, 100, 0.8)';
+    } else {
+      ctx.fillStyle = 'rgba(100, 255, 100, 0.2)';
+      ctx.strokeStyle = 'rgba(100, 255, 100, 0.8)';
     }
     ctx.lineWidth = 1.5;
     ctx.fill();

@@ -1,39 +1,8 @@
-# Journey Progression Specification
+# Delta for journey-progression
 
-## Purpose
-Expose linear vertical gameplay with chronological career biomes, collectible skills, separate HUD skill bags, and category-specific modals/inventories.
+This specification defines the migration from a single monolithic backpack HUD/modal to three category-specific interactive bags (Technical, Qualitative, Soft), introducing 4 soft skills (increasing total count to 19), and adding generic modal triggering.
 
-## Requirements
-
-### Requirement: Career Biomes and Spawning
-The system SHALL divide a vertical map of size `[0, MAP_HEIGHT]` into 4 chronological biomes. It SHALL spawn 19 key skill collectibles within their respective biomes (4 soft skills added: 1 per biome). Soft skills MUST render with a green palette on the canvas.
-
-#### Scenario: Spawning layout
-- GIVEN a new game session
-- WHEN the map initializes
-- THEN 19 skills SHALL be placed across 4 chronological biomes from top to bottom
-- AND counts per biome MUST be: LCS Robotics: 4, Crmble: 5, Twinny: 5, RIDE ON: 5
-
-#### Scenario: Soft skill rendering
-- GIVEN a soft skill is rendered on canvas
-- WHEN `drawCollectibles` executes
-- THEN the soft skill item MUST render with a green coin fill and stroke
-
-### Requirement: Collision Collection
-The system SHALL detect player overlap with collectibles. Upon collision, the skill MUST be collected, trigger an update event, and disappear from the canvas.
-
-#### Scenario: Collect item
-- GIVEN a player near an uncollected skill
-- WHEN the player collides with the skill's radius
-- THEN the skill is collected and removed from rendering
-
-### Requirement: Journey End CTA
-The system SHALL render a Call-To-Action (CTA) section at the bottom of the map near `MAP_HEIGHT`.
-
-#### Scenario: Reaching CTA
-- GIVEN the player scrolls to the bottom of the map
-- WHEN the viewport shows coordinates near `MAP_HEIGHT`
-- THEN the visual CTA section SHALL be rendered
+## ADDED Requirements
 
 ### Requirement: Separate HUD Bag Displays
 The system SHALL display three separate HUD bags (`TechBag`, `QualBag`, `SoftBag`) that subscribe to `collectedSkillsStore`, filtering and showing category-specific counts (Tech, Qual, Soft) vs total skills in that category. Each bag button MUST have class `no-print`.
@@ -65,11 +34,43 @@ The `RetroModal` component MUST accept a `data-trigger-id` attribute and generic
 - WHEN the modal is closed via its close button or backdrop click
 - THEN the trigger button's `aria-expanded` MUST be set to "false" and focus returned to it
 
+---
+
+## MODIFIED Requirements
+
+### Requirement: Career Biomes and Spawning
+The system SHALL divide a vertical map of size `[0, MAP_HEIGHT]` into 4 chronological biomes. It SHALL spawn 19 key skill collectibles within their respective biomes (4 soft skills added: 1 per biome). Soft skills MUST render with a green palette on the canvas.
+(Previously: 15 skill templates across 4 biomes with no soft skills category or green rendering)
+
+#### Scenario: Spawning layout
+- GIVEN a new game session
+- WHEN the map initializes
+- THEN 19 skills SHALL be placed across 4 chronological biomes from top to bottom
+- AND counts per biome MUST be: LCS Robotics: 4, Crmble: 5, Twinny: 5, RIDE ON: 5
+
+#### Scenario: Soft skill rendering
+- GIVEN a soft skill is rendered on canvas
+- WHEN `drawCollectibles` executes
+- THEN the soft skill item MUST render with a green coin fill and stroke
+
 ### Requirement: Update Tests
 The test suite MUST verify 19 total skills and assert updated per-biome counts.
+(Previously: Tested exactly 15 skills and biome counts of 3, 4, 4, 4)
 
 #### Scenario: Progression test suite
 - GIVEN a developer runs the test suite
 - WHEN `pnpm test` executes
 - THEN the progression tests MUST assert exactly 19 skills distributed as 4, 5, 5, 5 across the biomes
 - AND all chronological vertical order checks MUST pass
+
+---
+
+## REMOVED Requirements
+
+### Requirement: Backpack HUD Overlay
+(Reason: Replaced by separate Tech, Qual, and Soft HUD bags)
+(Migration: Deprecate and remove `#backpack-hud` button and related styles/scripts)
+
+### Requirement: Skill-Matrix Modal
+(Reason: Replaced by three specialized category-specific modals/inventories)
+(Migration: Deprecate and remove `#skill-matrix-modal` dialog)

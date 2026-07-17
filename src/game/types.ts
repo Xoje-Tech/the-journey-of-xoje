@@ -90,7 +90,7 @@ export interface Camera {
 export interface CollectibleItem {
   id: string; // Slugified name of the skill
   name: string;
-  category: 'technical' | 'qualitative';
+  category: 'technical' | 'qualitative' | 'soft';
   biome: string;
   x: number;
   y: number;

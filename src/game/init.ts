@@ -64,24 +64,28 @@ export const MAP_HEIGHT = 4000;
 export const SKILL_TEMPLATES = [
   // LCS Robotics (0 - 1000)
   { id: 'kuka-robotics', name: 'KUKA robotics tooling', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.3, y: 250 },
+  { id: 'cultural-adaptability', name: 'Cultural adaptability', category: 'soft' as const, biome: 'LCS Robotics', xRatio: 0.4, y: 350 },
   { id: 'international-ops', name: 'Operacion en entorno internacional', category: 'qualitative' as const, biome: 'LCS Robotics', xRatio: 0.7, y: 500 },
   { id: 'typescript', name: 'TypeScript', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.5, y: 750 },
 
   // Crmble (1000 - 2000)
   { id: 'sass', name: 'Sass', category: 'technical' as const, biome: 'Crmble', xRatio: 0.25, y: 1200 },
   { id: 'bootstrap', name: 'Bootstrap', category: 'technical' as const, biome: 'Crmble', xRatio: 0.75, y: 1400 },
+  { id: 'collaborative-creativity', name: 'Collaborative creativity', category: 'soft' as const, biome: 'Crmble', xRatio: 0.5, y: 1500 },
   { id: 'design-system', name: 'Design system', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.4, y: 1600 },
   { id: 'pixel-perfect', name: 'Pixel-perfect implementation', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.6, y: 1800 },
 
   // Twinny (2000 - 3000)
   { id: 'angular', name: 'Angular', category: 'technical' as const, biome: 'Twinny', xRatio: 0.3, y: 2200 },
   { id: 'jira', name: 'Jira', category: 'technical' as const, biome: 'Twinny', xRatio: 0.7, y: 2400 },
+  { id: 'peer-mentoring', name: 'Peer mentoring', category: 'soft' as const, biome: 'Twinny', xRatio: 0.6, y: 2500 },
   { id: 'swagger', name: 'Swagger', category: 'technical' as const, biome: 'Twinny', xRatio: 0.5, y: 2600 },
   { id: 'ddd', name: 'Domain-Driven Design (DDD)', category: 'qualitative' as const, biome: 'Twinny', xRatio: 0.4, y: 2800 },
 
   // RIDE ON (3000 - 4000)
   { id: 'astro', name: 'Astro', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.2, y: 3200 },
   { id: 'vue', name: 'Vue', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.8, y: 3400 },
+  { id: 'continuous-learning', name: 'Continuous learning', category: 'soft' as const, biome: 'RIDE ON', xRatio: 0.45, y: 3500 },
   { id: 'nodejs', name: 'Node.js', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.5, y: 3600 },
   { id: 'tdd', name: 'Test-Driven Development (TDD)', category: 'qualitative' as const, biome: 'RIDE ON', xRatio: 0.6, y: 3800 },
 ];

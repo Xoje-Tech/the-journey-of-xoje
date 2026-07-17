@@ -25,6 +25,12 @@
     "buttonBLabel": "Botón B: Shift (Correr)",
     "buttonALabel": "Botón A: Espacio / Clic (Salto)",
     "pauseButton": "Pausa",
-    "resumeGame": "Reanudar Juego"
+    "resumeGame": "Reanudar Juego",
+    "techBagLabel": "Tech: ",
+    "techBagTitle": "Habilidades Técnicas",
+    "qualBagLabel": "Comp: ",
+    "qualBagTitle": "Habilidades Cualitativas",
+    "softBagLabel": "Soft: ",
+    "softBagTitle": "Habilidades Blandas"
   }
 }
