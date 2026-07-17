@@ -116,3 +116,40 @@ describe('print contract — slice 1', () => {
     },
   );
 });
+
+/**
+ * Regression test for issue #9 (dogfooding 2026-07-17): the print-preview
+ * script was generating `BASE_URL/${locale}/` for both locales, which
+ * broke the default locale (es) after PR #17 flipped `prefixDefaultLocale`
+ * to false. ES lives at `/` (root), not `/es/`.
+ *
+ * This test asserts the print-preview script contains the URL-construction
+ * logic that respects the i18n routing contract. It does NOT run the script
+ * (which requires a live dev server); it verifies the static code shape.
+ */
+describe('print-preview-headless.mjs — issue #9 regression', () => {
+  const SCRIPT_PATH = resolve(PROJECT_ROOT, 'scripts/print-preview-headless.mjs');
+
+  it('script exists and is readable', () => {
+    expect(existsSync(SCRIPT_PATH)).toBe(true);
+  });
+
+  it('script defines a urlForLocale helper (or equivalent) for default locale at /', () => {
+    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    // After PR #17 the default locale lives at `/`. The script must reflect
+    // that, NOT hardcode `${BASE_URL}/${locale}/`.
+    expect(src).toMatch(/function\s+urlForLocale|if\s*\(\s*locale\s*===\s*['"]es['"]\s*\)/);
+  });
+
+  it('script does NOT contain the buggy pattern `BASE_URL}/${locale}/` for both locales', () => {
+    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    // The old buggy line was: const url = `${BASE_URL}/${locale}/`;
+    // After the fix it should be: const url = urlForLocale(locale);
+    expect(src).not.toMatch(/const\s+url\s*=\s*`\$\{BASE_URL\}\/\$\{locale\}\/`/);
+  });
+
+  it('script strips trailing slash from BASE_URL to avoid double slashes', () => {
+    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    expect(src).toMatch(/\.replace\([^)]+\)/);
+  });
+});
