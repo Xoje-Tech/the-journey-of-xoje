@@ -84,3 +84,95 @@ describe('build-cv-static.mjs — slice 3.1 contract', () => {
     }
   });
 });
+
+/**
+ * EN translation contract (slice "CV body EN", 2026-07-17):
+ *   1. cv.es.md and cv.en.md MUST NOT be byte-identical (different content per locale).
+ *   2. The EN file MUST contain at least 3 known English-language fragments
+ *      (regression: if the EN overlay is missing, both files collapse to ES content).
+ *   3. The ES file MUST still be primarily Spanish (regression: EN overlay
+ *      bleeding into ES bundle).
+ */
+describe('CV body EN translation — option B overlay', () => {
+  it('cv.es.md and cv.en.md differ (different content per locale)', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    const en = readFileSync(EN_PATH, 'utf8');
+    expect(es).not.toBe(en);
+  });
+
+  it('cv.en.md contains expected English-language fragments from the canonical translation', () => {
+    const en = readFileSync(EN_PATH, 'utf8');
+    const expectedFragments = [
+      'Software Developer with AI Focus',     // title (EN)
+      'Full Stack Developer',                  // title (EN)
+      'Front-end Developer',                   // Twinny title (EN)
+      'Multiplatform Application Development', // education (EN)
+      'Native Spanish, professional English',  // languages (EN)
+    ];
+    const hits = expectedFragments.filter((f) => en.includes(f));
+    expect(
+      hits.length,
+      `expected ≥3 EN fragments in cv.en.md, got: ${hits.join(', ')} (overlay may be missing)`,
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('cv.es.md stays primarily Spanish (EN fragments do not bleed into ES)', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    // At least one strong ES-only string should remain in ES file
+    const esMarkers = [
+      'Desarrollador de Software con enfoque en IA',
+      'Desarrollo de aplicaciones multiplataforma',
+    ];
+    const hits = esMarkers.filter((m) => es.includes(m));
+    expect(
+      hits.length,
+      `expected ES file to retain Spanish markers, got: ${hits.join(', ')}`,
+    ).toBeGreaterThanOrEqual(1);
+  });
+});
+
+/**
+ * Labels i18n contract: the render labels in cv.{es,en}.md MUST come from
+ * src/i18n/ui.{locale}.json (not hardcoded in build-cv-static.mjs). This
+ * regression was discovered when reviewing PR #22 in production — labels
+ * like "Ubicación", "Zona horaria", "Idiomas", "Periodo", "Tipo", etc.
+ * were Spanish-only even on the EN locale.
+ */
+describe('CV labels i18n — locale-aware render', () => {
+  it('cv.es.md uses Spanish labels from ui.es.json', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    // A representative subset of labels that MUST appear in ES rendering
+    const esLabels = ['Ubicación', 'Idiomas', 'Sobre mi', 'Experiencia', 'Responsabilidades'];
+    const hits = esLabels.filter((l) => es.includes(l));
+    expect(hits.length, `ES labels missing in cv.es.md: ${esLabels.join(', ')}`).toBe(esLabels.length);
+  });
+
+  it('cv.en.md uses English labels from ui.en.json (no Spanish leakage)', () => {
+    const en = readFileSync(EN_PATH, 'utf8');
+    // These MUST appear (English labels)
+    const enLabels = [
+      'Location', 'Languages', 'About me', 'Experience', 'Responsibilities',
+      'Technologies', 'Competencies', 'Education', 'Availability',
+    ];
+    const enHits = enLabels.filter((l) => en.includes(l));
+    expect(
+      enHits.length,
+      `EN labels missing in cv.en.md: ${enLabels.filter((l) => !en.includes(l)).join(', ')}`,
+    ).toBe(enLabels.length);
+
+    // These MUST NOT appear (Spanish-only labels leaking into EN)
+    const esOnlyLabels = ['Ubicación', 'Zona horaria', 'Idiomas', 'Sobre mi', 'Responsabilidades'];
+    const leaks = esOnlyLabels.filter((l) => en.includes(l));
+    expect(leaks.length, `Spanish labels leaked into cv.en.md: ${leaks.join(', ')}`).toBe(0);
+  });
+
+  it('ui.es.json and ui.en.json both define the cv.labels section (parity)', () => {
+    const uiEs = JSON.parse(readFileSync(resolve(PROJECT_ROOT, 'src/i18n/ui.es.json'), 'utf8'));
+    const uiEn = JSON.parse(readFileSync(resolve(PROJECT_ROOT, 'src/i18n/ui.en.json'), 'utf8'));
+    expect(uiEs.cv?.labels, 'ui.es.json missing cv.labels').toBeDefined();
+    expect(uiEn.cv?.labels, 'ui.en.json missing cv.labels').toBeDefined();
+    const keysEs = Object.keys(uiEs.cv.labels).sort();
+    const keysEn = Object.keys(uiEn.cv.labels).sort();
+    expect(keysEn, `label keys mismatch between ui.es.json (${keysEs.join(',')}) and ui.en.json (${keysEn.join(',')})`).toEqual(keysEs);
+  });
+});

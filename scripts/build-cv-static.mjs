@@ -39,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
 const CONTENT_DIR = join(PROJECT_ROOT, 'src/content');
+const I18N_DIR = join(PROJECT_ROOT, 'src/i18n');
 
 const DATA_DIR =
   process.env.PB_DATA_DIR ??
@@ -97,32 +98,49 @@ function validateSkills(arr) {
   }
 }
 
+/**
+ * Load the cv.labels dict from src/i18n/ui.{locale}.json. Returns a flat
+ * record of label keys → translated strings. Falls back to the ES dict if
+ * the requested locale has no cv section (defensive).
+ *
+ * @param {'es'|'en'} locale
+ * @returns {Record<string, string>}
+ */
+async function loadCvLabels(locale) {
+  const file = join(I18N_DIR, `ui.${locale}.json`);
+  const raw = await readFile(file, 'utf8');
+  const ui = JSON.parse(raw);
+  return ui?.cv?.labels ?? {};
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Markdown renderers (mirror the output format of the previous build-cv.mjs)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** @param {any} profile */
-function renderProfile(profile) {
+/**
+ * @param {any} profile
+ * @param {Record<string,string>} L - cv.labels dict for the target locale
+ */
+function renderProfile(profile, L) {
   const c = profile.contact;
   const contact = [c.email, c.linkedin, c.github, c.phone].filter(Boolean).join(' · ');
 
   const lines = [`# ${profile.name}`, '', `_${profile.headline}_`, '', '---', ''];
-  if (profile.location) lines.push(`- **Ubicación**: ${profile.location}`);
-  if (profile.timezone) lines.push(`- **Zona horaria**: ${profile.timezone}`);
-  if (profile.languages) lines.push(`- **Idiomas**: ${profile.languages}`);
-  if (contact) lines.push(`- **Contacto**: ${contact}`);
+  if (profile.location) lines.push(`- **${L.location}**: ${profile.location}`);
+  if (profile.timezone) lines.push(`- **${L.timezone}**: ${profile.timezone}`);
+  if (profile.languages) lines.push(`- **${L.languages}**: ${profile.languages}`);
+  if (contact) lines.push(`- **${L.contact}**: ${contact}`);
   lines.push('');
 
   if (profile.availability) {
     const a = profile.availability;
-    if (a.status) lines.push(`**Disponibilidad**: ${a.status}`);
-    if (a.type) lines.push(`**Tipo de trabajo**: ${a.type}`);
-    if (a.startDate) lines.push(`**Inicio**: ${a.startDate}`);
+    if (a.status) lines.push(`**${L.availability}**: ${a.status}`);
+    if (a.type) lines.push(`**${L.workType}**: ${a.type}`);
+    if (a.startDate) lines.push(`**${L.start}**: ${a.startDate}`);
     lines.push('');
   }
 
-  // "Sobre mi" — short summary
-  lines.push('## Sobre mi', '');
+  lines.push(`## ${L.aboutMe}`, '');
   lines.push(
     [profile.headline, profile.availability?.status, profile.availability?.type]
       .filter(Boolean)
@@ -133,31 +151,34 @@ function renderProfile(profile) {
   return lines.join('\n');
 }
 
-/** @param {any[]} experience */
-function renderExperience(experience) {
-  const lines = ['## Experiencia', ''];
+/**
+ * @param {any[]} experience
+ * @param {Record<string,string>} L - cv.labels dict for the target locale
+ */
+function renderExperience(experience, L) {
+  const lines = [`## ${L.experience}`, ''];
   for (const e of experience) {
     lines.push(`### ${e.title} — ${e.company}`, '');
     const meta = [];
-    if (e.period) meta.push(`**Periodo**: ${e.period}`);
-    if (e.type) meta.push(`**Tipo**: ${e.type}`);
-    if (e.industry) meta.push(`**Industria**: ${e.industry}`);
+    if (e.period) meta.push(`**${L.period}**: ${e.period}`);
+    if (e.type) meta.push(`**${L.type}**: ${e.type}`);
+    if (e.industry) meta.push(`**${L.industry}**: ${e.industry}`);
     if (meta.length) {
       lines.push(meta.join(' · '));
     }
-    if (e.team) lines.push(`**Equipo**: ${e.team}`);
+    if (e.team) lines.push(`**${L.team}**: ${e.team}`);
     if (Array.isArray(e.stack) && e.stack.length) {
-      lines.push(`**Stack**: ${e.stack.join(', ')}`);
+      lines.push(`**${L.stack}**: ${e.stack.join(', ')}`);
     }
     lines.push('');
 
     if (Array.isArray(e.responsibilities) && e.responsibilities.length) {
-      lines.push('**Responsabilidades**:');
+      lines.push(`**${L.responsibilities}**:`);
       for (const r of e.responsibilities) lines.push(`- ${r}`);
       lines.push('');
     }
     if (e.results) {
-      lines.push('**Resultados**:');
+      lines.push(`**${L.results}**:`);
       const results = Array.isArray(e.results) ? e.results : [e.results];
       for (const r of results) lines.push(`- ${r}`);
       lines.push('');
@@ -165,7 +186,7 @@ function renderExperience(experience) {
     if (e.notes) {
       const notes = Array.isArray(e.notes) ? e.notes : [e.notes];
       for (const n of notes) {
-        lines.push(`> _Notas_: ${n}`);
+        lines.push(`> _${L.notes}_: ${n}`);
       }
       lines.push('');
     }
@@ -173,8 +194,11 @@ function renderExperience(experience) {
   return lines.join('\n');
 }
 
-/** @param {any[]} skills */
-function renderSkills(skills) {
+/**
+ * @param {any[]} skills
+ * @param {Record<string,string>} L - cv.labels dict for the target locale
+ */
+function renderSkills(skills, L) {
   // Group by tag[0]: "technical" vs "qualitative"
   const technical = skills.filter((s) => Array.isArray(s.tags) && s.tags.includes('technical'));
   const qualitative = skills.filter((s) => Array.isArray(s.tags) && s.tags.includes('qualitative'));
@@ -183,10 +207,10 @@ function renderSkills(skills) {
       !Array.isArray(s.tags) || (!s.tags.includes('technical') && !s.tags.includes('qualitative')),
   );
 
-  const lines = ['## Habilidades', ''];
+  const lines = [`## ${L.skills}`, ''];
 
   if (technical.length) {
-    lines.push('### Tecnologias', '');
+    lines.push(`### ${L.technologies}`, '');
     for (const s of technical) {
       const level = s.level ? ` _(${s.level})_` : '';
       const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
@@ -196,7 +220,7 @@ function renderSkills(skills) {
   }
 
   if (qualitative.length) {
-    lines.push('### Competencias', '');
+    lines.push(`### ${L.competencies}`, '');
     for (const s of qualitative) {
       const level = s.level ? ` _(${s.level})_` : '';
       const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
@@ -206,7 +230,7 @@ function renderSkills(skills) {
   }
 
   if (other.length) {
-    lines.push('### Otros', '');
+    lines.push(`### ${L.other}`, '');
     for (const s of other) {
       const level = s.level ? ` _(${s.level})_` : '';
       const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
@@ -218,16 +242,19 @@ function renderSkills(skills) {
   return lines.join('\n');
 }
 
-/** @param {any[]} education */
-function renderEducation(education) {
+/**
+ * @param {any[]} education
+ * @param {Record<string,string>} L - cv.labels dict for the target locale
+ */
+function renderEducation(education, L) {
   if (!Array.isArray(education) || education.length === 0) return '';
-  const lines = ['## Educacion', ''];
+  const lines = [`## ${L.education}`, ''];
   for (const e of education) {
     const title = [e.degree, e.institution].filter(Boolean).join(' — ');
     if (title) lines.push(`### ${title}`, '');
-    if (e.period) lines.push(`**Periodo**: ${e.period}`);
+    if (e.period) lines.push(`**${L.period}**: ${e.period}`);
     if (Array.isArray(e.tags) && e.tags.length) {
-      lines.push(`**Tags**: ${e.tags.join(', ')}`);
+      lines.push(`**${L.tags}**: ${e.tags.join(', ')}`);
     }
     if (e.notes) lines.push(`> ${e.notes}`);
     lines.push('');
@@ -235,15 +262,18 @@ function renderEducation(education) {
   return lines.join('\n');
 }
 
-/** @param {any[]} projects */
-function renderProjects(projects) {
+/**
+ * @param {any[]} projects
+ * @param {Record<string,string>} L - cv.labels dict for the target locale
+ */
+function renderProjects(projects, L) {
   if (!Array.isArray(projects) || projects.length === 0) return '';
-  const lines = ['## Proyectos', ''];
+  const lines = [`## ${L.projects}`, ''];
   for (const p of projects) {
     if (p.name) lines.push(`### ${p.name}`, '');
     if (p.description) lines.push(p.description, '');
     if (Array.isArray(p.stack) && p.stack.length) {
-      lines.push(`**Stack**: ${p.stack.join(', ')}`);
+      lines.push(`**${L.stack}**: ${p.stack.join(', ')}`);
     }
     lines.push('');
   }
@@ -258,7 +288,7 @@ async function main() {
   console.log(`[build-cv-static] data source = ${DATA_DIR}`);
   const bundle = await readKbBundle();
 
-  // Validate
+  // Validate the canonical ES bundle (always required)
   try {
     validateProfile(bundle.profile);
     validateExperience(bundle.experience);
@@ -269,25 +299,76 @@ async function main() {
     process.exit(2);
   }
 
-  // Render (identical for es/en — UI strings live in src/i18n/ui.{es,en}.json)
-  const sections = [
-    renderProfile(bundle.profile),
-    renderExperience(bundle.experience),
-    renderSkills(bundle.skills),
-    renderEducation(bundle.education),
-    renderProjects(bundle.projects),
-  ].filter(Boolean);
-
-  const markdown = sections.join('\n');
+  // Optional EN overlay. When present at tests/fixtures/portfolio/cv.en.json,
+  // its fields override the ES bundle for the EN locale. This is the manual
+  // translation path (option B): canonical translation lives in the JSON;
+  // if the file is absent, EN falls back to ES (status quo).
+  const enOverlayPath = join(DATA_DIR, 'cv.en.json');
+  let enOverlay = null;
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const raw = await readFile(enOverlayPath, 'utf8');
+    enOverlay = JSON.parse(raw);
+    console.log(`[build-cv-static] EN overlay loaded (${enOverlayPath})`);
+  } catch (err) {
+    if (err && err.code !== 'ENOENT') {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[build-cv-static] EN overlay parse failed: ${msg}`);
+      process.exit(2);
+    }
+    console.log('[build-cv-static] no EN overlay found — EN locale will fall back to ES content');
+  }
 
   await mkdir(CONTENT_DIR, { recursive: true });
   for (const locale of ['es', 'en']) {
+    // For EN, use overlay when present; otherwise pass-through (legacy behaviour)
+    const bundleForLocale = locale === 'en' && enOverlay ? overlayBundle(bundle, enOverlay) : bundle;
+    const labels = await loadCvLabels(locale);
+    const sections = [
+      renderProfile(bundleForLocale.profile, labels),
+      renderExperience(bundleForLocale.experience, labels),
+      renderSkills(bundleForLocale.skills, labels),
+      renderEducation(bundleForLocale.education, labels),
+      renderProjects(bundleForLocale.projects, labels),
+    ].filter(Boolean);
+
+    const markdown = sections.join('\n');
     const outPath = join(CONTENT_DIR, `cv.${locale}.md`);
     await writeFile(outPath, markdown, 'utf8');
     console.log(`[build-cv-static] wrote ${outPath} (${markdown.length.toLocaleString()} bytes)`);
   }
 
   console.log('[build-cv-static] done');
+}
+
+/**
+ * Apply an EN overlay on top of the canonical ES bundle. The overlay contains
+ * translated versions of profile, experience, skills, education. Arrays
+ * (experience, skills, education) are matched by `id` or `name` against the
+ * canonical entries; missing entries fall back to ES.
+ *
+ * @param {any} bundle - canonical ES bundle from {profile,experience,skills,education,projects}.json
+ * @param {any} overlay - EN translation overlay from cv.en.json
+ * @returns {any} merged bundle for EN rendering
+ */
+function overlayBundle(bundle, overlay) {
+  const overlayByIdOrName = (arr, key = 'id') => {
+    const map = new Map();
+    for (const item of arr || []) map.set(item[key], item);
+    return map;
+  };
+
+  const expMap = overlayByIdOrName(overlay.experience, 'id');
+  const eduMap = overlayByIdOrName(overlay.education, 'degree');
+  const skillMap = overlayByIdOrName(overlay.skills, 'name');
+
+  return {
+    profile: overlay.profile ?? bundle.profile,
+    experience: (bundle.experience || []).map((e) => expMap.get(e.id) ?? e),
+    skills: (bundle.skills || []).map((s) => skillMap.get(s.name) ?? s),
+    education: (bundle.education || []).map((e) => eduMap.get(e.degree) ?? e),
+    projects: bundle.projects, // no overlay for projects yet
+  };
 }
 
 main().catch((err) => {
