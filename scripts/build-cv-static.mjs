@@ -258,7 +258,7 @@ async function main() {
   console.log(`[build-cv-static] data source = ${DATA_DIR}`);
   const bundle = await readKbBundle();
 
-  // Validate
+  // Validate the canonical ES bundle (always required)
   try {
     validateProfile(bundle.profile);
     validateExperience(bundle.experience);
@@ -269,25 +269,75 @@ async function main() {
     process.exit(2);
   }
 
-  // Render (identical for es/en — UI strings live in src/i18n/ui.{es,en}.json)
-  const sections = [
-    renderProfile(bundle.profile),
-    renderExperience(bundle.experience),
-    renderSkills(bundle.skills),
-    renderEducation(bundle.education),
-    renderProjects(bundle.projects),
-  ].filter(Boolean);
-
-  const markdown = sections.join('\n');
+  // Optional EN overlay. When present at tests/fixtures/portfolio/cv.en.json,
+  // its fields override the ES bundle for the EN locale. This is the manual
+  // translation path (option B): canonical translation lives in the JSON;
+  // if the file is absent, EN falls back to ES (status quo).
+  const enOverlayPath = join(DATA_DIR, 'cv.en.json');
+  let enOverlay = null;
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const raw = await readFile(enOverlayPath, 'utf8');
+    enOverlay = JSON.parse(raw);
+    console.log(`[build-cv-static] EN overlay loaded (${enOverlayPath})`);
+  } catch (err) {
+    if (err && err.code !== 'ENOENT') {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[build-cv-static] EN overlay parse failed: ${msg}`);
+      process.exit(2);
+    }
+    console.log('[build-cv-static] no EN overlay found — EN locale will fall back to ES content');
+  }
 
   await mkdir(CONTENT_DIR, { recursive: true });
   for (const locale of ['es', 'en']) {
+    // For EN, use overlay when present; otherwise pass-through (legacy behaviour)
+    const bundleForLocale = locale === 'en' && enOverlay ? overlayBundle(bundle, enOverlay) : bundle;
+    const sections = [
+      renderProfile(bundleForLocale.profile),
+      renderExperience(bundleForLocale.experience),
+      renderSkills(bundleForLocale.skills),
+      renderEducation(bundleForLocale.education),
+      renderProjects(bundleForLocale.projects),
+    ].filter(Boolean);
+
+    const markdown = sections.join('\n');
     const outPath = join(CONTENT_DIR, `cv.${locale}.md`);
     await writeFile(outPath, markdown, 'utf8');
     console.log(`[build-cv-static] wrote ${outPath} (${markdown.length.toLocaleString()} bytes)`);
   }
 
   console.log('[build-cv-static] done');
+}
+
+/**
+ * Apply an EN overlay on top of the canonical ES bundle. The overlay contains
+ * translated versions of profile, experience, skills, education. Arrays
+ * (experience, skills, education) are matched by `id` or `name` against the
+ * canonical entries; missing entries fall back to ES.
+ *
+ * @param {any} bundle - canonical ES bundle from {profile,experience,skills,education,projects}.json
+ * @param {any} overlay - EN translation overlay from cv.en.json
+ * @returns {any} merged bundle for EN rendering
+ */
+function overlayBundle(bundle, overlay) {
+  const overlayByIdOrName = (arr, key = 'id') => {
+    const map = new Map();
+    for (const item of arr || []) map.set(item[key], item);
+    return map;
+  };
+
+  const expMap = overlayByIdOrName(overlay.experience, 'id');
+  const eduMap = overlayByIdOrName(overlay.education, 'degree');
+  const skillMap = overlayByIdOrName(overlay.skills, 'name');
+
+  return {
+    profile: overlay.profile ?? bundle.profile,
+    experience: (bundle.experience || []).map((e) => expMap.get(e.id) ?? e),
+    skills: (bundle.skills || []).map((s) => skillMap.get(s.name) ?? s),
+    education: (bundle.education || []).map((e) => eduMap.get(e.degree) ?? e),
+    projects: bundle.projects, // no overlay for projects yet
+  };
 }
 
 main().catch((err) => {

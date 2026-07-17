@@ -84,3 +84,49 @@ describe('build-cv-static.mjs — slice 3.1 contract', () => {
     }
   });
 });
+
+/**
+ * EN translation contract (slice "CV body EN", 2026-07-17):
+ *   1. cv.es.md and cv.en.md MUST NOT be byte-identical (different content per locale).
+ *   2. The EN file MUST contain at least 3 known English-language fragments
+ *      (regression: if the EN overlay is missing, both files collapse to ES content).
+ *   3. The ES file MUST still be primarily Spanish (regression: EN overlay
+ *      bleeding into ES bundle).
+ */
+describe('CV body EN translation — option B overlay', () => {
+  it('cv.es.md and cv.en.md differ (different content per locale)', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    const en = readFileSync(EN_PATH, 'utf8');
+    expect(es).not.toBe(en);
+  });
+
+  it('cv.en.md contains expected English-language fragments from the canonical translation', () => {
+    const en = readFileSync(EN_PATH, 'utf8');
+    const expectedFragments = [
+      'Software Developer with AI Focus',     // title (EN)
+      'Full Stack Developer',                  // title (EN)
+      'Front-end Developer',                   // Twinny title (EN)
+      'Multiplatform Application Development', // education (EN)
+      'Native Spanish, professional English',  // languages (EN)
+    ];
+    const hits = expectedFragments.filter((f) => en.includes(f));
+    expect(
+      hits.length,
+      `expected ≥3 EN fragments in cv.en.md, got: ${hits.join(', ')} (overlay may be missing)`,
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('cv.es.md stays primarily Spanish (EN fragments do not bleed into ES)', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    // At least one strong ES-only string should remain in ES file
+    const esMarkers = [
+      'Desarrollador de Software con enfoque en IA',
+      'Desarrollo de aplicaciones multiplataforma',
+    ];
+    const hits = esMarkers.filter((m) => es.includes(m));
+    expect(
+      hits.length,
+      `expected ES file to retain Spanish markers, got: ${hits.join(', ')}`,
+    ).toBeGreaterThanOrEqual(1);
+  });
+});
