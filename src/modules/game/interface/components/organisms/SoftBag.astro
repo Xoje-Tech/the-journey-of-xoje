@@ -1,0 +1,170 @@
+---
+import { SKILL_TEMPLATES } from "@/modules/game/infrastructure/init";
+import RetroModal from "@/modules/game/interface/components/atoms/RetroModal.astro";
+import SkillCard from "@/modules/game/interface/components/molecules/SkillCard.astro";
+import uiEs from "@/i18n/ui.es.json";
+import uiEn from "@/i18n/ui.en.json";
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+
+const totalSoft = SKILL_TEMPLATES.filter((s) => s.category === 'soft').length;
+---
+
+<button
+  id="soft-bag-hud"
+  type="button"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  class="hud-btn no-print"
+>
+  <span class="hud-icon">🧠</span>
+  <span class="hud-label"
+    >{ui.game.softBagLabel}<strong id="soft-counter">0/{totalSoft}</strong></span
+  >
+  <span id="soft-toast" class="hud-toast"></span>
+</button>
+
+<RetroModal
+  id="soft-skills-modal"
+  title={ui.game.softBagTitle}
+  closeId="close-soft-modal"
+  triggerId="soft-bag-hud"
+>
+  <div class="skills-grid">
+    {
+      SKILL_TEMPLATES.filter((s) => s.category === 'soft').map((s) => (
+        <SkillCard id={s.id} name={s.name} biome={s.biome} />
+      ))
+    }
+  </div>
+</RetroModal>
+
+<style>
+  .hud-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 35, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .hud-btn:hover {
+    background: rgba(45, 45, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .hud-btn:active {
+    transform: translateY(1px);
+  }
+
+  .hud-icon {
+    font-size: 16px;
+  }
+
+  .hud-label {
+    font-weight: 500;
+  }
+
+  .hud-toast {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: #2ecc71; /* Different color (green) for Soft skills toasts */
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .hud-toast.toast-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { collectedSkillsStore } from "@/modules/game/application/store";
+  import { SKILL_TEMPLATES } from "@/modules/game/infrastructure/init";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const softBtn = document.getElementById('soft-bag-hud');
+    const modal = document.getElementById('soft-skills-modal') as HTMLDialogElement | null;
+    const counterEl = document.getElementById('soft-counter');
+    const toastEl = document.getElementById('soft-toast');
+
+    if (softBtn && modal) {
+      softBtn.addEventListener('click', () => {
+        modal.showModal();
+        softBtn.setAttribute('aria-expanded', 'true');
+      });
+    }
+
+    let lastLen = 0;
+
+    collectedSkillsStore.subscribe((skills) => {
+      // Filter collected soft skills
+      const softCollected = skills.filter((id) => {
+        const s = SKILL_TEMPLATES.find((t) => t.id === id);
+        return s && s.category === 'soft';
+      });
+
+      // Update HUD Counter
+      if (counterEl) {
+        const total = counterEl.textContent?.split('/')[1] || '4';
+        counterEl.textContent = `${softCollected.length}/${total}`;
+      }
+
+      // Unlock matching cards
+      softCollected.forEach((id) => {
+        const card = document.getElementById(`skill-card-${id}`);
+        if (card) {
+          card.classList.remove('skill-locked');
+          card.classList.add('skill-unlocked');
+        }
+      });
+
+      // Anim transient toast if a soft skill was just collected
+      if (skills.length > lastLen) {
+        const lastId = skills[skills.length - 1];
+        const lastSkill = SKILL_TEMPLATES.find((t) => t.id === lastId);
+        if (lastSkill && lastSkill.category === 'soft' && toastEl) {
+          toastEl.textContent = `+ ${lastSkill.name}!`;
+          toastEl.classList.add('toast-active');
+          setTimeout(() => {
+            toastEl.classList.remove('toast-active');
+          }, 2500);
+        }
+      }
+
+      lastLen = skills.length;
+    });
+  });
+</script>

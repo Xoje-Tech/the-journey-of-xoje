@@ -7,7 +7,16 @@
     "company": "RIDE ON Riders & Mechanics",
     "period": "2026-03 -> 2026-06",
     "team": "2 desarrolladores + CEO + marketing",
-    "stack": ["Astro", "Vue", "Firebase", "Firestore SDK", "Visual Studio Code", "GitHub Copilot", "Cursor", "OpenCode"],
+    "stack": [
+      "Astro",
+      "Vue",
+      "Firebase",
+      "Firestore SDK",
+      "Visual Studio Code",
+      "GitHub Copilot",
+      "Cursor",
+      "OpenCode"
+    ],
     "responsibilities": [
       "Definir e implementar funcionalidades end-to-end desde requisitos abiertos.",
       "Desarrollar frontend de producto con Astro y Vue.",
@@ -27,7 +36,19 @@
     "company": "RIDE ON Riders & Mechanics",
     "period": "2025-08 -> 2026-03",
     "team": "2 desarrolladores",
-    "stack": ["TypeScript", "Node.js", "Firebase", "Tailwind", "Vue", "Astro", "Angular", "Cursor", "OpenCode", "GitHub Copilot", "SDD"],
+    "stack": [
+      "TypeScript",
+      "Node.js",
+      "Firebase",
+      "Tailwind",
+      "Vue",
+      "Astro",
+      "Angular",
+      "Cursor",
+      "OpenCode",
+      "GitHub Copilot",
+      "SDD"
+    ],
     "responsibilities": [
       "Integrar el contexto tecnico y funcional del producto.",
       "Participar en la definicion de estructura de trabajo del equipo.",

@@ -58,12 +58,20 @@ describe('build-cv-static.mjs — slice 3.1 contract', () => {
 
   it('shape matches a CV (heading + ≥3 CV sections)', () => {
     const SECTION_HEADINGS = [
-      'perfil', 'profile',
-      'sobre mí', 'sobre mi', 'about',
-      'experiencia', 'experience',
-      'habilidades', 'skills',
-      'educación', 'educacion', 'education',
-      'proyectos', 'projects',
+      'perfil',
+      'profile',
+      'sobre mí',
+      'sobre mi',
+      'about',
+      'experiencia',
+      'experience',
+      'habilidades',
+      'skills',
+      'educación',
+      'educacion',
+      'education',
+      'proyectos',
+      'projects',
     ];
     for (const p of [ES_PATH, EN_PATH]) {
       const text = readFileSync(p, 'utf8').toLowerCase();

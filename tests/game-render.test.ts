@@ -12,8 +12,8 @@
  * worth a DOM-free fake-canvas exercise.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { updateTrail, isWithinViewport, drawCollectibles } from '../src/game/render';
-import type { CollectibleItem } from '../src/game/types';
+import { updateTrail, isWithinViewport, drawCollectibles } from "../src/modules/game/infrastructure/render";
+import type { CollectibleItem } from "../src/modules/game/domain/types";
 
 describe('updateTrail — append + age + drop', () => {
   it('appends the current position as a fresh point (age = 0)', () => {

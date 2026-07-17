@@ -27,14 +27,14 @@ src/game/player/animation.ts    src/game/player/sprite.ts
 
 ## Architecture Decisions
 
-| Decision | Options | Tradeoff | **Decision** |
-|---|---|---|---|
-| **Asset format** | (a) Vector SVG, (b) Programmatic shapes, (c) Spritesheet PNG | (a) hard to animate, (b) tedious math, (c) asset size & loading overhead | **(c) Spritesheet PNG** — classic, high fidelity, standard |
-| **Image Generator** | (a) Native FAL, (b) Local Python Gemini Imagen 3 | (a) FAL_KEY is missing, (b) GOOGLE_API_KEY is available in BWS | **(b) Custom Python Script using Gemini Imagen 3 API** |
-| **Spritesheet Layout** | (a) 4x4 matrix, (b) 9x1 horizontal strip | (b) trivial frame indexing `col * frameW` without row modulo math | **(b) 9x1 strip (288×48 px)** |
-| **Structure** | (a) Flat files, (b) Isolated `src/game/player/` module | (b) Separation of Concerns, Clean Architecture | **(b) isolated module with types/animation/sprite/index** |
-| **Blink layer** | (a) separate frames, (b) code-drawn overlay | (a) inflates spritesheet size, (b) lightweight and highly flexible | **(b) Code-drawn line overlay** over the eyes |
-| **Dash feedback** | (a) run-fast sprites, (b) code-skewed context | (a) more assets, (b) dynamic momentum feel with 0 asset cost | **(b) Context skew/rotate (8 degrees)** |
+| Decision               | Options                                                      | Tradeoff                                                                 | **Decision**                                               |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **Asset format**       | (a) Vector SVG, (b) Programmatic shapes, (c) Spritesheet PNG | (a) hard to animate, (b) tedious math, (c) asset size & loading overhead | **(c) Spritesheet PNG** — classic, high fidelity, standard |
+| **Image Generator**    | (a) Native FAL, (b) Local Python Gemini Imagen 3             | (a) FAL_KEY is missing, (b) GOOGLE_API_KEY is available in BWS           | **(b) Custom Python Script using Gemini Imagen 3 API**     |
+| **Spritesheet Layout** | (a) 4x4 matrix, (b) 9x1 horizontal strip                     | (b) trivial frame indexing `col * frameW` without row modulo math        | **(b) 9x1 strip (288×48 px)**                              |
+| **Structure**          | (a) Flat files, (b) Isolated `src/game/player/` module       | (b) Separation of Concerns, Clean Architecture                           | **(b) isolated module with types/animation/sprite/index**  |
+| **Blink layer**        | (a) separate frames, (b) code-drawn overlay                  | (a) inflates spritesheet size, (b) lightweight and highly flexible       | **(b) Code-drawn line overlay** over the eyes              |
+| **Dash feedback**      | (a) run-fast sprites, (b) code-skewed context                | (a) more assets, (b) dynamic momentum feel with 0 asset cost             | **(b) Context skew/rotate (8 degrees)**                    |
 
 ---
 
@@ -47,9 +47,9 @@ export type PoseType = 'idle' | 'walk-down' | 'walk-up' | 'walk-left' | 'walk-ri
 
 export interface AnimState {
   pose: PoseType;
-  frameIndex: number;          // 0 to 8 mapping to the spritesheet column
-  timeSinceLastFrame: number;  // ms accumulated
-  dashLeanActive: boolean;     // true if |vx|+|vy| > 4.0
+  frameIndex: number; // 0 to 8 mapping to the spritesheet column
+  timeSinceLastFrame: number; // ms accumulated
+  dashLeanActive: boolean; // true if |vx|+|vy| > 4.0
 }
 
 export interface PlayerSpriteConfig {
@@ -63,12 +63,7 @@ export interface PlayerSpriteConfig {
 // src/game/player/animation.ts
 // PURE — no canvas, no DOM, fully unit-testable under vitest 1.6.1
 
-export function pickFrame(
-  vx: number,
-  vy: number,
-  dtMs: number,
-  current: AnimState,
-): AnimState;
+export function pickFrame(vx: number, vy: number, dtMs: number, current: AnimState): AnimState;
 ```
 
 ```ts
@@ -94,10 +89,10 @@ export class PlayerEntity {
   private animState: AnimState;
 
   constructor(spritesheetPath: string);
-  
+
   // Load spritesheet image in browser environment safely
   load(): Promise<void>;
-  
+
   // Progresses animation and renders the frame
   updateAndDraw(
     ctx: CanvasRenderingContext2D,
@@ -116,6 +111,7 @@ export class PlayerEntity {
 ## Spritesheet Generator Blueprint (`scripts/generate-sprites-ai.py`)
 
 The script will be a robust, self-contained Python program:
+
 1. It creates `.venv` inside `scripts/` if missing.
 2. It installs `Pillow` and `requests` (using pip from the `.venv`).
 3. It iterates over the 9 frames (Idle, Walk-Down × 2, Walk-Up × 2, Walk-Left × 2, Walk-Right × 2).
@@ -129,9 +125,11 @@ The script will be a robust, self-contained Python program:
    - Save the result to `public/sprites/player.png`.
 
 To run it, we inject the keys from BWS:
+
 ```bash
 BWS_ACCESS_TOKEN="..." hermes exec -- pnpm generate-sprites
 ```
+
 Or simply let the user run it from their terminal where their BWS/credentials are already mapped.
 
 ---

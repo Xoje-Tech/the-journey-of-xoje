@@ -1,0 +1,145 @@
+---
+import uiEs from "@/i18n/ui.es.json";
+import uiEn from "@/i18n/ui.en.json";
+import RetroButton from "@/modules/game/interface/components/atoms/RetroButton.astro";
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div
+  id="start-screen"
+  class="no-print"
+  data-start-label={ui.game.startGame}
+  data-resume-label={ui.game.resumeGame}
+>
+  <div class="start-content">
+    <h1 class="retro-title">{ui.game.startTitle}</h1>
+    <p class="retro-tagline">{ui.game.startTagline}</p>
+    <div class="start-buttons">
+      <RetroButton id="start-game-btn">{ui.game.startGame}</RetroButton>
+      <RetroButton id="download-cv-btn">{ui.game.downloadCv}</RetroButton>
+      <RetroButton id="settings-btn">{ui.game.settings}</RetroButton>
+      <RetroButton id="controls-btn">{ui.game.controls}</RetroButton>
+    </div>
+  </div>
+</div>
+
+<style>
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #1c1c1f;
+    color: #f4f4f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 15;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    transition: transform 600ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  #start-screen.slide-up {
+    transform: translateY(-100%);
+  }
+
+  .start-content {
+    max-width: 600px;
+    padding: 24px;
+  }
+
+  .retro-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0 0 12px 0;
+    color: #f4f4f5;
+    letter-spacing: -0.02em;
+    text-shadow: 3px 3px 0px #09090b;
+  }
+
+  .retro-tagline {
+    font-size: 14px;
+    color: #a1a1aa;
+    margin-bottom: 32px;
+  }
+
+  .start-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+</style>
+
+<script>
+  import { isStartedStore } from "@/modules/game/application/store";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const startScreen = document.getElementById('start-screen');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const downloadCvBtn = document.getElementById('download-cv-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const controlsBtn = document.getElementById('controls-btn');
+    const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
+    const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
+
+    if (startGameBtn) {
+      startGameBtn.addEventListener('click', () => {
+        isStartedStore.set(true);
+      });
+    }
+
+    if (downloadCvBtn) {
+      downloadCvBtn.addEventListener('click', () => {
+        window.print();
+      });
+    }
+
+    if (settingsBtn && settingsModal) {
+      settingsBtn.addEventListener('click', () => {
+        settingsModal.showModal();
+      });
+    }
+
+    if (controlsBtn && controlsModal) {
+      controlsBtn.addEventListener('click', () => {
+        controlsModal.showModal();
+      });
+    }
+
+    if (startScreen) {
+      const startLabel = startScreen.dataset.startLabel || 'Start Game';
+      const resumeLabel = startScreen.dataset.resumeLabel || 'Resume Game';
+
+      isStartedStore.subscribe((started) => {
+        if (started) {
+          startScreen.classList.add('slide-up');
+          if (startGameBtn) {
+            startGameBtn.textContent = resumeLabel;
+          }
+        } else {
+          startScreen.style.display = 'flex';
+          // Force a DOM reflow to prevent CSS transition bypasses
+          void startScreen.offsetHeight;
+          startScreen.classList.remove('slide-up');
+        }
+      });
+
+      startScreen.addEventListener('transitionend', (e) => {
+        if (e.target === startScreen && e.propertyName === 'transform') {
+          if (isStartedStore.get()) {
+            startScreen.style.display = 'none';
+          }
+        }
+      });
+    }
+  });
+</script>

@@ -27,11 +27,11 @@ rules:
     guidelines:
       - Follow existing code patterns (Astro 6 content collection patterns, CSS-split convention)
       - Respect Astro 6 gotchas (glob from astro/loaders, omit schema key, generateId preserves slug, render() top-level import)
-    tdd: false           # sdd-apply controls TDD mode at the per-phase level — global TDD stays off
-    test_command: "pnpm test"
+    tdd: false # sdd-apply controls TDD mode at the per-phase level — global TDD stays off
+    test_command: 'pnpm test'
   verify:
-    test_command: "pnpm test"
-    build_command: "pnpm build"
+    test_command: 'pnpm test'
+    build_command: 'pnpm build'
     coverage_threshold: 0
   archive:
     - Warn before merging destructive deltas

@@ -27,8 +27,8 @@
  * negative-zero handling) is what is worth regression-testing.
  */
 import { describe, it, expect } from 'vitest';
-import { formatHud } from '../src/game/hud';
-import type { Player } from '../src/game/types';
+import { formatHud } from "../src/modules/game/infrastructure/hud";
+import type { Player } from "../src/modules/game/domain/types";
 
 function makePlayer(x: number, y: number, vx: number, vy: number): Player {
   return { x, y, vx, vy, size: 10 };

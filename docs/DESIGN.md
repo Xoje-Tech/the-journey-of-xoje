@@ -3,47 +3,47 @@ version: alpha
 name: The Journey of Xoje
 description: Muted retro pixel-art styled after Lisa the Painful with elegant serif print capabilities.
 colors:
-  primary: "#1c1c1f"
-  secondary: "#a1a1aa"
-  accent: "#eab308"
-  neutral: "#f4f4f5"
-  dark: "#09090b"
-  print-bg: "#ffffff"
-  print-text: "#000000"
+  primary: '#1c1c1f'
+  secondary: '#a1a1aa'
+  accent: '#eab308'
+  neutral: '#f4f4f5'
+  dark: '#09090b'
+  print-bg: '#ffffff'
+  print-text: '#000000'
 typography:
   monospace-screen:
-    fontFamily: "JetBrains Mono, Menlo, Consolas, Courier New, monospace"
-    fontSize: "14px"
-    lineHeight: "1.3"
+    fontFamily: 'JetBrains Mono, Menlo, Consolas, Courier New, monospace'
+    fontSize: '14px'
+    lineHeight: '1.3'
   serif-print:
-    fontFamily: "Charter, Source Serif Pro, Liberation Serif, Times New Roman, serif"
-    fontSize: "14px"
-    lineHeight: "1.35"
+    fontFamily: 'Charter, Source Serif Pro, Liberation Serif, Times New Roman, serif'
+    fontSize: '14px'
+    lineHeight: '1.35'
 spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
+  xs: '4px'
+  sm: '8px'
+  md: '16px'
+  lg: '24px'
 components:
   retro-button:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.neutral}"
-    rounded: "0px"
-    padding: "8px 16px"
+    backgroundColor: '{colors.primary}'
+    textColor: '{colors.neutral}'
+    rounded: '0px'
+    padding: '8px 16px'
   retro-button-hover:
-    backgroundColor: "#27272a"
+    backgroundColor: '#27272a'
   retro-button-active:
-    backgroundColor: "#3f3f46"
+    backgroundColor: '#3f3f46'
   start-screen-overlay:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.neutral}"
+    backgroundColor: '{colors.primary}'
+    textColor: '{colors.neutral}'
   gamepad-indicator-active:
-    textColor: "{colors.accent}"
+    textColor: '{colors.accent}'
   gamepad-indicator-inactive:
-    textColor: "{colors.dark}"
+    textColor: '{colors.dark}'
   cv-page-print:
-    backgroundColor: "{colors.print-bg}"
-    textColor: "{colors.print-text}"
+    backgroundColor: '{colors.print-bg}'
+    textColor: '{colors.print-text}'
 ---
 
 ## Overview

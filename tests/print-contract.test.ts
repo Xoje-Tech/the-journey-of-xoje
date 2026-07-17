@@ -112,10 +112,7 @@ describe('print contract — slice 1', () => {
     'emitted CSS contains required print-contract substring: %s',
     (_label, needle) => {
       const haystack = readAllEmittedCss();
-      expect(
-        needle.test(haystack),
-        `expected emitted CSS to match /${needle.source}/`,
-      ).toBe(true);
+      expect(needle.test(haystack), `expected emitted CSS to match /${needle.source}/`).toBe(true);
     },
   );
 });
