@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { init } from '../src/game/init';
-import { isStartedStore } from '../src/game/store';
+import { isStartedStore, activeDialogStore } from '../src/game/store';
 
 // Stub global requestAnimationFrame and cancelAnimationFrame for testing
 let rafCallback: FrameRequestCallback | null = null;
@@ -148,6 +148,25 @@ describe('Game Pause loop updates', () => {
     }
 
     handle.stop();
+  });
+
+  it('should freeze updates when activeDialogStore is active', () => {
+    const { canvas } = makeFakeCanvas();
+    const handle = init(canvas as any);
+
+    isStartedStore.set(true);
+    expect(activeDialogStore.get()).toBeNull();
+
+    // Set active dialogue (simulates collision)
+    activeDialogStore.set({ npcName: 'Héctor', skillId: 'kuka-robotics', text: 'Hey' });
+
+    // Tick the loop and verify updates freeze
+    if (rafCallback) {
+      rafCallback(16);
+    }
+
+    handle.stop();
+    activeDialogStore.set(null);
   });
 
   it('should call unsubscribe when engine stop() is invoked', () => {

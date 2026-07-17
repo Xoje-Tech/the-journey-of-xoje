@@ -31,6 +31,7 @@
     "qualBagLabel": "Comp: ",
     "qualBagTitle": "Habilidades Cualitativas",
     "softBagLabel": "Soft: ",
-    "softBagTitle": "Habilidades Blandas"
+    "softBagTitle": "Habilidades Blandas",
+    "dialogContinue": "Espacio / Clic para continuar"
   }
 }

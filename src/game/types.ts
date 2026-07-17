@@ -81,10 +81,27 @@ export interface InitOptions {
   deadzone?: number;
   /** Custom spritesheet path/URL dynamically resolved by the bundler. */
   spritesheetPath?: string;
+  /** Locale language 'es' | 'en' passed from the front-end */
+  locale?: 'es' | 'en';
 }
 
 export interface Camera {
   y: number; // Viewport top coordinate in world-space [0, MAP_HEIGHT - viewportHeight]
+}
+
+export interface NPCMetadata {
+  name: string;
+  initial: string;
+  dialogue: {
+    es: string;
+    en: string;
+  };
+}
+
+export interface ActiveDialog {
+  npcName: string;
+  skillId: string;
+  text: string;
 }
 
 export interface CollectibleItem {
@@ -96,6 +113,7 @@ export interface CollectibleItem {
   y: number;
   radius: number;
   collected: boolean;
+  npc?: NPCMetadata;
 }
 
 export interface PlayerState {
