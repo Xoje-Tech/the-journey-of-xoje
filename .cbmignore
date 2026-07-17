@@ -1,0 +1,13 @@
+# .cbmignore — Ignored paths for codebase-memory-mcp
+node_modules/
+dist/
+.astro/
+tmp/
+scripts/.venv/
+.venv/
+tests/fixtures/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
