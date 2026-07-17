@@ -8,6 +8,7 @@ import SettingsPanel from '../../components/game/SettingsPanel.astro';
 import ControlsGuide from '../../components/game/ControlsGuide.astro';
 import BackpackButton from '../../components/game/BackpackButton.astro';
 import BackpackInventory from '../../components/game/BackpackInventory.astro';
+import PauseButton from '../../components/game/PauseButton.astro';
 import uiEs from '../../i18n/ui.es.json';
 import uiEn from '../../i18n/ui.en.json';
 
@@ -46,6 +47,7 @@ const { Content } = await render(entry);
   <StartScreen locale={locale} />
   <SettingsPanel locale={locale} />
   <ControlsGuide locale={locale} />
+  <PauseButton locale={locale} />
   <BackpackButton />
   <BackpackInventory />
 

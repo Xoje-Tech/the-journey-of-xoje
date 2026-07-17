@@ -1,0 +1,84 @@
+---
+import uiEs from '../../i18n/ui.es.json';
+import uiEn from '../../i18n/ui.en.json';
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div class="pause-hud-container no-print">
+  <button id="pause-game-btn" type="button" class="pause-btn">
+    <span class="pause-icon">⏸</span>
+    <span class="pause-label">{ui.game.pauseButton}</span>
+  </button>
+</div>
+
+<style>
+  .pause-hud-container {
+    position: fixed;
+    top: 16px;
+    right: 180px;
+    z-index: 20;
+    display: none; /* Controlled dynamically by Nanostores subscription */
+  }
+
+  .pause-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 35, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .pause-btn:hover {
+    background: rgba(45, 45, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .pause-btn:active {
+    transform: translateY(1px);
+  }
+
+  .pause-icon {
+    font-size: 14px;
+  }
+
+  .pause-label {
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  import { isStartedStore } from '../../game/store';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const pauseBtn = document.getElementById('pause-game-btn');
+    const container = document.querySelector('.pause-hud-container') as HTMLElement | null;
+
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', () => {
+        isStartedStore.set(false);
+      });
+    }
+
+    // Toggle Pause button visibility based on isStartedStore
+    isStartedStore.subscribe((started) => {
+      if (container) {
+        container.style.display = started ? 'block' : 'none';
+      }
+    });
+  });
+</script>

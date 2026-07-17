@@ -38,6 +38,7 @@
  */
 import { applyFriction, clampPlayerY, checkCollision } from './physics';
 import { sampleInputs } from './input';
+import { isStartedStore } from './store';
 import {
   drawGrid,
   drawTrail,
@@ -101,6 +102,13 @@ const BLINK_MAX_INTERVAL_MS = 5000;
 
 export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHandle {
   let started = false;
+  let hasStarted = false;
+  const unsubscribe = isStartedStore.subscribe((val) => {
+    started = val;
+    if (val) {
+      hasStarted = true;
+    }
+  });
   const ctxOrNull = canvas.getContext('2d');
   if (!ctxOrNull) {
     throw new Error('[videogame-ui] could not acquire 2D context');
@@ -368,7 +376,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     // Draw Biomes
     drawBiomes(ctx, dims.w, camera.y, dims.h);
     
-    if (started) {
+    if (hasStarted) {
       // Draw Collectibles
       drawCollectibles(ctx, collectibles, camera.y, dims.h);
       
@@ -380,7 +388,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     }
     
     // Draw and progress player spritesheet animation
-    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, dtMs, blinkActive);
+    const animDt = started ? dtMs : 0;
+    const blinkStatus = started ? blinkActive : false;
+    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, animDt, blinkStatus);
     
     ctx.restore();
     
@@ -406,6 +416,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   return {
     stop(): void {
       pause();
+      unsubscribe();
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
