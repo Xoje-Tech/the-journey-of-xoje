@@ -1,0 +1,218 @@
+{
+  "_comment": "English translation of the CV body. Source of truth: ~/projects/pb-beta/OUTPUTS/cv/cv-product-eng/cv_product_eng_final_harvard_en.md (manually curated, professional translation). Keep in sync with ES counterpart in experience.json/profile.json/skills.json/education.json when DATA changes.",
+  "profile": {
+    "name": "Jose Vilches Sanchez",
+    "contact": {
+      "email": "vilchessanchezjose@gmail.com",
+      "linkedin": "https://www.linkedin.com/in/jose-vilchessanchez",
+      "github": "https://github.com/DevXoje",
+      "phone": "+34 622721994",
+      "portfolio": null
+    },
+    "availability": {
+      "status": "Actively seeking new opportunities / Available for new projects",
+      "type": "part-time, consulting, objective-based collaborations, full-time or part-time as Product Engineer",
+      "startDate": "Immediate"
+    },
+    "headline": "Software Developer with AI Focus",
+    "location": "Villajoyosa / la Vila Joiosa, Valencian Community, Spain",
+    "timezone": "Europe/Madrid",
+    "languages": "Native Spanish, professional English"
+  },
+  "experience": [
+    {
+      "id": "ride-on-2026",
+      "title": "Software Developer with AI Focus",
+      "type": "full-time",
+      "industry": "mobility / digital product",
+      "company": "RIDE ON Riders & Mechanics",
+      "period": "2026-03 -> 2026-06",
+      "team": "2 developers + CEO + marketing",
+      "stack": [
+        "Astro",
+        "Vue",
+        "Firebase",
+        "Firestore SDK",
+        "Visual Studio Code",
+        "GitHub Copilot",
+        "Cursor",
+        "OpenCode"
+      ],
+      "responsibilities": [
+        "Defined and implemented end-to-end features from open requirements, iterating directly with product.",
+        "Developed product frontend with Astro and Vue.",
+        "Implemented backend and persistence with Firebase and its ecosystem.",
+        "Integrated AI tools into the development cycle to accelerate delivery.",
+        "Applied SDD to maintain consistency and maintainability in AI-assisted code."
+      ],
+      "results": "No quantifiable metric declared yet for delivery cycle and quality.",
+      "notes": "Entry derived from LinkedIn narrative text; requires interview to quantify impact.",
+      "tags": []
+    },
+    {
+      "id": "ride-on-2025",
+      "title": "Full Stack Developer",
+      "type": "full-time",
+      "industry": "mobility / digital product",
+      "company": "RIDE ON Riders & Mechanics",
+      "period": "2025-08 -> 2026-03",
+      "team": "2 developers",
+      "stack": [
+        "TypeScript",
+        "Node.js",
+        "Firebase",
+        "Tailwind",
+        "Vue",
+        "Astro",
+        "Angular",
+        "Cursor",
+        "OpenCode",
+        "GitHub Copilot",
+        "SDD"
+      ],
+      "responsibilities": [
+        "Integrated the technical and functional context of the product.",
+        "Participated in defining the team's work structure.",
+        "Contributed to selecting the project's base technologies.",
+        "Helped establish development standards to evolve the work model.",
+        "Iterated AI-assisted development processes toward greater consistency."
+      ],
+      "results": "No quantifiable metric declared yet for adopted technical decisions.",
+      "notes": "Description focuses on process; missing evidence of specific deliverables.",
+      "tags": []
+    },
+    {
+      "id": "twinny-2024",
+      "title": "Front-end Developer",
+      "type": "full-time",
+      "industry": "B2B software / CRM",
+      "company": "Twinny",
+      "period": "2024-05 -> 2025-07",
+      "team": "6 people (CEO, CTO/Senior Back/DevOps, Junior Back, secretary, Front Junior, and Full Stack)",
+      "stack": [
+        "Angular (up to v19)",
+        "Jira",
+        "Swagger",
+        "GitHub Copilot"
+      ],
+      "responsibilities": [
+        "Iterated designs with design/product to improve requirements compliance and UX.",
+        "Promoted good development practices with better Jira ticket documentation.",
+        "Promoted Swagger usage to document the backend and align frontend-backend.",
+        "Acted as the reference point for development status and progress tracking.",
+        "Accelerated workflow productivity with early adoption of GitHub Copilot.",
+        "Introduced DDD concepts and code best practices to the frontend team."
+      ],
+      "results": "No quantifiable metric declared yet for productivity and quality impact.",
+      "notes": "No verifiable metrics were provided in the interview; keep focus on responsibilities and context.",
+      "tags": []
+    },
+    {
+      "id": "crmble-2023",
+      "title": "Frontend Programmer",
+      "type": "full-time",
+      "industry": "B2B software / CRM (Atlassian ecosystem)",
+      "company": "Crmble",
+      "period": "2023-03 -> 2024-05",
+      "team": "8 people (CEO, CTO, design, Senior Backend/DevOps, Senior Frontend, Trainee Frontend, Junior Frontend, Frontend)",
+      "stack": [
+        "Angular",
+        "Bootstrap",
+        "Sass"
+      ],
+      "responsibilities": [
+        "Resolved bug tickets and small product developments.",
+        "Developed the component system as a source of truth for applications.",
+        "Aligned frontend implementation with design for pixel-perfect compliance."
+      ],
+      "results": "Contributed to the product's expansion into another platform within the Atlassian ecosystem. Achieved early operational autonomy to deliver from initial phase and support trainee/junior profiles.",
+      "notes": "No high-impact technical decisions were taken directly in this role; do not emphasize that point in outputs.",
+      "tags": []
+    },
+    {
+      "id": "lcs-robotics-2022",
+      "title": "Industrial Automation Systems Integrator",
+      "type": "full-time",
+      "industry": "automotive components / industrial automation",
+      "company": "LCS Robotics",
+      "period": "2022-06 -> 2022-12",
+      "team": "large structure by departments (Production, Maintenance, Quality, etc.)",
+      "stack": [
+        "VASS Standard",
+        "KUKA robots"
+      ],
+      "responsibilities": [
+        "Supervised production line pace and continuity.",
+        "Applied hotfixes to resolve incidents during production and avoid stoppages.",
+        "Developed automated robot lines for industrial operation."
+      ],
+      "results": "Progressively increased responsibility from supervision/hotfixes to line programming.",
+      "notes": "Entry-level role with strong operational learning; high-impact technical decisions are not emphasized. Differential value: adaptation in an international environment, operational English, and a fast learning curve.",
+      "tags": []
+    }
+  ],
+  "skills": [
+    { "name": "Astro", "level": "proficient", "tags": ["technical", "frontend-framework", "ssg"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Vue", "level": "proficient", "tags": ["technical", "frontend-framework"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "TypeScript", "level": "proficient", "tags": ["technical", "language"], "evidence": ["Cross-cutting usage across software career", "RIDE ON Riders & Mechanics"] },
+    { "name": "Angular", "level": "advanced", "tags": ["technical", "frontend-framework"], "evidence": ["Twinny (Angular up to v19)", "Crmble"] },
+    { "name": "Node.js", "level": "familiar", "tags": ["technical", "runtime"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Sass", "level": "proficient", "tags": ["technical", "css-preprocessor"], "evidence": ["Crmble"] },
+    { "name": "Bootstrap", "level": "proficient", "tags": ["technical", "css-framework"], "evidence": ["Crmble"] },
+    { "name": "Firebase", "level": "proficient", "tags": ["technical", "backend", "baas"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Firestore SDK", "level": "proficient", "tags": ["technical", "database"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "GitHub Copilot", "level": "proficient", "tags": ["technical", "ai-tooling"], "evidence": ["RIDE ON Riders & Mechanics", "Twinny"] },
+    { "name": "Cursor", "level": "proficient", "tags": ["technical", "ai-tooling"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "OpenCode", "level": "familiar", "tags": ["technical", "ai-tooling"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Visual Studio Code", "level": "advanced", "tags": ["technical", "editor"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Jira", "level": "proficient", "tags": ["technical", "project-management"], "evidence": ["Twinny"] },
+    { "name": "Swagger", "level": "proficient", "tags": ["technical", "api-documentation"], "evidence": ["Twinny"] },
+    { "name": "KUKA robotics tooling", "level": "familiar", "tags": ["technical", "robotics"], "evidence": ["LCS Robotics"] },
+    { "name": "Tailwind", "level": "proficient", "tags": ["technical", "css-framework"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "End-to-end feature ownership", "level": "advanced", "tags": ["qualitative", "architecture"], "evidence": ["RIDE ON Riders & Mechanics: implementation of frontend and backend from open requirements"] },
+    { "name": "Team development standards", "level": "advanced", "tags": ["qualitative", "process"], "evidence": ["RIDE ON Riders & Mechanics: contribution to structure and work standards"] },
+    { "name": "Domain-Driven Design (DDD)", "level": "proficient", "tags": ["qualitative", "architecture"], "evidence": ["Twinny: introduction of concepts and best practices to the frontend teammate"] },
+    { "name": "Design system / component system", "level": "proficient", "tags": ["qualitative", "architecture"], "evidence": ["Crmble: development of the component system as a source of truth"] },
+    { "name": "Agentic development workflows", "level": "proficient", "tags": ["qualitative", "ai-tooling"], "evidence": ["RIDE ON and RIDE ON: operational use of Cursor, OpenCode, and GitHub Copilot with SDD approach"] },
+    { "name": "Spec-Driven Development (SDD)", "level": "proficient", "tags": ["qualitative", "process"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Test-Driven Development (TDD)", "level": "proficient", "tags": ["qualitative", "process"], "evidence": ["Applied at RideOn; not reported in previous roles"] },
+    { "name": "Work structure definition", "level": "proficient", "tags": ["qualitative", "process"], "evidence": ["RIDE ON Riders & Mechanics"] },
+    { "name": "Design-development collaboration for UX", "level": "proficient", "tags": ["qualitative", "collaboration"], "evidence": ["Twinny: iteration with design to align requirements and experience"] },
+    { "name": "Pixel-perfect implementation", "level": "proficient", "tags": ["qualitative", "craft"], "evidence": ["Crmble: tight alignment with design for visual fidelity"] },
+    { "name": "Operation in international environment", "level": "proficient", "tags": ["qualitative", "communication"], "evidence": ["LCS Robotics: onsite work in the USA with operational communication in English"] }
+  ],
+  "education": [
+    {
+      "degree": "Multiplatform Application Development (DAM) and Web Development (DAW)",
+      "institution": "IES Pere Maria Orts i Bosch",
+      "period": "2019 -> 2022",
+      "tags": ["official-education", "software-development"],
+      "notes": "Dual vocational training in software development."
+    }
+  ],
+  "additionalSkills": [
+    "Technical leadership and frontend team mentoring",
+    "Design systems and component platforms architecture",
+    "Web performance and observability",
+    "AI-assisted development and Spec-Driven Development (SDD)",
+    "Native Spanish, professional English"
+  ],
+  "technologies": [
+    "JavaScript",
+    "TypeScript",
+    "Astro",
+    "Vue",
+    "Angular",
+    "Node.js",
+    "Firebase",
+    "GitHub Copilot",
+    "Cursor",
+    "OpenCode",
+    "Jira",
+    "Swagger",
+    "Sass",
+    "Bootstrap",
+    "SDD",
+    "TDD"
+  ]
+}
