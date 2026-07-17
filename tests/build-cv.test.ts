@@ -130,3 +130,49 @@ describe('CV body EN translation — option B overlay', () => {
     ).toBeGreaterThanOrEqual(1);
   });
 });
+
+/**
+ * Labels i18n contract: the render labels in cv.{es,en}.md MUST come from
+ * src/i18n/ui.{locale}.json (not hardcoded in build-cv-static.mjs). This
+ * regression was discovered when reviewing PR #22 in production — labels
+ * like "Ubicación", "Zona horaria", "Idiomas", "Periodo", "Tipo", etc.
+ * were Spanish-only even on the EN locale.
+ */
+describe('CV labels i18n — locale-aware render', () => {
+  it('cv.es.md uses Spanish labels from ui.es.json', () => {
+    const es = readFileSync(ES_PATH, 'utf8');
+    // A representative subset of labels that MUST appear in ES rendering
+    const esLabels = ['Ubicación', 'Idiomas', 'Sobre mi', 'Experiencia', 'Responsabilidades'];
+    const hits = esLabels.filter((l) => es.includes(l));
+    expect(hits.length, `ES labels missing in cv.es.md: ${esLabels.join(', ')}`).toBe(esLabels.length);
+  });
+
+  it('cv.en.md uses English labels from ui.en.json (no Spanish leakage)', () => {
+    const en = readFileSync(EN_PATH, 'utf8');
+    // These MUST appear (English labels)
+    const enLabels = [
+      'Location', 'Languages', 'About me', 'Experience', 'Responsibilities',
+      'Technologies', 'Competencies', 'Education', 'Availability',
+    ];
+    const enHits = enLabels.filter((l) => en.includes(l));
+    expect(
+      enHits.length,
+      `EN labels missing in cv.en.md: ${enLabels.filter((l) => !en.includes(l)).join(', ')}`,
+    ).toBe(enLabels.length);
+
+    // These MUST NOT appear (Spanish-only labels leaking into EN)
+    const esOnlyLabels = ['Ubicación', 'Zona horaria', 'Idiomas', 'Sobre mi', 'Responsabilidades'];
+    const leaks = esOnlyLabels.filter((l) => en.includes(l));
+    expect(leaks.length, `Spanish labels leaked into cv.en.md: ${leaks.join(', ')}`).toBe(0);
+  });
+
+  it('ui.es.json and ui.en.json both define the cv.labels section (parity)', () => {
+    const uiEs = JSON.parse(readFileSync(resolve(PROJECT_ROOT, 'src/i18n/ui.es.json'), 'utf8'));
+    const uiEn = JSON.parse(readFileSync(resolve(PROJECT_ROOT, 'src/i18n/ui.en.json'), 'utf8'));
+    expect(uiEs.cv?.labels, 'ui.es.json missing cv.labels').toBeDefined();
+    expect(uiEn.cv?.labels, 'ui.en.json missing cv.labels').toBeDefined();
+    const keysEs = Object.keys(uiEs.cv.labels).sort();
+    const keysEn = Object.keys(uiEn.cv.labels).sort();
+    expect(keysEn, `label keys mismatch between ui.es.json (${keysEs.join(',')}) and ui.en.json (${keysEn.join(',')})`).toEqual(keysEs);
+  });
+});

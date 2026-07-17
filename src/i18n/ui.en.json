@@ -33,5 +33,33 @@
     "softBagLabel": "Soft: ",
     "softBagTitle": "Soft Skills",
     "dialogContinue": "Space / Click to continue"
+  },
+  "cv": {
+    "labels": {
+      "location": "Location",
+      "timezone": "Timezone",
+      "languages": "Languages",
+      "contact": "Contact",
+      "availability": "Availability",
+      "workType": "Work type",
+      "start": "Start",
+      "aboutMe": "About me",
+      "experience": "Experience",
+      "period": "Period",
+      "type": "Type",
+      "industry": "Industry",
+      "team": "Team",
+      "stack": "Stack",
+      "responsibilities": "Responsibilities",
+      "results": "Results",
+      "notes": "Notes",
+      "skills": "Skills",
+      "technologies": "Technologies",
+      "competencies": "Competencies",
+      "other": "Other",
+      "education": "Education",
+      "tags": "Tags",
+      "projects": "Projects"
+    }
   }
 }
