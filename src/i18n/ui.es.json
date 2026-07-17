@@ -33,5 +33,33 @@
     "softBagLabel": "Soft: ",
     "softBagTitle": "Habilidades Blandas",
     "dialogContinue": "Espacio / Clic para continuar"
+  },
+  "cv": {
+    "labels": {
+      "location": "Ubicación",
+      "timezone": "Zona horaria",
+      "languages": "Idiomas",
+      "contact": "Contacto",
+      "availability": "Disponibilidad",
+      "workType": "Tipo de trabajo",
+      "start": "Inicio",
+      "aboutMe": "Sobre mi",
+      "experience": "Experiencia",
+      "period": "Periodo",
+      "type": "Tipo",
+      "industry": "Industria",
+      "team": "Equipo",
+      "stack": "Stack",
+      "responsibilities": "Responsabilidades",
+      "results": "Resultados",
+      "notes": "Notas",
+      "skills": "Habilidades",
+      "technologies": "Tecnologias",
+      "competencies": "Competencias",
+      "other": "Otros",
+      "education": "Educacion",
+      "tags": "Tags",
+      "projects": "Proyectos"
+    }
   }
 }
