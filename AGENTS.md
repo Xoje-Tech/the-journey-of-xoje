@@ -186,6 +186,17 @@ Slice 3 (deploy) is **not** part of slice 2 — deploy is the last thing, after 
 - **English in code, comments, identifiers, UI copy, and docs.** Spanish is for the persona reply only. The README/AGENTS files are documentation artifacts, not chat — keep them in English.
 - **Commits are conventional.** No `Co-Authored-By:`, no AI attribution.
 
+## OpenWiki
+
+This repository has documentation located in the `openwiki/` directory.
+
+Start here:
+- [OpenWiki Quickstart](openwiki/quickstart.md)
+
+OpenWiki includes repository overview, architecture notes, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
+
+When working in this repository, read the OpenWiki quickstart first, then follow its links to the relevant architecture, workflow, domain, operation, and testing notes.
+
 ---
 
 ## When you finish a task
