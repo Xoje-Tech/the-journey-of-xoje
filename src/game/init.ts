@@ -239,6 +239,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     y: t.y,
     radius: 12,
     collected: false,
+    npc: t.npc,
   }));
 
   /** Instantiate the clean architecture PlayerEntity and load spritesheet */
