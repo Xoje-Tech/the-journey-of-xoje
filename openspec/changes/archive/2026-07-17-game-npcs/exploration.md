@@ -1,10 +1,12 @@
 ## Exploration: Unidirectional Dialog System and NPCs in "The Journey of Xoje"
 
 ### Current State
+
 Currently, the core game engine initializes in `src/game/init.ts` and renders interactive elements (collectibles) as circular colored coins representing skills from Xoje's CV. There are 19 skill templates inside `SKILL_TEMPLATES` in `src/game/init.ts`. When the player's circular collision overlaps with a collectible coin, the coin is immediately collected. This triggers a CustomEvent `game-state-update` dispatched to the DOM which is intercepted by `GameViewport.astro` and bridged into the Nanostore `collectedSkillsStore` which updates the backpack HUD elements (`TechBag`, `QualBag`, `SoftBag`).
 Calculations (physics, input state, motion trail, animations) run continuously in the game loop when `isStartedStore` is true.
 
 ### Affected Areas
+
 - `src/game/types.ts` — Define `NPCMetadata` and `ActiveDialog` interfaces, and update `CollectibleItem` to include optional `npc` metadata. Add `locale` to `InitOptions` so the engine knows the current language.
 - `src/game/store.ts` — Export `activeDialogStore` as a Nanostore of type `ActiveDialog | null` to track the state of active dialogs.
 - `src/game/init.ts` — Add `npc` metadata to `SKILL_TEMPLATES` for Héctor, Laura, Dani, and Marcos. In the game loop, subscribe to `activeDialogStore` to pause physics, inputs, motion trail updates, and collision checks while a dialog is active. Pass `0` delta time and disable blink triggers to freeze spritesheet animation. Intercept collisions with NPCs to activate the dialog store instead of immediately collecting the skill. Listen to `'dialog-dismissed'` events to mark the associated skill as collected when the player closes the dialogue overlay.
@@ -15,6 +17,7 @@ Calculations (physics, input state, motion trail, animations) run continuously i
 - `src/i18n/ui.es.json` & `src/i18n/ui.en.json` — Add `"dialogContinue": "Espacio / Clic para continuar"` and `"dialogContinue": "Space / Click to continue"`.
 
 ### Approaches
+
 1. **Approach A: Decoupled CustomEvent Progression (Recommended)**
    - The engine handles collisions and populates `activeDialogStore` (raising the dialogue overlay). It suspends loop calculations.
    - The UI overlay (`DialogOverlay.astro`) reads the active dialog, handles DOM events (Space key, click), and upon dismissal dispatches a `dialog-dismissed` CustomEvent with the `skillId`.
@@ -30,11 +33,14 @@ Calculations (physics, input state, motion trail, animations) run continuously i
    - **Effort:** Medium.
 
 ### Recommendation
-We strongly recommend **Approach A (Decoupled CustomEvent Progression)**. It adheres perfectly to the *Pure Engine to Reactive HUD Decoupling Pattern* (§11.8) of the project doctrine. It preserves clean testability of the headless engine (using fake window event triggers) and ensures that all physics, inputs, and animations freeze cleanly when active without corrupting the loop structure or leaking states.
+
+We strongly recommend **Approach A (Decoupled CustomEvent Progression)**. It adheres perfectly to the _Pure Engine to Reactive HUD Decoupling Pattern_ (§11.8) of the project doctrine. It preserves clean testability of the headless engine (using fake window event triggers) and ensures that all physics, inputs, and animations freeze cleanly when active without corrupting the loop structure or leaking states.
 
 ### Risks
+
 - **Test Suite Collisions**: Ensuring that standard integration tests in `tests/game-journey-progression.test.ts` don't break because of NPC metadata changes. We'll make sure `npc` metadata is entirely optional and backwards-compatible.
 - **Double Space Key triggers**: When the player presses Space to start the game on the start screen, or to jump, we must prevent those presses from interfering with the dialog overlay, and vice-versa (e.g., using `e.preventDefault()` and checking `activeDialogStore` state).
 
 ### Ready for Proposal
+
 Yes — The technical design is crystal clear and matches all criteria perfectly. We are ready to transition to the proposal phase.

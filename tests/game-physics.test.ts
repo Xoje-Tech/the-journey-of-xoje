@@ -15,8 +15,8 @@ import { describe, it, expect } from 'vitest';
 // Production code that DOES NOT EXIST YET — importing it on a fresh checkout
 // would fail at module-resolution time, which is itself a valid RED signal.
 // The test runner will report the missing module as the failure.
-import { wrapAround, applyFriction, clampPlayerY, checkCollision } from '../src/game/physics';
-import type { Player, CollectibleItem } from '../src/game/types';
+import { wrapAround, applyFriction, clampPlayerY, checkCollision } from '../src/modules/game/application/physics';
+import type { Player, CollectibleItem } from '../src/modules/game/domain/types';
 
 function makePlayer(x: number, y: number): Player {
   return { x, y, vx: 0, vy: 0, size: 10 };

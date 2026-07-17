@@ -71,7 +71,15 @@
  * from the pb-beta editorial source. Do NOT do this by hand.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  unlinkSync,
+  statSync,
+} from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
@@ -83,7 +91,13 @@ import { homedir } from 'node:os';
 
 const HOME = homedir();
 const PB_BETA = join(HOME, 'projects', 'pb-beta');
-const PB_CANONICAL_CV = join(PB_BETA, 'OUTPUTS', 'cv', 'cv-product-eng', 'cv_product_eng_final_harvard.md');
+const PB_CANONICAL_CV = join(
+  PB_BETA,
+  'OUTPUTS',
+  'cv',
+  'cv-product-eng',
+  'cv_product_eng_final_harvard.md',
+);
 const PB_EXPERIENCE_MD = join(PB_BETA, 'DATA', 'experience.md');
 const PB_SKILLS_MD = join(PB_BETA, 'DATA', 'skills.md');
 
@@ -121,7 +135,15 @@ function parseArgs(argv) {
 }
 
 if (ARG.help) {
-  console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1).join('\n').split('Usage:')[0].split('// ─')[0].trim());
+  console.log(
+    readFileSync(new URL(import.meta.url), 'utf8')
+      .split('\n')
+      .slice(1)
+      .join('\n')
+      .split('Usage:')[0]
+      .split('// ─')[0]
+      .trim(),
+  );
   console.log('\nUsage: see header comment of this script.');
   process.exit(0);
 }
@@ -184,7 +206,7 @@ function parseExperienceMd() {
     const next = positions[i + 1];
     const bodyEnd = next ? next.start : text.length;
     const body = text.slice(cur.bodyStart, bodyEnd);
-  const company = cur.title;
+    const company = cur.title;
     // Skip template placeholders (TODO markers without real data).
     if (body.includes('TODO:')) continue;
     const fields = parseFields(body);
@@ -198,9 +220,9 @@ function parseExperienceMd() {
     const SHORT_IDS = {
       'RIDE ON Riders & Mechanics': { startYear: '2026-03', suffix: 'ride-on' },
       'RIDE-ON Riders & Mechanics': { startYear: '2025-08', suffix: 'ride-on' },
-      'Twinny':                      { startYear: '2024-05', suffix: 'twinny' },
-      'Crmble':                      { startYear: '2023-03', suffix: 'crmble' },
-      'LCS Robotics':                { startYear: '2022-06', suffix: 'lcs-robotics' },
+      Twinny: { startYear: '2024-05', suffix: 'twinny' },
+      Crmble: { startYear: '2023-03', suffix: 'crmble' },
+      'LCS Robotics': { startYear: '2022-06', suffix: 'lcs-robotics' },
     };
     const idMap = SHORT_IDS[company];
     const id = idMap
@@ -281,16 +303,28 @@ function parseSkillsMd() {
     }
 
     const headerLine = match[0].split('\n')[0];
-    const headers = headerLine.split('|').map((h) => h.trim().toLowerCase()).filter(Boolean);
+    const headers = headerLine
+      .split('|')
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean);
     const is3col = headers.length >= 3;
     const rows = match[1].trim().split('\n');
     for (const row of rows) {
-      const values = row.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+      const values = row
+        .replace(/^\||\|$/g, '')
+        .split('|')
+        .map((c) => c.trim());
       if (values.length < 2) continue;
       const name = values[0];
       const evidenceRaw = is3col ? values[2] : values[1];
       const level = is3col ? values[1] : undefined;
-      if (!name || name === 'Habilidad' || name === 'Patrón / Concepto' || name === 'Herramienta / Concepto') continue;
+      if (
+        !name ||
+        name === 'Habilidad' ||
+        name === 'Patrón / Concepto' ||
+        name === 'Herramienta / Concepto'
+      )
+        continue;
       if (name.startsWith('TODO')) continue;
 
       // G08 guardrail: BLOCKER on missing evidence. Skills without any
@@ -317,7 +351,10 @@ function parseSkillsMd() {
         headers[0].includes('capacidad');
       if (isQualitativeSection) tags[0] = 'qualitative';
 
-      const evidence = evidenceRaw.split(/,\s*/).map((s) => s.trim()).filter(Boolean);
+      const evidence = evidenceRaw
+        .split(/,\s*/)
+        .map((s) => s.trim())
+        .filter(Boolean);
 
       out.push({
         name,
@@ -410,7 +447,10 @@ function diffSummary(a, b) {
 
 function backupFile(path) {
   if (!existsSync(path)) return null;
-  const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+  const ts = new Date()
+    .toISOString()
+    .replace(/[-:T.Z]/g, '')
+    .slice(0, 14);
   // Format: YYYYMMDD-HHMMSS
   const stamp = `${ts.slice(0, 8)}-${ts.slice(8)}`;
   const bak = `${path}.bak.${stamp}`;
@@ -501,7 +541,10 @@ function runTests() {
 
 function runPrintPreview() {
   console.log('[sync] running print-preview-headless.mjs ...');
-  const r = spawnSync('node', ['scripts/print-preview-headless.mjs'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
+  const r = spawnSync('node', ['scripts/print-preview-headless.mjs'], {
+    cwd: PROJECT_ROOT,
+    encoding: 'utf8',
+  });
   if (r.status !== 0) {
     console.error(`[sync] print-preview FAILED:\n${r.stdout}\n${r.stderr}`);
     return false;
@@ -519,7 +562,16 @@ function runPrintPreview() {
 function validateExperience(arr) {
   if (!Array.isArray(arr)) return 'not an array';
   for (const [i, e] of arr.entries()) {
-    for (const k of ['id', 'title', 'company', 'period', 'team', 'stack', 'responsibilities', 'results']) {
+    for (const k of [
+      'id',
+      'title',
+      'company',
+      'period',
+      'team',
+      'stack',
+      'responsibilities',
+      'results',
+    ]) {
       if (!(k in e)) return `entry[${i}] missing "${k}"`;
     }
     if (!Array.isArray(e.stack)) return `entry[${i}].stack not array`;
@@ -619,6 +671,9 @@ async function main() {
     console.error('[sync] To accept the source-of-truth overwrite, re-run with --apply --force.');
     process.exit(4);
   }
+  const expOk = expDrift
+    ? applyDraft(DRAFT_EXPERIENCE, join(DATA_DIR, 'experience.json'), 'experience')
+    : true;
   const skOk = skDrift ? applyDraft(DRAFT_SKILLS, join(DATA_DIR, 'skills.json'), 'skills') : true;
   if (!expOk || !skOk) {
     console.error('[sync] apply FAILED');

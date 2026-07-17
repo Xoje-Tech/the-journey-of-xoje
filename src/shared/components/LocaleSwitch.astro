@@ -1,0 +1,23 @@
+---
+// LocaleSwitch renders a single <a> to the OTHER locale. The label for
+// "switch to the other locale" comes in as a prop (already localized by
+// the calling page via ui.{locale}.json). Astro.currentLocale is reliable
+// inside .astro files under static output when i18n config is set; we
+// fall back to 'es' only if it's somehow missing (defensive).
+interface Props {
+  currentLocale?: string;
+  targetSwitchLabel: string;
+}
+
+const { currentLocale, targetSwitchLabel } = Astro.props;
+const here = (Astro.currentLocale ?? currentLocale ?? 'es') as 'es' | 'en';
+const target: 'es' | 'en' = here === 'es' ? 'en' : 'es';
+const baseUrl = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : import.meta.env.BASE_URL + '/';
+const href = target === 'es' ? baseUrl : `${baseUrl}${target}/`;
+---
+
+<a href={href} class="lang-switch__link" rel="alternate" hreflang={target} lang={target}>
+  {targetSwitchLabel}
+</a>

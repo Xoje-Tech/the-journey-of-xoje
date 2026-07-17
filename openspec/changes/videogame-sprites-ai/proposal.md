@@ -44,12 +44,14 @@ The spritesheet will be a horizontal PNG of 9 frames, each 32×48 px. Total dime
 - **Frames 7-8**: Walk right (2 frames)
 
 **Dynamic animation layers**:
+
 - **Blink**: Since we are using a spritesheet, instead of needing separate blink frames, we will draw a small off-black rectangle overlay over the character's eye line programmatically when `blinkActive === true` inside `src/game/player/sprite.ts`. This saves asset size and preserves code-based control.
 - **Dash Lean**: When `|vx| + |vy| > 4.0`, we will dynamically skew the canvas context by 8 degrees in the direction of velocity before drawing the frame (`ctx.transform(...)` or `ctx.rotate(...)`), creating a stylish leaning effect without extra sprite frames.
 
 ### 2. Spritesheet Generation Script (`scripts/generate-sprites-ai.py`)
 
 A standalone Python script will:
+
 1. Extract `GOOGLE_API_KEY` from the running shell environment.
 2. Call Google's Imagen 3 generation endpoint (`imagen-3.0-generate-002`) using Python's `urllib` or `requests` to generate each of the required frames based on a highly-calibrated prompt designed for strict pixel-art consistency.
 3. Use `Pillow` (`PIL`) to crop, normalize, and stitch the generated frames side-by-side into a single 288×48 px PNG.

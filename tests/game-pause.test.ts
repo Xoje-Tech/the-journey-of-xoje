@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { init } from '../src/game/init';
-import { isStartedStore, activeDialogStore } from '../src/game/store';
+import { init } from "../src/modules/game/infrastructure/init";
+import { isStartedStore, activeDialogStore } from "../src/modules/game/application/store";
 
 // Stub global requestAnimationFrame and cancelAnimationFrame for testing
 let rafCallback: FrameRequestCallback | null = null;
 
-vi.stubGlobal('requestAnimationFrame', vi.fn((cb) => {
-  rafCallback = cb;
-  return 123;
-}));
+vi.stubGlobal(
+  'requestAnimationFrame',
+  vi.fn((cb) => {
+    rafCallback = cb;
+    return 123;
+  }),
+);
 
 vi.stubGlobal('cancelAnimationFrame', vi.fn());
 
@@ -40,7 +43,7 @@ const mockWindow = {
   dispatchEvent: vi.fn((event: any) => {
     const listeners = windowListeners[event.type];
     if (listeners) {
-      listeners.forEach(cb => cb(event));
+      listeners.forEach((cb) => cb(event));
     }
     return true;
   }),
@@ -62,7 +65,7 @@ vi.stubGlobal('navigator', mockNavigator);
 
 const makeFakeCanvas = () => {
   const canvasListeners: Record<string, Function[]> = {};
-  
+
   const ctx = {
     setTransform: vi.fn(),
     setLineDash: vi.fn(),
@@ -118,7 +121,7 @@ describe('Game Pause loop updates', () => {
     expect(isStartedStore.get()).toBe(false);
 
     // Simulate key press for moving down
-    const onKeyDown = mockWindow.addEventListener.mock.calls.find(c => c[0] === 'keydown')?.[1];
+    const onKeyDown = mockWindow.addEventListener.mock.calls.find((c) => c[0] === 'keydown')?.[1];
     if (onKeyDown) {
       onKeyDown({ key: 'ArrowDown' });
     }
@@ -173,7 +176,7 @@ describe('Game Pause loop updates', () => {
     const { canvas } = makeFakeCanvas();
     const mockUnsubscribe = vi.fn();
     const originalSubscribe = isStartedStore.subscribe;
-    
+
     // Intercept subscribe to verify its cleanup
     isStartedStore.subscribe = vi.fn(() => mockUnsubscribe);
 

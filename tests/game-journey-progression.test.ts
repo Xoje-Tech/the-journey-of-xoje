@@ -2,23 +2,23 @@
  * tests/game-journey-progression.test.ts
  *
  * videogame-ui — Phase 4 Integration Tests for the journey-progression mechanics.
- * Verifies camera boundaries, player vertical clamping, collectible spawning, 
+ * Verifies camera boundaries, player vertical clamping, collectible spawning,
  * collision triggers, and CustomEvent dispatching.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { clampPlayerY, checkCollision } from '../src/game/physics';
-import { SKILL_TEMPLATES, MAP_HEIGHT } from '../src/game/init';
-import type { Player, CollectibleItem } from '../src/game/types';
+import { clampPlayerY, checkCollision } from "../src/modules/game/application/physics";
+import { SKILL_TEMPLATES, MAP_HEIGHT } from "../src/modules/game/infrastructure/init";
+import type { Player, CollectibleItem } from "../src/modules/game/domain/types";
 
 describe('Journey Progression Integration', () => {
   it('SKILL_TEMPLATES defines exactly 19 collectibles distributed across 4 biomes', () => {
     expect(SKILL_TEMPLATES).toHaveLength(19);
 
-    const biomes = SKILL_TEMPLATES.map(t => t.biome);
-    expect(biomes.filter(b => b === 'LCS Robotics')).toHaveLength(4);
-    expect(biomes.filter(b => b === 'Crmble')).toHaveLength(5);
-    expect(biomes.filter(b => b === 'Twinny')).toHaveLength(5);
-    expect(biomes.filter(b => b === 'RIDE ON')).toHaveLength(5);
+    const biomes = SKILL_TEMPLATES.map((t) => t.biome);
+    expect(biomes.filter((b) => b === 'LCS Robotics')).toHaveLength(4);
+    expect(biomes.filter((b) => b === 'Crmble')).toHaveLength(5);
+    expect(biomes.filter((b) => b === 'Twinny')).toHaveLength(5);
+    expect(biomes.filter((b) => b === 'RIDE ON')).toHaveLength(5);
 
     // Assert chronological vertical order
     for (let i = 0; i < SKILL_TEMPLATES.length - 1; i++) {
@@ -78,7 +78,7 @@ describe('CustomEvent dispatching', () => {
     } else {
       // Node fallback for testing environment where window is defined by vitest or missing
       global.window = {
-        dispatchEvent: vi.fn()
+        dispatchEvent: vi.fn(),
       } as any;
       dispatchSpy = vi.spyOn(global.window, 'dispatchEvent');
     }
@@ -90,8 +90,26 @@ describe('CustomEvent dispatching', () => {
 
   it('dispatches game-state-update CustomEvent with correct detail payload upon collision simulated logic', () => {
     const collectiblesList: CollectibleItem[] = [
-      { id: 'ts', name: 'TypeScript', category: 'technical', biome: 'LCS', x: 100, y: 100, radius: 12, collected: false },
-      { id: 'vue', name: 'Vue', category: 'technical', biome: 'RIDE ON', x: 200, y: 200, radius: 12, collected: false },
+      {
+        id: 'ts',
+        name: 'TypeScript',
+        category: 'technical',
+        biome: 'LCS',
+        x: 100,
+        y: 100,
+        radius: 12,
+        collected: false,
+      },
+      {
+        id: 'vue',
+        name: 'Vue',
+        category: 'technical',
+        biome: 'RIDE ON',
+        x: 200,
+        y: 200,
+        radius: 12,
+        collected: false,
+      },
     ];
 
     const player: Player = { x: 100, y: 105, vx: 0, vy: 0, size: 14 };
@@ -100,17 +118,19 @@ describe('CustomEvent dispatching', () => {
     for (const item of collectiblesList) {
       if (!item.collected && checkCollision(player, item)) {
         item.collected = true;
-        const collectedCount = collectiblesList.filter(c => c.collected).length;
+        const collectedCount = collectiblesList.filter((c) => c.collected).length;
         const totalCount = collectiblesList.length;
 
-        window.dispatchEvent(new CustomEvent('game-state-update', {
-          detail: {
-            collectedCount,
-            totalCount,
-            lastCollected: item.name,
-            unlockedId: item.id,
-          }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('game-state-update', {
+            detail: {
+              collectedCount,
+              totalCount,
+              lastCollected: item.name,
+              unlockedId: item.id,
+            },
+          }),
+        );
       }
     }
 

@@ -45,7 +45,7 @@ const cv = defineCollection({
   loader: glob({
     pattern: 'cv.*.md',
     base: 'src/content',
-    generateId: ({ entry }) => entry,   // ← preserves 'cv.es.md' as-is
+    generateId: ({ entry }) => entry, // ← preserves 'cv.es.md' as-is
   }),
 });
 ```
@@ -57,7 +57,7 @@ const cv = defineCollection({
 const { Content } = await entry.render();
 
 // ✅ Astro 6
-const { Content } = await render(entry);   // top-level import from 'astro:content'
+const { Content } = await render(entry); // top-level import from 'astro:content'
 ```
 
 ### 5. CSS minifier quirks
@@ -110,11 +110,11 @@ If the DATA changes, just re-run `pnpm dev` (or `pnpm build`). The `predev` / `b
 
 The orchestrator in `@personal-brand/cv` runs three guardrails over the generated CV:
 
-| Guardrail | What it does | Agent consequence |
-|---|---|---|
-| **G01** | Voice consistency | Don't paraphrase the CV body in code; trust the orchestrator output |
-| **G04** | No invented metrics | **BLOCKER.** Never invent experience entries, skills, dates, responsibilities. If the DATA is incomplete, leave it incomplete and surface the gap to the user |
-| **G05** | Format compliance | Don't bypass with `skipGuardrails: true` unless the user explicitly approves it (and document why) |
+| Guardrail | What it does        | Agent consequence                                                                                                                                             |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **G01**   | Voice consistency   | Don't paraphrase the CV body in code; trust the orchestrator output                                                                                           |
+| **G04**   | No invented metrics | **BLOCKER.** Never invent experience entries, skills, dates, responsibilities. If the DATA is incomplete, leave it incomplete and surface the gap to the user |
+| **G05**   | Format compliance   | Don't bypass with `skipGuardrails: true` unless the user explicitly approves it (and document why)                                                            |
 
 **You are not allowed** to write `src/content/cv.*.md` by hand. They are generated artifacts.
 
@@ -122,18 +122,18 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 
 ## Commands cheat sheet
 
-| Task | Command |
-|---|---|
-| Run dev server | `pnpm dev` (auto-runs `build:cv` first via `predev`) |
-| Run dev server on alternate port | `pnpm dev --port 4322` |
-| Build for production | `pnpm build` |
-| Preview the production build | `pnpm preview` |
-| Regenerate `cv.{es,en}.md` only | `pnpm build:cv` |
-| Run all tests | `pnpm test` |
-| Run tests in watch mode | `pnpm test:watch` |
-| Typecheck | `pnpm typecheck` |
-| Format | `pnpm format` |
-| Headless print preview (PDFs) | `node scripts/print-preview-headless.mjs` (needs `pnpm dev` running) |
+| Task                             | Command                                                              |
+| -------------------------------- | -------------------------------------------------------------------- |
+| Run dev server                   | `pnpm dev` (auto-runs `build:cv` first via `predev`)                 |
+| Run dev server on alternate port | `pnpm dev --port 4322`                                               |
+| Build for production             | `pnpm build`                                                         |
+| Preview the production build     | `pnpm preview`                                                       |
+| Regenerate `cv.{es,en}.md` only  | `pnpm build:cv`                                                      |
+| Run all tests                    | `pnpm test`                                                          |
+| Run tests in watch mode          | `pnpm test:watch`                                                    |
+| Typecheck                        | `pnpm typecheck`                                                     |
+| Format                           | `pnpm format`                                                        |
+| Headless print preview (PDFs)    | `node scripts/print-preview-headless.mjs` (needs `pnpm dev` running) |
 
 ---
 

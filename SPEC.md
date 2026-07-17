@@ -66,21 +66,40 @@ the-journey-of-xoje/
 ```css
 @page {
   size: A4;
-  margin: 1.6cm 2cm;            /* top/bottom 1.6cm, left/right 2cm — Harvard sheet feel */
+  margin: 1.6cm 2cm; /* top/bottom 1.6cm, left/right 2cm — Harvard sheet feel */
 }
 
 @media print {
-  body                          { font-family: "Charter", "Source Serif Pro", "Liberation Serif", "Times New Roman", serif;
-                                  font-size: 10.5pt;
-                                  line-height: 1.35;
-                                  color: #000;
-                                  background: #fff; }
-  h1                            { font-size: 22pt; margin: 0 0 0.3cm 0; }
-  h2                            { font-size: 13pt; margin: 0.6cm 0 0.2cm 0; border-bottom: 0.5pt solid #444; padding-bottom: 0.1cm; }
-  h3                            { font-size: 11.5pt; margin: 0.35cm 0 0.1cm 0; }
-  section[data-cv-section]      { page-break-inside: avoid; }
-  .no-print                     { display: none !important; }
-  a[href]::after                { content: ""; }    /* URLs OFF in print */
+  body {
+    font-family: 'Charter', 'Source Serif Pro', 'Liberation Serif', 'Times New Roman', serif;
+    font-size: 10.5pt;
+    line-height: 1.35;
+    color: #000;
+    background: #fff;
+  }
+  h1 {
+    font-size: 22pt;
+    margin: 0 0 0.3cm 0;
+  }
+  h2 {
+    font-size: 13pt;
+    margin: 0.6cm 0 0.2cm 0;
+    border-bottom: 0.5pt solid #444;
+    padding-bottom: 0.1cm;
+  }
+  h3 {
+    font-size: 11.5pt;
+    margin: 0.35cm 0 0.1cm 0;
+  }
+  section[data-cv-section] {
+    page-break-inside: avoid;
+  }
+  .no-print {
+    display: none !important;
+  }
+  a[href]::after {
+    content: '';
+  } /* URLs OFF in print */
 }
 ```
 
@@ -113,6 +132,7 @@ the-journey-of-xoje/
 ## Memory plan
 
 After implementation, save (one entry each):
+
 - Decision: "portfolio content source = @personal-brand/cv, not snapshot" — `topic_key: portfolio/content-source`
 - Decision: "no backend, build-time only" — `topic_key: portfolio/runtime-model`
 - Gotcha: "DATA/*.json lives in ~/.personal-brand, not in this repo" — `topic_key: portfolio/data-location`
@@ -120,14 +140,14 @@ After implementation, save (one entry each):
 
 ## Hard-rule compliance (project-doctrine v1.0)
 
-| Rule | Compliance |
-|------|------------|
-| Type-safe by default | TS strict + Astro type-checking pre-build. ✅ |
-| Small files | Largest component < 200 lines. CSS split screen/print. ✅ |
-| Test what is testable | Print-contract test (deterministic) + manual acceptance. ✅ |
-| Secrets never in code | n/a — no secrets. ✅ |
+| Rule                          | Compliance                                                             |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| Type-safe by default          | TS strict + Astro type-checking pre-build. ✅                          |
+| Small files                   | Largest component < 200 lines. CSS split screen/print. ✅              |
+| Test what is testable         | Print-contract test (deterministic) + manual acceptance. ✅            |
+| Secrets never in code         | n/a — no secrets. ✅                                                   |
 | Convention over configuration | Astro content collections, route convention `[locale]/index.astro`. ✅ |
-| When in doubt, ask | This SPEC is the ask. ⏳ |
+| When in doubt, ask            | This SPEC is the ask. ⏳                                               |
 
 ## Resolved decisions
 

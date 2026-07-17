@@ -1,0 +1,207 @@
+---
+import uiEs from "@/i18n/ui.es.json";
+import uiEn from "@/i18n/ui.en.json";
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div
+  id="dialog-overlay"
+  class="dialog-overlay no-print"
+  style="display: none;"
+  data-dialog-continue={ui.game.dialogContinue}
+>
+  <div class="dialog-box">
+    <div id="dialog-npc-name" class="dialog-npc-name"></div>
+    <div id="dialog-text" class="dialog-text"></div>
+    <div id="dialog-prompt" class="dialog-prompt">{ui.game.dialogContinue}</div>
+  </div>
+</div>
+
+<style>
+  .dialog-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(9, 9, 11, 0.4);
+    z-index: 25;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    user-select: none;
+  }
+
+  .dialog-box {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    height: 150px;
+    background: #1c1c1f;
+    border: 2px solid #fff;
+    box-shadow: 6px 6px 0px #09090b;
+    padding: 20px;
+    box-sizing: border-box;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .dialog-npc-name {
+    position: absolute;
+    top: -14px;
+    left: 16px;
+    background: #f1c40f;
+    color: #09090b;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    border: 1px solid #fff;
+    box-shadow: 2px 2px 0px #09090b;
+    text-transform: uppercase;
+  }
+
+  .dialog-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #f4f4f5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    height: 80px;
+    overflow-y: auto;
+  }
+
+  .dialog-prompt {
+    position: absolute;
+    bottom: 8px;
+    right: 16px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    animation: pulse 1s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from {
+      opacity: 0.3;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import { activeDialogStore } from "@/modules/game/application/store";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('dialog-overlay');
+    const nameEl = document.getElementById('dialog-npc-name');
+    const textEl = document.getElementById('dialog-text');
+    const promptEl = document.getElementById('dialog-prompt');
+
+    if (!overlay || !nameEl || !textEl) return;
+
+    let fullText = '';
+    let currentText = '';
+    let charIndex = 0;
+    let timerId: number | null = null;
+    let activeSkillId = '';
+    let isTypewriterComplete = false;
+    const CHAR_SPEED_MS = 30;
+
+    const startTypewriter = (text: string) => {
+      if (timerId) clearInterval(timerId);
+      isTypewriterComplete = false;
+      fullText = text;
+      currentText = '';
+      charIndex = 0;
+      textEl.textContent = '';
+      if (promptEl) promptEl.style.display = 'none';
+
+      timerId = window.setInterval(() => {
+        if (charIndex < fullText.length) {
+          currentText += fullText.charAt(charIndex);
+          textEl.textContent = currentText;
+          charIndex++;
+        } else {
+          completeTypewriter();
+        }
+      }, CHAR_SPEED_MS);
+    };
+
+    const completeTypewriter = () => {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      textEl.textContent = fullText;
+      isTypewriterComplete = true;
+      if (promptEl) promptEl.style.display = 'block';
+    };
+
+    const handleAdvance = () => {
+      if (!isTypewriterComplete) {
+        // Force complete the progressive animation instantly
+        completeTypewriter();
+      } else {
+        // Complete the dialog and unlock the associated skill
+        const skillId = activeSkillId;
+
+        // Clear active dialogue store
+        activeDialogStore.set(null);
+
+        // Dispatch decoupled event to let the engine collect and unlock
+        window.dispatchEvent(
+          new CustomEvent('dialog-dismissed', {
+            detail: { skillId },
+          }),
+        );
+      }
+    };
+
+    // Listen to store updates to open/close dialogue overlay
+    activeDialogStore.subscribe((dialog) => {
+      if (dialog) {
+        activeSkillId = dialog.skillId;
+        nameEl.textContent = dialog.npcName;
+        overlay.style.display = 'flex';
+        startTypewriter(dialog.text);
+      } else {
+        overlay.style.display = 'none';
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+    });
+
+    // Advance dialogue on Space key or dialogue click
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if (activeDialogStore.get() && e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          handleAdvance();
+        }
+      },
+      { capture: true },
+    );
+
+    overlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleAdvance();
+    });
+  });
+</script>

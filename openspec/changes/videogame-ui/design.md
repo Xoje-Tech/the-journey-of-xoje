@@ -6,15 +6,15 @@ Approach 1 (Pure CSS Media-Query Hide/Show) per exploration. The game and the pr
 
 ## Architecture Decisions
 
-| Decision | Options | Tradeoff | **Decision** |
-|----------|---------|----------|--------------|
-| **DOM placement** | (a) inside `CvDocument`, (b) inside `CvLayout`, (c) new `<GameCanvas>` | (a) colocates with `data-locale`; (b) breaks slot story; (c) over-abstraction | **(a) — `<canvas id="game-canvas">` as sibling of `<article>` in `CvDocument.astro`, before it** |
-| **Engine shape** | (a) one file, (b) `types`/`input`/`physics`/`render`/`init` module tree | (a) likely > 200 lines, hard to test | **(b)** — five small files, all pure except `init.ts` |
-| **Input routing** | (a) `window` listeners for keys+gamepad, `canvas` for mouse; (b) all on canvas | (a) WASD-on regardless of focus | **(a)** — matches exploration |
-| **Locale impact** | (a) one game shared across `/es/` + `/en/`, (b) duplicate per locale | locale content is identical on screen | **(a) one canvas, locale-agnostic** |
-| **CSS layering** | (a) `@media screen` block in `screen.css`, (b) separate `game.css` | (b) splits related rules | **(a) — `screen.css` gains `@media screen { article[data-locale]{display:none!important} #game-canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:10} }`; `print.css` gains `#game-canvas{display:none!important}`** |
-| **Tick model** | (a) RAF only, (b) RAF + `setTimeout` fallback | (b) unnecessary | **(a)** |
-| **DOM test env** | (a) add `happy-dom`/`jsdom` devDep, (b) test pure funcs + mock canvas | "no new deps w/o asking" | **(b) — physics/input are pure; init/render validated by chromium PDF diff** |
+| Decision          | Options                                                                        | Tradeoff                                                                      | **Decision**                                                                                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DOM placement** | (a) inside `CvDocument`, (b) inside `CvLayout`, (c) new `<GameCanvas>`         | (a) colocates with `data-locale`; (b) breaks slot story; (c) over-abstraction | **(a) — `<canvas id="game-canvas">` as sibling of `<article>` in `CvDocument.astro`, before it**                                                                                                                                 |
+| **Engine shape**  | (a) one file, (b) `types`/`input`/`physics`/`render`/`init` module tree        | (a) likely > 200 lines, hard to test                                          | **(b)** — five small files, all pure except `init.ts`                                                                                                                                                                            |
+| **Input routing** | (a) `window` listeners for keys+gamepad, `canvas` for mouse; (b) all on canvas | (a) WASD-on regardless of focus                                               | **(a)** — matches exploration                                                                                                                                                                                                    |
+| **Locale impact** | (a) one game shared across `/es/` + `/en/`, (b) duplicate per locale           | locale content is identical on screen                                         | **(a) one canvas, locale-agnostic**                                                                                                                                                                                              |
+| **CSS layering**  | (a) `@media screen` block in `screen.css`, (b) separate `game.css`             | (b) splits related rules                                                      | **(a) — `screen.css` gains `@media screen { article[data-locale]{display:none!important} #game-canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:10} }`; `print.css` gains `#game-canvas{display:none!important}`** |
+| **Tick model**    | (a) RAF only, (b) RAF + `setTimeout` fallback                                  | (b) unnecessary                                                               | **(a)**                                                                                                                                                                                                                          |
+| **DOM test env**  | (a) add `happy-dom`/`jsdom` devDep, (b) test pure funcs + mock canvas          | "no new deps w/o asking"                                                      | **(b) — physics/input are pure; init/render validated by chromium PDF diff**                                                                                                                                                     |
 
 ## Data Flow — One Frame
 
@@ -44,36 +44,49 @@ The non-obvious bit — **wrap-around**: `x = ((x % w) + w) % w`. JavaScript's `
 
 ## File Changes
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/game/types.ts` | Create | `Player`, `InputState`, `CanvasDims`, `InitOptions` interfaces |
-| `src/game/input.ts` | Create | `sampleInputs(state, canvas, w, h)` — keyboard + mouse + gamepad poll, deadzone 0.15 |
-| `src/game/physics.ts` | Create | `wrapAround`, `applyFriction` — pure functions |
-| `src/game/render.ts` | Create | `drawGrid`, `drawPlayer` — 2D context draws |
-| `src/game/init.ts` | Create | `init(canvas, opts)` — public entry; RAF loop; resize w/ DPR; returns `{ stop() }` |
-| `src/components/CvDocument.astro` | Modify | Insert `<canvas id="game-canvas" aria-hidden="true" role="img">` before `<article>` |
-| `src/layouts/CvLayout.astro` | Modify | Add `<script>` calling `init(canvas)` from `src/game/init.ts` |
-| `src/styles/screen.css` | Modify | `@media screen { article[data-locale]{display:none!important} #game-canvas{position:fixed;inset:0;width:100vw;height:100vh;background:#0e0e10;z-index:10} }` |
-| `src/styles/print.css` | Modify | Inside `@media print`: prepend `#game-canvas,.game-hud{display:none!important}` |
-| `tests/game-physics.test.ts` | Create | Unit: `wrapAround` for ±x, ±y, exact edges |
-| `tests/game-input.test.ts` | Create | Unit: deadzone 0.15, keyboard clears mouseTarget, d-pad overrides analog |
-| `tests/game-build.test.ts` | Create | Integration: `astro build` emits dist HTML containing `<canvas id="game-canvas">` AND keeps slice-1 print contract substrings |
-| (deleted) | — | none |
+| File                              | Action | Purpose                                                                                                                                                      |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/game/types.ts`               | Create | `Player`, `InputState`, `CanvasDims`, `InitOptions` interfaces                                                                                               |
+| `src/game/input.ts`               | Create | `sampleInputs(state, canvas, w, h)` — keyboard + mouse + gamepad poll, deadzone 0.15                                                                         |
+| `src/game/physics.ts`             | Create | `wrapAround`, `applyFriction` — pure functions                                                                                                               |
+| `src/game/render.ts`              | Create | `drawGrid`, `drawPlayer` — 2D context draws                                                                                                                  |
+| `src/game/init.ts`                | Create | `init(canvas, opts)` — public entry; RAF loop; resize w/ DPR; returns `{ stop() }`                                                                           |
+| `src/components/CvDocument.astro` | Modify | Insert `<canvas id="game-canvas" aria-hidden="true" role="img">` before `<article>`                                                                          |
+| `src/layouts/CvLayout.astro`      | Modify | Add `<script>` calling `init(canvas)` from `src/game/init.ts`                                                                                                |
+| `src/styles/screen.css`           | Modify | `@media screen { article[data-locale]{display:none!important} #game-canvas{position:fixed;inset:0;width:100vw;height:100vh;background:#0e0e10;z-index:10} }` |
+| `src/styles/print.css`            | Modify | Inside `@media print`: prepend `#game-canvas,.game-hud{display:none!important}`                                                                              |
+| `tests/game-physics.test.ts`      | Create | Unit: `wrapAround` for ±x, ±y, exact edges                                                                                                                   |
+| `tests/game-input.test.ts`        | Create | Unit: deadzone 0.15, keyboard clears mouseTarget, d-pad overrides analog                                                                                     |
+| `tests/game-build.test.ts`        | Create | Integration: `astro build` emits dist HTML containing `<canvas id="game-canvas">` AND keeps slice-1 print contract substrings                                |
+| (deleted)                         | —      | none                                                                                                                                                         |
 
 ## Interfaces / Contracts
 
 ```ts
 // src/game/types.ts
-export interface Player { x: number; y: number; vx: number; vy: number; size: number }
+export interface Player {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+}
 export interface InputState {
   keys: Record<string, boolean>;
   mouseTarget: { x: number; y: number } | null;
   gamepadConnected: boolean;
   clearMouseTarget(): void;
 }
-export interface CanvasDims { w: number; h: number; dpr: number }
+export interface CanvasDims {
+  w: number;
+  h: number;
+  dpr: number;
+}
 export interface InitOptions {
-  gridSize?: number; friction?: number; acceleration?: number; deadzone?: number;
+  gridSize?: number;
+  friction?: number;
+  acceleration?: number;
+  deadzone?: number;
 }
 ```
 
@@ -86,11 +99,11 @@ Vanilla TS (no class), matching the project's existing content-script style.
 
 ## Testing Strategy
 
-| Layer | What | How |
-|-------|------|-----|
-| **Unit** | `wrapAround`, `applyFriction`, `sampleInputs` (deadzone + override) | `tests/game-physics.test.ts`, `tests/game-input.test.ts` — pure-function vitest, no DOM |
-| **Integration** | emitted `dist/{es,en}/index.html` contains `<canvas id="game-canvas">` AND slice-1 print contract substrings still in emitted CSS | `tests/game-build.test.ts` runs `astro build`, regex-walks `dist/` |
-| **E2E** | print PDF `/es/` and `/en/` matches pre-change baseline (zero canvas pixels, Harvard intact) | reuse `scripts/print-preview-headless.mjs` with `--emulate-media=print`; diff vs `tmp/print-preview-{es,en}-baseline.pdf` captured BEFORE changes |
+| Layer           | What                                                                                                                              | How                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**        | `wrapAround`, `applyFriction`, `sampleInputs` (deadzone + override)                                                               | `tests/game-physics.test.ts`, `tests/game-input.test.ts` — pure-function vitest, no DOM                                                           |
+| **Integration** | emitted `dist/{es,en}/index.html` contains `<canvas id="game-canvas">` AND slice-1 print contract substrings still in emitted CSS | `tests/game-build.test.ts` runs `astro build`, regex-walks `dist/`                                                                                |
+| **E2E**         | print PDF `/es/` and `/en/` matches pre-change baseline (zero canvas pixels, Harvard intact)                                      | reuse `scripts/print-preview-headless.mjs` with `--emulate-media=print`; diff vs `tmp/print-preview-{es,en}-baseline.pdf` captured BEFORE changes |
 
 `tests/print-contract.test.ts` MUST keep passing — `print.css` gains, doesn't lose, contract substrings.
 

@@ -104,23 +104,9 @@ function validateSkills(arr) {
 /** @param {any} profile */
 function renderProfile(profile) {
   const c = profile.contact;
-  const contact = [
-    c.email,
-    c.linkedin,
-    c.github,
-    c.phone,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const contact = [c.email, c.linkedin, c.github, c.phone].filter(Boolean).join(' · ');
 
-  const lines = [
-    `# ${profile.name}`,
-    '',
-    `_${profile.headline}_`,
-    '',
-    '---',
-    '',
-  ];
+  const lines = [`# ${profile.name}`, '', `_${profile.headline}_`, '', '---', ''];
   if (profile.location) lines.push(`- **Ubicación**: ${profile.location}`);
   if (profile.timezone) lines.push(`- **Zona horaria**: ${profile.timezone}`);
   if (profile.languages) lines.push(`- **Idiomas**: ${profile.languages}`);
@@ -138,11 +124,7 @@ function renderProfile(profile) {
   // "Sobre mi" — short summary
   lines.push('## Sobre mi', '');
   lines.push(
-    [
-      profile.headline,
-      profile.availability?.status,
-      profile.availability?.type,
-    ]
+    [profile.headline, profile.availability?.status, profile.availability?.type]
       .filter(Boolean)
       .join('. ') + '.',
     '',
@@ -197,7 +179,8 @@ function renderSkills(skills) {
   const technical = skills.filter((s) => Array.isArray(s.tags) && s.tags.includes('technical'));
   const qualitative = skills.filter((s) => Array.isArray(s.tags) && s.tags.includes('qualitative'));
   const other = skills.filter(
-    (s) => !Array.isArray(s.tags) || (!s.tags.includes('technical') && !s.tags.includes('qualitative')),
+    (s) =>
+      !Array.isArray(s.tags) || (!s.tags.includes('technical') && !s.tags.includes('qualitative')),
   );
 
   const lines = ['## Habilidades', ''];
@@ -206,7 +189,7 @@ function renderSkills(skills) {
     lines.push('### Tecnologias', '');
     for (const s of technical) {
       const level = s.level ? ` _(${s.level})_` : '';
-      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : s.evidence ?? '';
+      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
       lines.push(`- **${s.name}**${level}: ${ev}`);
     }
     lines.push('');
@@ -216,7 +199,7 @@ function renderSkills(skills) {
     lines.push('### Competencias', '');
     for (const s of qualitative) {
       const level = s.level ? ` _(${s.level})_` : '';
-      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : s.evidence ?? '';
+      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
       lines.push(`- **${s.name}**${level}: ${ev}`);
     }
     lines.push('');
@@ -226,7 +209,7 @@ function renderSkills(skills) {
     lines.push('### Otros', '');
     for (const s of other) {
       const level = s.level ? ` _(${s.level})_` : '';
-      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : s.evidence ?? '';
+      const ev = Array.isArray(s.evidence) ? s.evidence.join(', ') : (s.evidence ?? '');
       lines.push(`- **${s.name}**${level}: ${ev}`);
     }
     lines.push('');

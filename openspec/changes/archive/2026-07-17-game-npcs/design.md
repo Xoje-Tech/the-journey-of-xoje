@@ -13,11 +13,11 @@ The `game-npcs` change integrates four stationary coworker NPCs (Héctor, Laura,
 
 ## Architecture Decisions
 
-| Decision | Option | Tradeoff | Decision |
-|---|---|---|---|
-| **State Sharing** | CustomEvent vs Nanostore | CustomEvents are isolated but difficult to sync with UI component mounting/rendering states. Nanostores allow instant reactivity in Astro. | **Nanostore (`activeDialogStore`)** for reactive UI rendering, and **CustomEvent (`dialog-dismissed`)** to trigger engine-side collection. |
-| **Dialogue Localization** | Client-side interpolation vs Store-level resolution | Interpolating on the client requires passing all language pairs. Store-level resolution filters the correct string in the engine on collision. | **Store-level resolution** within the engine, resolving text based on the engine's initialized locale. |
-| **Blink & Anim Freeze** | Pause whole loop vs Selective freeze (`dt=0`) | Pausing the loop stops all canvas rendering. Selective freeze retains drawing but locks physics/animations. | **Selective freeze (`dt = 0`)** with static drawing active, ensuring player/blink stay frozen but visible. |
+| Decision                  | Option                                              | Tradeoff                                                                                                                                       | Decision                                                                                                                                   |
+| ------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **State Sharing**         | CustomEvent vs Nanostore                            | CustomEvents are isolated but difficult to sync with UI component mounting/rendering states. Nanostores allow instant reactivity in Astro.     | **Nanostore (`activeDialogStore`)** for reactive UI rendering, and **CustomEvent (`dialog-dismissed`)** to trigger engine-side collection. |
+| **Dialogue Localization** | Client-side interpolation vs Store-level resolution | Interpolating on the client requires passing all language pairs. Store-level resolution filters the correct string in the engine on collision. | **Store-level resolution** within the engine, resolving text based on the engine's initialized locale.                                     |
+| **Blink & Anim Freeze**   | Pause whole loop vs Selective freeze (`dt=0`)       | Pausing the loop stops all canvas rendering. Selective freeze retains drawing but locks physics/animations.                                    | **Selective freeze (`dt = 0`)** with static drawing active, ensuring player/blink stay frozen but visible.                                 |
 
 ## Data Flow
 
@@ -43,7 +43,7 @@ sequenceDiagram
     Store->>Overlay: State updated (active)
     Note over Engine: Loop forces dt = 0,<br/>pausing physics, inputs & blinks
     Overlay->>Overlay: Render NES Dialogue Box, start Typewriter
-    
+
     Note over Player, Overlay: User presses Space or clicks
     Player->>Overlay: Advance request
     alt Typewriter is running
@@ -61,6 +61,7 @@ sequenceDiagram
 ## Interfaces / Contracts
 
 ### `src/game/types.ts`
+
 ```typescript
 export interface NPCMetadata {
   name: string;
@@ -100,6 +101,7 @@ export interface InitOptions {
 ```
 
 ### `src/game/store.ts`
+
 ```typescript
 import { atom } from 'nanostores';
 import type { ActiveDialog } from './types';
@@ -121,14 +123,16 @@ export const activeDialogStore = atom<ActiveDialog | null>(null); // Added
 
 ## Testing Strategy
 
-| Layer | What to Test | Approach |
-|---|---|---|
-| **Unit** | Store initialization and updates. NPC metadata presence in `SKILL_TEMPLATES`. | Assert `activeDialogStore` starts as `null` and accepts updates. Assert that 4 specific skills have valid `npc` metadata. |
-| **Integration** | Engine freezing and collision behavior. | In a virtual loop context, assert that colliding with an NPC sets `activeDialogStore` and forces `dt = 0`. Assert `'dialog-dismissed'` resumes the loop and marks the item collected. |
-| **Manual / UI** | Visual layout of NES dialogue box, typewriter animation, and Space/click progression. | Launch the local server via `pnpm dev`, collide with each of the 4 NPCs, verify visual rendering and typewriter speed, and test Space key/mouse click progression. |
+| Layer           | What to Test                                                                          | Approach                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**        | Store initialization and updates. NPC metadata presence in `SKILL_TEMPLATES`.         | Assert `activeDialogStore` starts as `null` and accepts updates. Assert that 4 specific skills have valid `npc` metadata.                                                             |
+| **Integration** | Engine freezing and collision behavior.                                               | In a virtual loop context, assert that colliding with an NPC sets `activeDialogStore` and forces `dt = 0`. Assert `'dialog-dismissed'` resumes the loop and marks the item collected. |
+| **Manual / UI** | Visual layout of NES dialogue box, typewriter animation, and Space/click progression. | Launch the local server via `pnpm dev`, collide with each of the 4 NPCs, verify visual rendering and typewriter speed, and test Space key/mouse click progression.                    |
 
 ## Threat Matrix
+
 `N/A — no routing, shell, subprocess, VCS/PR automation, executable-file classification, or process-integration boundary.`
 
 ## Migration / Rollout
+
 No database migration required. Fully backward compatible; collectibles without the optional `npc` field continue to render and behave as standard skill coins.

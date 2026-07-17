@@ -1,6 +1,73 @@
 ---
-// Bare `/` (no locale prefix) → redirect to default locale `/es/`.
-// Astro 6 with i18n.routing.prefixDefaultLocale:true does NOT produce a bare
-// `/` page, so this is the entry point for visitors who hit the domain root.
-return Astro.redirect(import.meta.env.BASE_URL + 'es/', 302);
+import { getCollection, render } from 'astro:content';
+import CvLayout from '../layouts/CvLayout.astro';
+import CvDocument from "@/modules/cv/interface/components/organisms/CvDocument.astro";
+import GameViewport from "@/modules/game/interface/components/organisms/GameViewport.astro";
+import StartScreen from "@/modules/game/interface/components/organisms/StartScreen.astro";
+import SettingsPanel from "@/modules/game/interface/components/organisms/SettingsPanel.astro";
+import ControlsGuide from "@/modules/game/interface/components/organisms/ControlsGuide.astro";
+import PauseButton from "@/modules/game/interface/components/atoms/PauseButton.astro";
+import TechBag from "@/modules/game/interface/components/organisms/TechBag.astro";
+import QualBag from "@/modules/game/interface/components/organisms/QualBag.astro";
+import SoftBag from "@/modules/game/interface/components/organisms/SoftBag.astro";
+import DialogOverlay from "@/modules/game/interface/components/organisms/DialogOverlay.astro";
+import uiEs from "@/i18n/ui.es.json";
+
+const locale = 'es';
+const ui = uiEs;
+
+const entries = await getCollection('cv');
+const targetId = `cv.${locale}.md`;
+const entry = entries.find((e) => e.id === targetId);
+
+if (!entry) {
+  throw new Error(
+    `CV entry not found for locale "${locale}". ` +
+      `Expected "${targetId}" under src/content/. ` +
+      `Did you run "pnpm build:cv"?`,
+  );
+}
+
+const { Content } = await render(entry);
 ---
+
+<CvLayout locale={locale}>
+  <!-- Game engine viewport and retro screen-only overlays -->
+  <GameViewport />
+  <DialogOverlay locale={locale} />
+  <StartScreen locale={locale} />
+  <SettingsPanel locale={locale} />
+  <ControlsGuide locale={locale} />
+
+  <!-- Top-right HUD buttons container -->
+  <div class="hud-top-right no-print">
+    <PauseButton locale={locale} />
+    <SoftBag locale={locale} />
+    <QualBag locale={locale} />
+    <TechBag locale={locale} />
+  </div>
+
+  <!-- Clean, print-ready CV layout (fully decoupled from game layers) -->
+  <CvDocument locale={locale} ui={ui}>
+    <Content slot="body" />
+  </CvDocument>
+</CvLayout>
+
+<style>
+  .hud-top-right {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  @media (max-width: 480px) {
+    .hud-top-right :global(.hud-label),
+    .hud-top-right :global(.pause-label) {
+      display: none !important;
+    }
+  }
+</style>
