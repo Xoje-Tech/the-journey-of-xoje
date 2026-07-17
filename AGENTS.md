@@ -179,6 +179,7 @@ Slice 3 (deploy) is **not** part of slice 2 — deploy is the last thing, after 
 
 - **No sudo.** If a command needs root, surface it and stop.
 - **No auto-merge, no auto-push.** The user merges PRs and pushes. The agent validates locally.
+- **Human-Led Validation Gate (MANDATORY)**: The agent MUST NOT push, switch branches, stage commits, or declare a feature complete until the user has explicitly verified the live browser behavior themselves in their own environment. Automated testing and local Browserbase simulation are pre-flight tools for the agent to prove readiness; they never substitute the user's manual validation gate. If a bug is caught, the agent must keep the local checkout on the active feature branch, apply the fix, run local tests, and stop there, requesting the user to test the fix before performing any git operations.
 - **No inline destructive git operations.** Multi-step git chains (rebase, merge, push) go into reusable scripts under `~/.hermes/credentials/` or skill assets, not inline.
 - **No invented DATA.** If you don't know it, ask the user. See G04.
 - **No Playwright.** Doctrine is lightweight. Use `chromium --headless` (see `scripts/print-preview-headless.mjs`).
