@@ -38,6 +38,7 @@
  */
 import { applyFriction, clampPlayerY, checkCollision } from './physics';
 import { sampleInputs } from './input';
+import { isStartedStore, activeDialogStore } from './store';
 import {
   drawGrid,
   drawTrail,
@@ -63,26 +64,90 @@ export const MAP_HEIGHT = 4000;
 export const SKILL_TEMPLATES = [
   // LCS Robotics (0 - 1000)
   { id: 'kuka-robotics', name: 'KUKA robotics tooling', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.3, y: 250 },
-  { id: 'international-ops', name: 'Operacion en entorno internacional', category: 'qualitative' as const, biome: 'LCS Robotics', xRatio: 0.7, y: 500 },
+  { id: 'cultural-adaptability', name: 'Cultural adaptability', category: 'soft' as const, biome: 'LCS Robotics', xRatio: 0.4, y: 350 },
+  {
+    id: 'international-ops',
+    name: 'Operacion en entorno internacional',
+    category: 'qualitative' as const,
+    biome: 'LCS Robotics',
+    xRatio: 0.7,
+    y: 500,
+    npc: {
+      name: 'Héctor',
+      initial: 'H',
+      dialogue: {
+        es: '¡Ey Xoje! Bienvenido a bordo. En este entorno internacional de automoción vas a tener que comunicarte con equipos de todo el mundo. ¡La adaptabilidad es clave!',
+        en: 'Hey Xoje! Welcome aboard. In this international automotive environment, you will have to communicate with teams from all over the world. Adaptability is key!'
+      }
+    }
+  },
   { id: 'typescript', name: 'TypeScript', category: 'technical' as const, biome: 'LCS Robotics', xRatio: 0.5, y: 750 },
 
   // Crmble (1000 - 2000)
   { id: 'sass', name: 'Sass', category: 'technical' as const, biome: 'Crmble', xRatio: 0.25, y: 1200 },
   { id: 'bootstrap', name: 'Bootstrap', category: 'technical' as const, biome: 'Crmble', xRatio: 0.75, y: 1400 },
-  { id: 'design-system', name: 'Design system', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.4, y: 1600 },
+  { id: 'collaborative-creativity', name: 'Collaborative creativity', category: 'soft' as const, biome: 'Crmble', xRatio: 0.5, y: 1500 },
+  {
+    id: 'design-system',
+    name: 'Design system',
+    category: 'qualitative' as const,
+    biome: 'Crmble',
+    xRatio: 0.4,
+    y: 1600,
+    npc: {
+      name: 'Laura',
+      initial: 'L',
+      dialogue: {
+        es: 'Hola Jose. Diseñé estos componentes píxel-perfect. Vamos a construir juntos un sistema de componentes sólido para que sirva como única fuente de verdad.',
+        en: 'Hi Jose. I designed these pixel-perfect components. Let\'s build a solid component system together to serve as our single source of truth.'
+      }
+    }
+  },
   { id: 'pixel-perfect', name: 'Pixel-perfect implementation', category: 'qualitative' as const, biome: 'Crmble', xRatio: 0.6, y: 1800 },
 
   // Twinny (2000 - 3000)
   { id: 'angular', name: 'Angular', category: 'technical' as const, biome: 'Twinny', xRatio: 0.3, y: 2200 },
   { id: 'jira', name: 'Jira', category: 'technical' as const, biome: 'Twinny', xRatio: 0.7, y: 2400 },
+  {
+    id: 'peer-mentoring',
+    name: 'Peer mentoring',
+    category: 'soft' as const,
+    biome: 'Twinny',
+    xRatio: 0.6,
+    y: 2500,
+    npc: {
+      name: 'Dani',
+      initial: 'D',
+      dialogue: {
+        es: '¡Hola Xoje! Gracias por guiarme con Angular y explicarme los patrones de DDD. Tener un mentor en el equipo hace que aprender sea mucho más fácil.',
+        en: 'Hi Xoje! Thanks for guiding me with Angular and explaining DDD patterns. Having a mentor in the team makes learning so much easier.'
+      }
+    }
+  },
   { id: 'swagger', name: 'Swagger', category: 'technical' as const, biome: 'Twinny', xRatio: 0.5, y: 2600 },
   { id: 'ddd', name: 'Domain-Driven Design (DDD)', category: 'qualitative' as const, biome: 'Twinny', xRatio: 0.4, y: 2800 },
 
   // RIDE ON (3000 - 4000)
   { id: 'astro', name: 'Astro', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.2, y: 3200 },
   { id: 'vue', name: 'Vue', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.8, y: 3400 },
+  { id: 'continuous-learning', name: 'Continuous learning', category: 'soft' as const, biome: 'RIDE ON', xRatio: 0.45, y: 3500 },
   { id: 'nodejs', name: 'Node.js', category: 'technical' as const, biome: 'RIDE ON', xRatio: 0.5, y: 3600 },
-  { id: 'tdd', name: 'Test-Driven Development (TDD)', category: 'qualitative' as const, biome: 'RIDE ON', xRatio: 0.6, y: 3800 },
+  {
+    id: 'tdd',
+    name: 'Test-Driven Development (TDD)',
+    category: 'qualitative' as const,
+    biome: 'RIDE ON',
+    xRatio: 0.6,
+    y: 3800,
+    npc: {
+      name: 'Marcos',
+      initial: 'M',
+      dialogue: {
+        es: 'Qué tal, Xoje. Aquí en RIDE ON la calidad es innegociable. No subas nada sin escribir primero sus tests unitarios. ¡TDD es el camino!',
+        en: 'Hey Xoje. Here at RIDE ON, quality is non-negotiable. Don\'t upload anything without writing its unit tests first. TDD is the way!'
+      }
+    }
+  },
 ];
 
 // Phase-2 polish constants. Keep them next to the slice so anyone reading
@@ -101,6 +166,45 @@ const BLINK_MAX_INTERVAL_MS = 5000;
 
 export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHandle {
   let started = false;
+  let hasStarted = false;
+  const locale = opts.locale ?? 'es';
+
+  const unsubscribe = isStartedStore.subscribe((val) => {
+    started = val;
+    if (val) {
+      hasStarted = true;
+    }
+  });
+
+  let isDialogActive = false;
+  const unsubscribeDialog = activeDialogStore.subscribe((val) => {
+    isDialogActive = !!val;
+  });
+
+  const onDialogDismissed = (e: Event) => {
+    const customEvent = e as CustomEvent<{ skillId: string }>;
+    const skillId = customEvent.detail.skillId;
+    const item = collectibles.find(c => c.id === skillId);
+    if (item && !item.collected) {
+      item.collected = true;
+      const collectedCount = collectibles.filter(c => c.collected).length;
+      const totalCount = collectibles.length;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('game-state-update', {
+          detail: {
+            collectedCount,
+            totalCount,
+            lastCollected: item.name,
+            unlockedId: item.id,
+          }
+        }));
+      }
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('dialog-dismissed', onDialogDismissed);
+  }
   const ctxOrNull = canvas.getContext('2d');
   if (!ctxOrNull) {
     throw new Error('[videogame-ui] could not acquire 2D context');
@@ -135,6 +239,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     y: t.y,
     radius: 12,
     collected: false,
+    npc: t.npc,
   }));
 
   /** Instantiate the clean architecture PlayerEntity and load spritesheet */
@@ -271,7 +376,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     }
     const blinkActive = now - blinkStart < BLINK_DURATION_MS;
 
-    if (started) {
+    const isPlaying = started && !isDialogActive;
+
+    if (isPlaying) {
       // Pull the latest gamepad reading (axes 0/1 + dpad buttons). Polled
       // here rather than from events so the value is exactly the stick's
       // current state for this frame.
@@ -338,18 +445,31 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       // Collisions check & Dispatch CustomEvent
       for (const item of collectibles) {
         if (!item.collected && checkCollision(player, item)) {
-          item.collected = true;
-          const collectedCount = collectibles.filter(c => c.collected).length;
-          const totalCount = collectibles.length;
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('game-state-update', {
-              detail: {
-                collectedCount,
-                totalCount,
-                lastCollected: item.name,
-                unlockedId: item.id,
-              }
-            }));
+          if (item.npc) {
+            // Trigger dialog overlay instead of direct collection
+            const dialogText = locale === 'es' ? item.npc.dialogue.es : item.npc.dialogue.en;
+            activeDialogStore.set({
+              npcName: item.npc.name,
+              skillId: item.id,
+              text: dialogText
+            });
+            // Stop movement to prevent overlapping
+            player.vx = 0;
+            player.vy = 0;
+          } else {
+            item.collected = true;
+            const collectedCount = collectibles.filter(c => c.collected).length;
+            const totalCount = collectibles.length;
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('game-state-update', {
+                detail: {
+                  collectedCount,
+                  totalCount,
+                  lastCollected: item.name,
+                  unlockedId: item.id,
+                }
+              }));
+            }
           }
         }
       }
@@ -368,7 +488,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     // Draw Biomes
     drawBiomes(ctx, dims.w, camera.y, dims.h);
     
-    if (started) {
+    if (hasStarted) {
       // Draw Collectibles
       drawCollectibles(ctx, collectibles, camera.y, dims.h);
       
@@ -380,7 +500,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     }
     
     // Draw and progress player spritesheet animation
-    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, dtMs, blinkActive);
+    const animDt = isPlaying ? dtMs : 0;
+    const blinkStatus = isPlaying ? blinkActive : false;
+    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, animDt, blinkStatus);
     
     ctx.restore();
     
@@ -406,6 +528,11 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   return {
     stop(): void {
       pause();
+      unsubscribe();
+      unsubscribeDialog();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('dialog-dismissed', onDialogDismissed);
+      }
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);

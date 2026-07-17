@@ -11,7 +11,7 @@ const { locale } = Astro.props;
 const ui = locale === 'es' ? uiEs : uiEn;
 ---
 
-<div id="start-screen" class="no-print">
+<div id="start-screen" class="no-print" data-start-label={ui.game.startGame} data-resume-label={ui.game.resumeGame}>
   <div class="start-content">
     <h1 class="retro-title">{ui.game.startTitle}</h1>
     <p class="retro-tagline">{ui.game.startTagline}</p>
@@ -111,15 +111,28 @@ const ui = locale === 'es' ? uiEs : uiEn;
     }
 
     if (startScreen) {
+      const startLabel = startScreen.dataset.startLabel || 'Start Game';
+      const resumeLabel = startScreen.dataset.resumeLabel || 'Resume Game';
+
       isStartedStore.subscribe((started) => {
         if (started) {
           startScreen.classList.add('slide-up');
+          if (startGameBtn) {
+            startGameBtn.textContent = resumeLabel;
+          }
+        } else {
+          startScreen.style.display = 'flex';
+          // Force a DOM reflow to prevent CSS transition bypasses
+          void startScreen.offsetHeight;
+          startScreen.classList.remove('slide-up');
         }
       });
 
       startScreen.addEventListener('transitionend', (e) => {
         if (e.target === startScreen && e.propertyName === 'transform') {
-          startScreen.style.display = 'none';
+          if (isStartedStore.get()) {
+            startScreen.style.display = 'none';
+          }
         }
       });
     }
