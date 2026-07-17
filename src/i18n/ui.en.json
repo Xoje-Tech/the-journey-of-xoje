@@ -5,7 +5,7 @@
   },
   "actions": {
     "print": "Print CV",
-    "switchLocale": "Espanol"
+    "switchLocale": "Spanish"
   },
   "game": {
     "startTitle": "The Journey of Xoje",
@@ -28,7 +28,7 @@
     "resumeGame": "Resume Game",
     "techBagLabel": "Tech: ",
     "techBagTitle": "Technical Skills",
-    "qualBagLabel": "Qual: ",
+    "qualBagLabel": "Skills: ",
     "qualBagTitle": "Qualitative Skills",
     "softBagLabel": "Soft: ",
     "softBagTitle": "Soft Skills",
