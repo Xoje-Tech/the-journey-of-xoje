@@ -104,7 +104,7 @@ describe('print contract — slice 1', () => {
   }, 120_000);
 
   it('astro build emits dist/ with both locale HTML pages', () => {
-    expect(existsSync(resolve(DIST, 'es/index.html'))).toBe(true);
+    expect(existsSync(resolve(DIST, 'index.html'))).toBe(true);
     expect(existsSync(resolve(DIST, 'en/index.html'))).toBe(true);
   });
 

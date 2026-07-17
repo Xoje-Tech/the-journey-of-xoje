@@ -12,7 +12,7 @@
 
 A KISS, zero-runtime, zero-backend portfolio website. The screen is a thin wrapper around the CV; the print output is the actual CV.
 
-- **URL (when deployed):** `https://xoje.dev`
+- **URL (when deployed):** `https://xoje-tech.github.io/the-journey-of-xoje/`
 - **Two locales:** Spanish (default, `/es/`) and English (`/en/`). Bare `/` redirects to `/es/`.
 - **Source of truth for content:** the live DATA at `~/.personal-brand/DATA/*.json`, fed through the `cv-product-eng` orchestrator of `@personal-brand/cv`.
 - **Architecture:** Astro 6 static export. No SSR, no integrations, no runtime JS.
@@ -153,13 +153,27 @@ To update the CV:
 
 ---
 
+## Deployment (GitHub Pages)
+
+The website is continuously deployed to **GitHub Pages** using GitHub Actions:
+
+- **Deployment branch:** `master`
+- **Workflow file:** `.github/workflows/deploy.yml`
+- **URL:** `https://xoje-tech.github.io/the-journey-of-xoje/`
+
+Any push or merge into the `master` branch automatically triggers the deployment action, which compiles the static site and deploys it.
+
+---
+
 ## Slice status
 
 | Slice | Scope | Status |
 |---|---|---|
 | 1 | Print-ready CV, two locales, headless preview | ✅ Closed and validated 2026-07-15 |
-| 2 | Close slice-1 debts (DATA, docs, tests), pre-deploy hygiene | 🔄 In progress |
-| Deploy | Static hosting (`https://xoje.dev`) | ⏸ Deferred — **last thing, not slice 2** |
+| 2 | Close slice-1 debts (DATA, docs, tests), pre-deploy hygiene | ✅ Completed 2026-07-16 |
+| 3 (Deploy) | Static hosting on GitHub Pages | ✅ Completed and live 2026-07-16 |
+| 4 (Interactive) | Videogame HUD: Pause button, NPCs, Skill pouches, animation | ✅ Completed and live 2026-07-17 |
+| 5 (i18n) | Translation of CV Body content (ES -> EN) | 🔄 Active (in Backlog) |
 
 Backlog tracked in dev-tracker project `the-journey-of-xoje`.
 
