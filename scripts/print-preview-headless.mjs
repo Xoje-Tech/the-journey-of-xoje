@@ -28,9 +28,25 @@ import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 
 const CHROMIUM = '/usr/bin/chromium';
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:4321';
+const BASE_URL = (process.env.BASE_URL ?? 'http://localhost:4321').replace(/\/$/, '');
+const DEFAULT_LOCALE = 'es';
 const LOCALES = /** @type {const} */ (['es', 'en']);
 const OUT_DIR = resolve(process.cwd(), 'tmp');
+
+/**
+ * Build the URL for a given locale respecting the i18n routing contract.
+ * Astro's `prefixDefaultLocale: false` means the default locale (es) lives
+ * at the root `/`, while other locales are prefixed (e.g. `/en/`).
+ *
+ * @param {string} locale
+ * @returns {string}
+ */
+function urlForLocale(locale) {
+  if (locale === DEFAULT_LOCALE) {
+    return `${BASE_URL}/`;
+  }
+  return `${BASE_URL}/${locale}/`;
+}
 
 /**
  * @param {string} locale
@@ -38,7 +54,7 @@ const OUT_DIR = resolve(process.cwd(), 'tmp');
  * @returns {Promise<void>}
  */
 function renderPdf(locale, outPath) {
-  const url = `${BASE_URL}/${locale}/`;
+  const url = urlForLocale(locale);
   console.log(`[print-preview] ${locale} → ${outPath}`);
   console.log(`[print-preview]   url=${url}`);
 
@@ -95,7 +111,7 @@ async function main() {
  * @param {string} outPath
  */
 function renderPdfWithMedia(locale, outPath) {
-  const url = `${BASE_URL}/${locale}/`;
+  const url = urlForLocale(locale);
   console.log(`[print-preview] ${locale} → ${outPath}`);
   console.log(`[print-preview]   url=${url}  (media: print)`);
 

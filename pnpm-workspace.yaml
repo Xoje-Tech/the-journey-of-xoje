@@ -9,6 +9,7 @@
 # See AGENTS.md → "Workspace linkage" for the full rationale.
 
 allowBuilds:
+  chromedriver: true
   esbuild: true
+  puppeteer: true
   sharp: true
-onlyBuiltDependencies: '["esbuild","sharp"]'
