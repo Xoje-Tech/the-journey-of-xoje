@@ -284,3 +284,43 @@ describe('Gamepad Start → Settings — Slice C WU-3 source contract', () => {
     expect(src).toMatch(/!settingsModal\.open/);
   });
 });
+
+/**
+ * Slice C WU-4: D-pad navigation inside modals. The engine dispatches
+ * per-direction CustomEvents; RetroModal listens and cycles focus
+ * through the modal's focusables.
+ */
+describe('Gamepad D-pad navigation in modals — Slice C WU-4 source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+  const MODAL_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/RetroModal.astro');
+
+  it('init.ts source tracks previous D-pad state for edge detection', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The per-direction dispatch only fires on released → press transition.
+    expect(src).toMatch(/prevDpadState/);
+  });
+
+  it.each(['up', 'down', 'left', 'right'] as const)(
+    'init.ts source dispatches gamepad-dpad-%s on edge transition',
+    (dir) => {
+      const src = readFileSync(INIT_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`'gamepad-dpad-${dir}'`));
+    },
+  );
+
+  it.each(['up', 'down', 'left', 'right'] as const)(
+    'RetroModal source listens for gamepad-dpad-%s',
+    (dir) => {
+      const src = readFileSync(MODAL_PATH, 'utf8');
+      // The modal cycles focus on any direction event.
+      expect(src).toMatch(new RegExp(`addEventListener\\(['"]gamepad-dpad-${dir}['"]`));
+    },
+  );
+
+  it('RetroModal source guards navigation behind modal.open check', () => {
+    const src = readFileSync(MODAL_PATH, 'utf8');
+    // The D-pad handler must check modal.open before touching focus,
+    // otherwise it would intercept D-pad events meant for the game.
+    expect(src).toMatch(/if\s*\(\s*!modal\.open\s*\)/);
+  });
+});

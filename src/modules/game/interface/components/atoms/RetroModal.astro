@@ -132,9 +132,7 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
       // pressing A activates it (e.g. closing the modal via close-btn).
       // We do NOT force-close the modal here so the focus-trap semantics
       // are preserved: A respects whatever the user has navigated to with
-      // the focus trap (upcoming slice will add D-pad navigation; until
-      // then, Tab is the navigation path and A activates the focused
-      // element).
+      // the D-pad / Tab focus trap.
       modal.addEventListener('gamepad-a', () => {
         if (!modal.open) return;
         const active = document.activeElement as HTMLElement | null;
@@ -154,6 +152,36 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
         modal.close();
         handleClose();
       });
+
+      // Gamepad D-pad navigation (Slice C WU-4). Cycles focus through
+      // the modal's focusables. Up/Down move to prev/next (matches the
+      // expected mental model for vertical lists — Settings and Controls
+      // modals have stacked controls). Left/Right also cycle but the
+      // effect is the same — kept as a stub for future horizontal
+      // layouts (e.g. icon grids) without changing the public contract.
+      //
+      // Edge-detect is handled upstream in init.ts, so each direction
+      // event fires exactly once per physical press — no repeat spam.
+      const moveFocus = (delta: number) => {
+        if (!modal.open) return;
+        const focusables = getFocusable();
+        if (focusables.length === 0) return;
+        const active = document.activeElement as HTMLElement | null;
+        let idx = active ? focusables.indexOf(active) : -1;
+        if (idx === -1) {
+          // Focus not in modal: take the first focusable.
+          idx = 0;
+        } else {
+          // Wrap-around cycle.
+          idx = (idx + delta + focusables.length) % focusables.length;
+        }
+        focusables[idx]?.focus();
+      };
+
+      modal.addEventListener('gamepad-dpad-up', () => moveFocus(-1));
+      modal.addEventListener('gamepad-dpad-down', () => moveFocus(1));
+      modal.addEventListener('gamepad-dpad-left', () => moveFocus(-1));
+      modal.addEventListener('gamepad-dpad-right', () => moveFocus(1));
 
       // Move focus into the modal when it opens.
       const observer = new MutationObserver(() => {

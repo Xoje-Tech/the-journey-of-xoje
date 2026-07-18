@@ -524,6 +524,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   let prevAPressed = false;
   let prevBPressed = false;
   let prevStartPressed = false;
+  let prevDpadState = { up: false, down: false, left: false, right: false };
   const BUTTON_POLL_MS = 100;
   // Defensive: tests that mock `window` may not provide setInterval.
   // The interval id defaults to 0 (a falsy timer handle that
@@ -533,10 +534,33 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   if (typeof window.setInterval === 'function') {
     gamepadButtonTimer = window.setInterval(() => {
       if (!state.gamepadConnected) return;
-      const { a, b, start } = pollGamepadOnce();
+      const { dpad, a, b, start } = pollGamepadOnce();
       const aPressed = !!a;
       const bPressed = !!b;
       const startPressed = !!start;
+      // D-pad edge-detect: dispatch per-direction events for D-pad
+      // navigation inside modals (Slice C WU-4). The game-loop's
+      // existing dpad path handles character movement; this only
+      // emits CustomEvents for the DOM modal layer.
+      const prevDpadUp = prevDpadState.up;
+      const prevDpadDown = prevDpadState.down;
+      const prevDpadLeft = prevDpadState.left;
+      const prevDpadRight = prevDpadState.right;
+      if (dpad) {
+        if (dpad.up && !prevDpadUp) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-up'));
+        }
+        if (dpad.down && !prevDpadDown) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-down'));
+        }
+        if (dpad.left && !prevDpadLeft) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-left'));
+        }
+        if (dpad.right && !prevDpadRight) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-right'));
+        }
+        prevDpadState = { up: dpad.up, down: dpad.down, left: dpad.left, right: dpad.right };
+      }
       if (aPressed && !prevAPressed) {
         window.dispatchEvent(new CustomEvent('gamepad-a'));
       }
