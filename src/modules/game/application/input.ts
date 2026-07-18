@@ -14,9 +14,13 @@
  *   1. Keyboard (WASD + arrows). When any movement key is held, the pending
  *      mouseTarget is cleared (OQ2: keyboard overrides mouse).
  *   2. Gamepad D-pad (discrete buttons). When pressed, D-pad wins over a
- *      contradicting analog stick.
+ *      contradicting analog stick. ALSO clears the pending mouseTarget
+ *      (Slice-A fix: gamepad must override mouse just like keyboard does,
+ *      otherwise the player drifts back to a stale click point after the
+ *      user releases the D-pad).
  *   3. Gamepad analog stick with a 0.15 deadzone — inside the deadzone the
- *      stick reads as zero (no drift at rest).
+ *      stick reads as zero (no drift at rest). ABOVE the deadzone it ALSO
+ *      clears the pending mouseTarget (same rationale as the D-pad).
  *   4. Mouse one-shot target — produces a unit vector toward the click
  *      point, normalized so diagonal isn't faster than axis-aligned.
  *
@@ -93,6 +97,10 @@ export function sampleInputs(
     const dpadX = (dpad.right ? accel : 0) + (dpad.left ? -accel : 0);
     const dpadY = (dpad.down ? accel : 0) + (dpad.up ? -accel : 0);
     if (dpadX !== 0 || dpadY !== 0) {
+      // Gamepad overrides mouse just like keyboard does (Slice-A fix).
+      // Without this, releasing the D-pad leaves the player drifting back
+      // toward a stale click point that the user no longer cares about.
+      if (state.mouseTarget) state.clearMouseTarget();
       return { vx: dpadX, vy: dpadY };
     }
   }
@@ -102,6 +110,10 @@ export function sampleInputs(
     const sx = Math.abs(stick.x) > DEFAULT_DEADZONE ? stick.x : 0;
     const sy = Math.abs(stick.y) > DEFAULT_DEADZONE ? stick.y : 0;
     if (sx !== 0 || sy !== 0) {
+      // Same mouse-override rationale as the D-pad path above: a live
+      // analog input is explicit user intent and must supersede a stale
+      // pending click target.
+      if (state.mouseTarget) state.clearMouseTarget();
       // Scale the stick output to the same per-frame feel as the keyboard accel.
       return { vx: sx * accel, vy: sy * accel };
     }

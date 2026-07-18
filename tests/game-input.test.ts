@@ -152,6 +152,54 @@ describe('sampleInputs — D-pad overrides analog', () => {
   });
 });
 
+describe('sampleInputs — gamepad overrides mouseTarget (Slice-A fix)', () => {
+  // Symmetry with the keyboard path (lines 76-94): the OQ2 rule says "any
+  // active movement input overrides mouse". Before Slice-A, only the
+  // keyboard path called state.clearMouseTarget(). Releasing the D-pad or
+  // stick left the player drifting back to a stale click point.
+
+  it('D-pad press clears a pending mouseTarget (mirror of the keyboard path)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const dpad = { up: false, down: false, left: false, right: true };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, dpad);
+    expect(state.mouseTarget).toBeNull();
+  });
+
+  it('analog stick above deadzone clears a pending mouseTarget', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0.5, y: 0 };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(state.mouseTarget).toBeNull();
+  });
+
+  it('analog stick inside deadzone does NOT clear mouseTarget (rest state, not intent)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0.05, y: 0.05 }; // below deadzone
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(state.mouseTarget).not.toBeNull();
+  });
+
+  it('D-pad NOT pressed and stick at zero does NOT clear mouseTarget (mirror of no-keys case)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0, y: 0 };
+    const dpad = { up: false, down: false, left: false, right: false };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick, dpad);
+    expect(state.mouseTarget).not.toBeNull();
+  });
+});
+
 describe('sampleInputs — mouse-target steering', () => {
   it('produces a vector toward the click target', () => {
     // Player is conceptually at (0,0); target is straight to the right.
