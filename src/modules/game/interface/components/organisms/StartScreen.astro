@@ -111,6 +111,11 @@ const ui = locale === 'es' ? uiEs : uiEn;
     const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
     const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
 
+    // Slice D (WU-1): all four buttons are wired to keyboard activation
+    // for free because they are real <button> elements (Enter / Space
+    // trigger click automatically). We just add explicit click→click
+    // handlers below for the actions themselves.
+
     if (startGameBtn) {
       startGameBtn.addEventListener('click', () => {
         isStartedStore.set(true);
@@ -134,6 +139,116 @@ const ui = locale === 'es' ? uiEs : uiEn;
         controlsModal.showModal();
       });
     }
+
+    // Slice D (WU-2): 2D grid navigation for keyboard + gamepad.
+    // The 4 buttons are laid out 2x2:
+    //   [0] Start Game   [1] Download CV
+    //   [2] Settings     [3] Controls
+    // ArrowRight / D-pad-right → idx +1 (wrap row 0→1 at column 1)
+    // ArrowLeft  / D-pad-left  → idx -1 (wrap row 1→0 at column 0)
+    // ArrowDown  / D-pad-down  → idx +2 (next row, wrap last→first)
+    // ArrowUp    / D-pad-up    → idx -2 (previous row, wrap first→last)
+    //
+    // Gamepad A activation: dispatched by init.ts as a 'gamepad-a'
+    // CustomEvent (Slice A). When the focused element is one of our 4
+    // buttons, we just call .click() on it.
+    const buttons: HTMLElement[] = [
+      startGameBtn,
+      downloadCvBtn,
+      settingsBtn,
+      controlsBtn,
+    ].filter((b): b is HTMLElement => b !== null);
+
+    const getCurrentIndex = (): number => {
+      const active = document.activeElement as HTMLElement | null;
+      const idx = active ? buttons.indexOf(active) : -1;
+      return idx;
+    };
+
+    const moveFocus = (delta: number) => {
+      if (buttons.length === 0) return;
+      // Don't intercept navigation while a modal is open — modals have
+      // their own focus management (RetroModal + Slice C WU-4).
+      if (settingsModal?.open || controlsModal?.open) return;
+      const current = getCurrentIndex();
+      const total = buttons.length;
+      // If nothing is focused yet, default to the first button (idx 0).
+      const base = current === -1 ? 0 : current;
+      const next = ((base + delta) % total + total) % total;
+      buttons[next]?.focus();
+    };
+
+    const isStartScreenActive = (): boolean => {
+      // The start screen is the active input target only when it's
+      // visible (display !== 'none') AND the game hasn't started yet.
+      if (!startScreen) return false;
+      const style = window.getComputedStyle(startScreen);
+      if (style.display === 'none') return false;
+      // If a modal is open, modal nav (Slice C WU-4) takes precedence.
+      if (settingsModal?.open || controlsModal?.open) return false;
+      return true;
+    };
+
+    // Keyboard arrow navigation. Listener attached to window so it works
+    // regardless of which element has focus (within reason — guard below).
+    window.addEventListener('keydown', (e) => {
+      if (!isStartScreenActive()) return;
+      // tagName string check is test-env-safe (HTMLInputElement isn't
+      // defined in Vitest without DOM — same trick as the P-shortcut
+      // in init.ts).
+      const target = e.target as unknown as { tagName?: string } | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
+        return;
+      }
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          moveFocus(1);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          moveFocus(-1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          moveFocus(2);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          moveFocus(-2);
+          break;
+      }
+    });
+
+    // Gamepad D-pad navigation. init.ts dispatches 'gamepad-dpad-up/
+    // down/left/right' on edge transitions (Slice C WU-4 added this).
+    // We reuse the same moveFocus logic. The Slice C listener on
+    // RetroModal handles D-pad nav inside modals; here we handle the
+    // start screen.
+    const onDpad = (delta: number) => () => {
+      if (!isStartScreenActive()) return;
+      moveFocus(delta);
+    };
+    window.addEventListener('gamepad-dpad-right', onDpad(1));
+    window.addEventListener('gamepad-dpad-left', onDpad(-1));
+    window.addEventListener('gamepad-dpad-down', onDpad(2));
+    window.addEventListener('gamepad-dpad-up', onDpad(-2));
+
+    // Gamepad A activation. init.ts dispatches 'gamepad-a' on edge
+    // transition. If the focused element is one of our 4 buttons, fire
+    // a synthetic click so the existing click handlers do their work.
+    // This mirrors the Slice C modal pattern (A activates focused).
+    window.addEventListener('gamepad-a', () => {
+      if (!isStartScreenActive()) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (active && buttons.includes(active)) {
+        active.click();
+      }
+    });
+
+    // Note: Gamepad B (cancel) is intentionally NOT wired here. There
+    // is nothing to "cancel" on the start screen — B's semantic meaning
+    // (close modal) doesn't apply.
 
     if (startScreen) {
       const startLabel = startScreen.dataset.startLabel || 'Start Game';
@@ -164,6 +279,25 @@ const ui = locale === 'es' ? uiEs : uiEn;
             startScreen.style.display = 'none';
           }
         }
+      });
+    }
+
+    // Slice D (WU-1): auto-focus the first button when the page loads.
+    // A native <button> reacts to Enter/Space automatically, so just
+    // landing focus on startGameBtn is enough for keyboard activation.
+    // Gamepad A activation is wired separately in WU-2 by dispatching
+    // a synthetic click on the focused element.
+    //
+    // We focus only once, on initial load. When the user pauses and the
+    // start screen reappears, we do NOT steal focus — that would be
+    // surprising mid-game (e.g. the user is reading a dialog and the
+    // game pauses from elsewhere). They can Tab back if they want.
+    if (startGameBtn) {
+      // requestAnimationFrame ensures the start screen has been laid
+      // out and visible (display:flex is set inline by the subscription
+      // on DOMContentLoaded) before we move focus to it.
+      requestAnimationFrame(() => {
+        startGameBtn.focus();
       });
     }
   });

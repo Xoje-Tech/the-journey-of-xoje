@@ -58,4 +58,16 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
     box-shadow: 2px 2px 0px #09090b;
     background-color: #3f3f46;
   }
+
+  /*
+   * Focus ring — Slice D (WU-1) needs a visible focus indicator so
+   * keyboard and gamepad navigation is usable. The retro aesthetic
+   * uses a chunky pixel border instead of a thin outline; the white
+   * drop-shadow matches the Lisa: The Painful visual canon.
+   */
+  .retro-btn:focus-visible {
+    outline: none;
+    border-color: #f4f4f5;
+    box-shadow: 4px 4px 0px #f4f4f5, 0 0 0 2px #09090b;
+  }
 </style>
