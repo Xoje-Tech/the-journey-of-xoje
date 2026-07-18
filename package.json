@@ -10,6 +10,7 @@
     "dev": "astro dev",
     "generate-sprites": "scripts/.venv/bin/python scripts/generate-sprites.py",
     "generate-skill-sprites": "scripts/.venv/bin/python scripts/generate-skill-sprites.py",
+    "generate-start-bg": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=$HOME/tools/squashfs-root/usr/lib $HOME/tools/squashfs-root/usr/bin/libresprite --batch --script $INIT_CWD/scripts/generate-start-bg.js",
     "build:astro": "astro build",
     "prebuild": "node scripts/build-cv-static.mjs",
     "build": "pnpm build:cv && astro build",
