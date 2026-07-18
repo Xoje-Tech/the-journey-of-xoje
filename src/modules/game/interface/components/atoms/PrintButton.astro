@@ -1,0 +1,95 @@
+---
+import uiEs from "@/i18n/ui.es.json";
+import uiEn from "@/i18n/ui.en.json";
+
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+const ui = locale === 'es' ? uiEs : uiEn;
+---
+
+<div class="print-hud-container no-print">
+  <button id="print-cv-btn" type="button" class="print-hud-btn" aria-label={ui.actions.print}>
+    <span class="print-icon" aria-hidden="true">🖨</span>
+    <span class="print-hud-label">{ui.actions.print}</span>
+  </button>
+</div>
+
+<style>
+  .print-hud-container {
+    display: none; /* Controlled dynamically by Nanostores subscription */
+  }
+
+  .print-hud-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 35, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .print-hud-btn:hover {
+    background: rgba(45, 45, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .print-hud-btn:active {
+    transform: translateY(1px);
+  }
+
+  .print-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .print-hud-label {
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  import { isStartedStore } from "@/modules/game/application/store";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const printBtn = document.getElementById('print-cv-btn');
+    const container = document.querySelector('.print-hud-container') as HTMLElement | null;
+
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        // Same handler as StartScreen's Download CV button — the slice-1
+        // print contract already validates the print preview output. This
+        // makes the action reachable from inside the game, not just from
+        // the start screen (Slice-C Brecha 8).
+        window.print();
+      });
+    }
+
+    // Visible only while the game is running. Same pattern as PauseButton.
+    isStartedStore.subscribe((started) => {
+      if (container) {
+        container.style.display = started ? 'block' : 'none';
+      }
+    });
+
+    // Keyboard shortcut (P) — Slice C WU-2. The engine in init.ts dispatches
+    // a `print-requested` CustomEvent on keydown('p'). We listen here so
+    // the same print handler serves both the button click and the
+    // keyboard shortcut. The event is dispatched even when the button is
+    // hidden (Start Screen open) because the start screen also benefits
+    // from the P shortcut; visibility is purely a styling concern.
+    window.addEventListener('print-requested', () => {
+      window.print();
+    });
+  });
+</script>
