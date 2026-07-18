@@ -219,3 +219,68 @@ describe('PrintButton.astro — Slice C WU-1', () => {
     expect(enHtml).toMatch(/Print\s*CV/);
   });
 });
+
+/**
+ * Slice C WU-2: keyboard P shortcut. The engine in init.ts dispatches a
+ * 'print-requested' CustomEvent on keydown('p'). PrintButton listens to
+ * it. We verify the source contract here because the runtime dispatch
+ * path is covered by integration tests in start-screen.test.ts.
+ */
+describe('Print requested event — Slice C WU-2 source contract', () => {
+  const PRINT_BTN_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/PrintButton.astro');
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+
+  it('PrintButton source listens for print-requested', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]print-requested['"]/);
+  });
+
+  it('init.ts source dispatches print-requested on keydown "p"', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The dispatch happens inside the onKeyDown handler.
+    expect(src).toMatch(/'print-requested'/);
+    expect(src).toMatch(/e\.key === ['"]p['"]/);
+  });
+
+  it('init.ts source respects e.repeat to avoid auto-repeat spam', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The guard must check e.repeat BEFORE dispatching.
+    expect(src).toMatch(/e\.repeat/);
+  });
+});
+
+/**
+ * Slice C WU-3: gamepad Start button (buttons[9]) opens the Settings
+ * modal. The engine dispatches 'gamepad-start' on edge-detect, and
+ * SettingsPanel.astro listens for it.
+ */
+describe('Gamepad Start → Settings — Slice C WU-3 source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+  const SETTINGS_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/organisms/SettingsPanel.astro');
+
+  it('init.ts source polls buttons[9] (Start) in pollGamepadOnce', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // buttons[9] is Start in standard W3C gamepad mapping.
+    expect(src).toMatch(/buttons\[9\]/);
+  });
+
+  it('init.ts source dispatches gamepad-start on edge-detect', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    expect(src).toMatch(/'gamepad-start'/);
+    // Edge-detect must track previous state to avoid spam.
+    expect(src).toMatch(/prevStartPressed/);
+  });
+
+  it('SettingsPanel source listens for gamepad-start and opens the modal', () => {
+    const src = readFileSync(SETTINGS_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]gamepad-start['"]/);
+    expect(src).toMatch(/showModal\(\)/);
+  });
+
+  it('SettingsPanel source does not double-open the modal if already open', () => {
+    const src = readFileSync(SETTINGS_PATH, 'utf8');
+    // Guard: don't call showModal() if already open (it would throw or
+    // be a no-op depending on the browser).
+    expect(src).toMatch(/!settingsModal\.open/);
+  });
+});

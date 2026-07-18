@@ -511,17 +511,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
   document.addEventListener('visibilitychange', onVisibility);
 
-  // Gamepad A/B edge-detect (Slice A, WU-2). The dialog overlay and the
-  // retro modals live in the DOM, not on the canvas, so they need to react
-  // to gamepad input even when the RAF loop is paused (e.g. dialog open).
-  // We poll at 10 Hz — fast enough for a confirm button, slow enough not
-  // to compete with the per-frame loop on the same getGamepads() call.
+  // Gamepad A/B/Start edge-detect (Slice A, WU-2; Slice C WU-3 adds Start).
+  // The dialog overlay and the retro modals live in the DOM, not on the
+  // canvas, so they need to react to gamepad input even when the RAF
+  // loop is paused (e.g. dialog open). We poll at 10 Hz — fast enough for
+  // a confirm button, slow enough not to compete with the per-frame loop
+  // on the same getGamepads() call.
   //
   // Edge detection: only fire when the button transitions from
   // released → pressed. Without this, holding A would spam clicks every
   // 100 ms.
   let prevAPressed = false;
   let prevBPressed = false;
+  let prevStartPressed = false;
   const BUTTON_POLL_MS = 100;
   // Defensive: tests that mock `window` may not provide setInterval.
   // The interval id defaults to 0 (a falsy timer handle that
@@ -531,17 +533,22 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   if (typeof window.setInterval === 'function') {
     gamepadButtonTimer = window.setInterval(() => {
       if (!state.gamepadConnected) return;
-      const { a, b } = pollGamepadOnce();
+      const { a, b, start } = pollGamepadOnce();
       const aPressed = !!a;
       const bPressed = !!b;
+      const startPressed = !!start;
       if (aPressed && !prevAPressed) {
         window.dispatchEvent(new CustomEvent('gamepad-a'));
       }
       if (bPressed && !prevBPressed) {
         window.dispatchEvent(new CustomEvent('gamepad-b'));
       }
+      if (startPressed && !prevStartPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-start'));
+      }
       prevAPressed = aPressed;
       prevBPressed = bPressed;
+      prevStartPressed = startPressed;
     }, BUTTON_POLL_MS);
   }
 
@@ -570,12 +577,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
   /**
    * Polled once per frame (during play) for stick + dpad; also polled at
-   * 10 Hz by a separate interval for the A/B edge-detect that drives
-   * dialog advance and modal close — those events can fire while the RAF
-   * loop is paused (e.g. dialog overlay open), so the polling can't depend
-   * on `loop()` being scheduled.
+   * 10 Hz by a separate interval for the A/B/Start edge-detect that drives
+   * dialog advance, modal close, and settings open — those events can fire
+   * while the RAF loop is paused (e.g. dialog overlay open), so the polling
+   * can't depend on `loop()` being scheduled.
    *
-   * Standard mapping: buttons[0] = A (south), buttons[1] = B (east).
+   * Standard mapping:
+   *   buttons[0]  = A (south / confirm)
+   *   buttons[1]  = B (east / cancel)
+   *   buttons[9]  = Start (menu — NES-style Start button)
+   *
    * We treat "pressed" as `pressed || touched` so soft-presses on
    * triggerless controllers still register.
    */
@@ -584,11 +595,13 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     dpad?: { up: boolean; down: boolean; left: boolean; right: boolean };
     a?: boolean;
     b?: boolean;
+    start?: boolean;
   } {
     let stick: { x: number; y: number } | undefined;
     let dpad: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined;
     let a: boolean | undefined;
     let b: boolean | undefined;
+    let start: boolean | undefined;
     if (state.gamepadConnected && typeof navigator.getGamepads === 'function') {
       const pads = navigator.getGamepads();
       const pad = pads && pads[0];
@@ -600,12 +613,15 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
           left: !!pad.buttons[14]?.pressed,
           right: !!pad.buttons[15]?.pressed,
         };
-        // Standard mapping (W3C gamepad): 0 = A (south), 1 = B (east).
+        // Standard mapping (W3C gamepad).
         a = !!(pad.buttons[0]?.pressed || pad.buttons[0]?.touched);
         b = !!(pad.buttons[1]?.pressed || pad.buttons[1]?.touched);
+        // Start button is buttons[9] in standard mapping (between
+        // shoulder buttons and stick clicks).
+        start = !!(pad.buttons[9]?.pressed || pad.buttons[9]?.touched);
       }
     }
-    return { stick, dpad, a, b };
+    return { stick, dpad, a, b, start };
   }
 
   function pollGamepad(): { stick?: { x: number; y: number }; dpad?: { up: boolean; down: boolean; left: boolean; right: boolean } } {
