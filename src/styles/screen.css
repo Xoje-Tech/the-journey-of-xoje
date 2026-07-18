@@ -110,6 +110,14 @@ article[data-locale] li {
     height: 100vh;
     background: #0e0e10;
     z-index: 10;
+    /*
+     * touch-action: none tells the browser not to consume pointer events
+     * with default gestures (scroll, zoom, double-tap-to-zoom). Without
+     * this, mobile users would scroll the page instead of moving the
+     * player when tapping on the canvas. Pointer Events in init.ts then
+     * handle the rest of the gesture lifecycle.
+     */
+    touch-action: none;
   }
   /*
    * The HUD is drawn via ctx.fillText in src/game/init.ts → drawHud; no

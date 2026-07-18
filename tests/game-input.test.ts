@@ -19,7 +19,7 @@
  * the caller owns, which is how we keep tests DOM-free.
  */
 import { describe, it, expect } from 'vitest';
-import { sampleInputs } from '../src/modules/game/application/input';
+import { sampleInputs, pointerEventToCanvasTarget } from '../src/modules/game/application/input';
 import type { InputState, CanvasDims } from '../src/modules/game/domain/types';
 
 function makeState(overrides: Partial<InputState> = {}): InputState {
@@ -221,5 +221,129 @@ describe('sampleInputs — mouse-target steering', () => {
     const state = makeState({ mouseTarget: { x: 50, y: 50 } });
     sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 51, y: 51 });
     expect(state.mouseTarget).toBeNull();
+  });
+});
+
+/**
+ * Slice-B (pointer events) — `pointerEventToCanvasTarget` covers the
+ * canvas-local coordinate mapping for the unified mouse/touch/pen path.
+ * We don't need a real DOM: a stub canvas with a fixed bounding rect
+ * is enough, and the function only reads three things from the event:
+ * `offsetX`/`offsetY` (when present) and `clientX`/`clientY`.
+ */
+describe('pointerEventToCanvasTarget — pointer events (Slice B)', () => {
+  function makeCanvas(rect: DOMRect): HTMLCanvasElement {
+    return {
+      getBoundingClientRect: () => rect,
+    } as HTMLCanvasElement;
+  }
+
+  it('uses offsetX/offsetY directly when present (modern PointerEvent path)', () => {
+    const canvas = makeCanvas({
+      left: 100,
+      top: 50,
+      right: 700,
+      bottom: 650,
+      width: 600,
+      height: 600,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      offsetX: 42,
+      offsetY: 17,
+      clientX: 999, // ignored when offsetX is present
+      clientY: 999,
+    });
+    expect(target).toEqual({ x: 42, y: 17 });
+  });
+
+  it('falls back to clientX - rect.left when offsetX is missing (legacy path)', () => {
+    const canvas = makeCanvas({
+      left: 100,
+      top: 50,
+      right: 700,
+      bottom: 650,
+      width: 600,
+      height: 600,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      clientX: 142, // 142 - 100 = 42
+      clientY: 67, // 67 - 50 = 17
+    });
+    expect(target).toEqual({ x: 42, y: 17 });
+  });
+
+  it('handles a tap at the canvas origin (top-left) correctly', () => {
+    const canvas = makeCanvas({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      clientX: 0,
+      clientY: 0,
+    });
+    expect(target).toEqual({ x: 0, y: 0 });
+  });
+
+  it('handles offsetX=0 / offsetY=0 distinctly from "missing" (type guard)', () => {
+    // This is the regression that bites if you use `|| e.offsetX`:
+    // `0 || fallback` evaluates to fallback. The `typeof === 'number'`
+    // check correctly accepts 0 as a valid coordinate.
+    const canvas = makeCanvas({
+      left: 10,
+      top: 20,
+      right: 410,
+      bottom: 320,
+      width: 400,
+      height: 300,
+      x: 10,
+      y: 20,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      offsetX: 0,
+      offsetY: 0,
+      clientX: 999,
+      clientY: 999,
+    });
+    expect(target).toEqual({ x: 0, y: 0 });
+  });
+
+  it('produces a target the sampler can steer toward (integration with sampleInputs)', () => {
+    // End-to-end: simulate a tap on the right half of the canvas and
+    // verify sampleInputs produces a rightward vector toward it.
+    const canvas = makeCanvas({
+      left: 0,
+      top: 0,
+      right: DIMS.w,
+      bottom: DIMS.h,
+      width: DIMS.w,
+      height: DIMS.h,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const state = makeState({
+      mouseTarget: pointerEventToCanvasTarget(canvas, {
+        offsetX: 180,
+        offsetY: 0,
+        clientX: 180,
+        clientY: 0,
+      }),
+    });
+    const v = sampleInputs(state, canvas, DIMS.w, DIMS.h);
+    expect(v.vx).toBeGreaterThan(0);
   });
 });

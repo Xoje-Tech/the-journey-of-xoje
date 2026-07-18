@@ -37,7 +37,7 @@
  * Return value: `{ stop() }` cancels the RAF loop and detaches listeners.
  */
 import { applyFriction, clampPlayerY, checkCollision } from '@/modules/game/application/physics';
-import { sampleInputs } from '@/modules/game/application/input';
+import { sampleInputs, pointerEventToCanvasTarget } from '@/modules/game/application/input';
 import { isStartedStore, activeDialogStore, activeTooltipStore } from '@/modules/game/application/store';
 import {
   drawGrid,
@@ -457,12 +457,8 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   function onKeyUp(e: KeyboardEvent): void {
     state.keys[e.key] = false;
   }
-  function onMouseDown(e: MouseEvent): void {
-    const rect = canvas.getBoundingClientRect();
-    state.mouseTarget = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
+  function onPointerDown(e: PointerEvent): void {
+    state.mouseTarget = pointerEventToCanvasTarget(canvas, e);
   }
   function onGamepadConnected(): void {
     state.gamepadConnected = true;
@@ -483,7 +479,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   window.addEventListener('resize', resize);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('gamepadconnected', onGamepadConnected);
   window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
   document.addEventListener('visibilitychange', onVisibility);
@@ -775,7 +771,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
-      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('gamepadconnected', onGamepadConnected);
       window.removeEventListener('gamepaddisconnected', onGamepadDisconnected);
       document.removeEventListener('visibilitychange', onVisibility);
