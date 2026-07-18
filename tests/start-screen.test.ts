@@ -203,6 +203,124 @@ describe('Start Screen Core Engine Suspension', () => {
     handle.stop();
   });
 
+  describe('Slice B: Pointer Events path (touch / mouse / pen)', () => {
+    it('registers pointerdown on the canvas (not mousedown) — Slice B wiring', () => {
+      const { canvas, canvasListeners } = makeFakeCanvas();
+      init(canvas as any);
+      // Pointer Events are the unified path; mousedown is gone.
+      expect(canvasListeners['pointerdown']).toBeDefined();
+      expect(canvasListeners['pointerdown']?.length).toBe(1);
+      expect(canvasListeners['mousedown']).toBeUndefined();
+    });
+
+    it('pointerdown sets state.mouseTarget to canvas-local coordinates', () => {
+      const { canvas, canvasListeners } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      // Synthetic PointerEvent (mobile browsers emit these on tap).
+      const pointerEvent = {
+        type: 'pointerdown',
+        pointerType: 'touch',
+        offsetX: 250,
+        offsetY: 175,
+        clientX: 250, // canvas rect starts at (0,0) per makeFakeCanvas
+        clientY: 175,
+      } as unknown as PointerEvent;
+
+      canvasListeners['pointerdown']?.[0]?.(pointerEvent);
+
+      // The handler stores into state.mouseTarget via the input sampler.
+      // We can verify the side effect by reading it through the handle
+      // (the GameHandle.player reference exposes the live state object
+      // indirectly via the internal closure, but the cleanest observable
+      // is to step a frame and confirm the player accelerates toward it).
+      handle.start();
+
+      // Single frame: state.mouseTarget = (250, 175), player at (400, 14),
+      // so the player should drift LEFT (vx < 0) toward the target.
+      if (rafCallback) rafCallback(performance.now());
+
+      const spy = vi.spyOn(PlayerEntity.prototype, 'updateAndDraw');
+      spy.mockClear();
+      if (rafCallback) rafCallback(performance.now());
+
+      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]!;
+      // Player started at x=400, target at x=250 → player should move left.
+      expect(lastCall[1]).toBeLessThan(400);
+
+      handle.stop();
+    });
+
+    it('falls back to clientX/Y when offsetX/Y are missing (older browsers)', () => {
+      const { canvas, canvasListeners } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      // Synthetic event WITHOUT offsetX/offsetY — relies on clientX/Y.
+      // Target (100, 50) is to the LEFT and BELOW the player at (400, 14).
+      // dy = 50 - 14 = 36 > 0 → vy > 0 → player moves DOWN.
+      const pointerEvent = {
+        type: 'pointerdown',
+        pointerType: 'mouse',
+        clientX: 100, // canvas rect at (0,0) → x=100
+        clientY: 50, // → y=50
+      } as unknown as PointerEvent;
+
+      canvasListeners['pointerdown']?.[0]?.(pointerEvent);
+
+      handle.start();
+      if (rafCallback) rafCallback(performance.now());
+
+      const spy = vi.spyOn(PlayerEntity.prototype, 'updateAndDraw');
+      spy.mockClear();
+      if (rafCallback) rafCallback(performance.now());
+
+      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]!;
+      // Target (100, 50), player (400, 14) → player moves left and down.
+      expect(lastCall[1]).toBeLessThan(400); // x decreases (toward 100)
+      expect(lastCall[2]).toBeGreaterThan(14); // y increases (toward 50)
+
+      handle.stop();
+    });
+
+    it('a key press after a tap clears the pending mouseTarget (OQ2 holds for touch)', () => {
+      const { canvas, canvasListeners } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      // 1. Tap on the right side → set mouseTarget.
+      canvasListeners['pointerdown']?.[0]?.({
+        type: 'pointerdown',
+        pointerType: 'touch',
+        offsetX: 700,
+        offsetY: 300,
+        clientX: 700,
+        clientY: 300,
+      } as unknown as PointerEvent);
+
+      handle.start();
+      if (rafCallback) rafCallback(performance.now());
+
+      // 2. Press ArrowLeft on the keyboard. Per Slice A + OQ2, any
+      // active movement input overrides mouseTarget.
+      window.dispatchEvent({ type: 'keydown', key: 'ArrowLeft' } as any);
+      // Release the tap-touch implicitly by ArrowLeft taking over.
+      if (rafCallback) rafCallback(performance.now());
+
+      // 3. Verify the player now follows ArrowLeft, not the tap target.
+      const spy = vi.spyOn(PlayerEntity.prototype, 'updateAndDraw');
+      spy.mockClear();
+      for (let i = 0; i < 3; i++) {
+        if (rafCallback) rafCallback(performance.now());
+      }
+
+      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]!;
+      // ArrowLeft → vx < 0 → player.x decreases (moves left).
+      expect(lastCall[1]).toBeLessThan(400);
+
+      window.dispatchEvent({ type: 'keyup', key: 'ArrowLeft' } as any);
+      handle.stop();
+    });
+  });
+
   describe('StartScreen Astro component DOM & Store integration', () => {
     it('should add slide-up class to start-screen when isStartedStore becomes true', () => {
       const startScreenMock = {

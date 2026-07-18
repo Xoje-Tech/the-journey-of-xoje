@@ -39,6 +39,34 @@ export const DEFAULT_ACCELERATION = 0.6;
 /** Distance threshold (logical px) below which a click target is considered reached. */
 const ARRIVAL_RADIUS = 1.5;
 
+/**
+ * Convert a PointerEvent to canvas-local logical coordinates.
+ *
+ * Exported as a pure function so unit tests can drive it with synthetic
+ * PointerEvents (the DOM-emitted ones in jsdom are unreliable; using
+ * `{} as PointerEvent` and filling offsetX/Y works fine).
+ *
+ * Pointer Events unify mouse / touch / pen under one path. The sampler
+ * in `sampleInputs` only consumes `state.mouseTarget`, which is
+ * pointer-type agnostic.
+ *
+ * - When the event exposes `offsetX`/`offsetY` (modern browsers, e.g.
+ *   Chrome and Safari since 2018), we use them directly. They account
+ *   for CSS transforms and scroll automatically.
+ * - Older or synthetic events fall back to `clientX`/`clientY` minus the
+ *   canvas bounding rect, which is the same math the previous
+ *   `mousedown` handler used.
+ */
+export function pointerEventToCanvasTarget(
+  canvas: HTMLCanvasElement,
+  e: { offsetX?: number; offsetY?: number; clientX: number; clientY: number },
+): { x: number; y: number } {
+  const rect = canvas.getBoundingClientRect();
+  const x = typeof e.offsetX === 'number' ? e.offsetX : e.clientX - rect.left;
+  const y = typeof e.offsetY === 'number' ? e.offsetY : e.clientY - rect.top;
+  return { x, y };
+}
+
 export interface Dpad {
   up: boolean;
   down: boolean;
