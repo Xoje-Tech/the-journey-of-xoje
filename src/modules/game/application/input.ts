@@ -79,9 +79,31 @@ export interface Stick {
   y: number;
 }
 
+export interface SampleInput {
+  vx: number;
+  vy: number;
+  /**
+   * Which input source produced the movement this frame. Used by the
+   * HUD to show "keyboard:W", "gamepad:D-up", "mouse:(200,300)",
+   * "touch:(150,75)", or "idle" — useful when validating input
+   * behavior during dev. The enum is intentionally small and ordered
+   * by precedence: keyboard > gamepad D-pad > gamepad stick > mouse >
+   * touch > idle.
+   */
+  source: 'keyboard' | 'gamepad-dpad' | 'gamepad-stick' | 'mouse' | 'touch' | 'idle';
+  /**
+   * One-line, human-readable detail about what specifically was
+   * pressed (e.g. "W", "D-up", "(200,300)", "(150,75)"). Used in the
+   * compact HUD line so the dev sees exactly which key/axis/tap is
+   * firing.
+   */
+  detail: string;
+}
+
 /**
  * Sample the current frame's input. Returns a velocity contribution
- * `{ vx, vy }` to add to the player.
+ * `{ vx, vy }` to add to the player, plus the source and a short
+ * detail string for the debug HUD.
  *
  * The optional `stick` and `dpad` parameters exist so the browser-side
  * init.ts can pass live `navigator.getGamepads()` readings and the unit
@@ -99,7 +121,7 @@ export function sampleInputs(
   stick?: Stick,
   dpad?: Dpad,
   playerPos?: { x: number; y: number },
-): { vx: number; vy: number } {
+): SampleInput {
   const accel = DEFAULT_ACCELERATION;
   let vx = 0;
   let vy = 0;
@@ -117,7 +139,15 @@ export function sampleInputs(
     vy += (keyDown ? accel : 0) + (keyUp ? -accel : 0);
     // Keyboard overrides any pending click target (OQ2).
     if (state.mouseTarget) state.clearMouseTarget();
-    return { vx, vy };
+    // Build the detail string: list held movement keys in priority
+    // order (Up, Down, Left, Right) so the HUD line is stable across
+    // frames and easy to read.
+    const held: string[] = [];
+    if (keyUp) held.push(keys['w'] || keys['W'] ? 'W' : 'ArrowUp');
+    if (keyDown) held.push(keys['s'] || keys['S'] ? 'S' : 'ArrowDown');
+    if (keyLeft) held.push(keys['a'] || keys['A'] ? 'A' : 'ArrowLeft');
+    if (keyRight) held.push(keys['d'] || keys['D'] ? 'D' : 'ArrowRight');
+    return { vx, vy, source: 'keyboard', detail: held.join('+') };
   }
 
   // 2. Gamepad D-pad wins over analog stick.
@@ -129,7 +159,12 @@ export function sampleInputs(
       // Without this, releasing the D-pad leaves the player drifting back
       // toward a stale click point that the user no longer cares about.
       if (state.mouseTarget) state.clearMouseTarget();
-      return { vx: dpadX, vy: dpadY };
+      const dirs: string[] = [];
+      if (dpad.up) dirs.push('D-up');
+      if (dpad.down) dirs.push('D-down');
+      if (dpad.left) dirs.push('D-left');
+      if (dpad.right) dirs.push('D-right');
+      return { vx: dpadX, vy: dpadY, source: 'gamepad-dpad', detail: dirs.join('+') };
     }
   }
 
@@ -143,7 +178,8 @@ export function sampleInputs(
       // pending click target.
       if (state.mouseTarget) state.clearMouseTarget();
       // Scale the stick output to the same per-frame feel as the keyboard accel.
-      return { vx: sx * accel, vy: sy * accel };
+      const detail = `(${stick.x.toFixed(2)},${stick.y.toFixed(2)})`;
+      return { vx: sx * accel, vy: sy * accel, source: 'gamepad-stick', detail };
     }
   }
 
@@ -157,12 +193,20 @@ export function sampleInputs(
     if (playerPos && dist <= ARRIVAL_RADIUS) {
       // Arrived — clear the one-shot target.
       state.clearMouseTarget();
-      return { vx: 0, vy: 0 };
+      return { vx: 0, vy: 0, source: 'mouse', detail: `arrived@(${target.x},${target.y})` };
     }
 
     if (dist > 0) {
       // Normalize then scale by accel so steering feels as snappy as keys.
-      return { vx: (dx / dist) * accel, vy: (dy / dist) * accel };
+      // Mouse and touch share the same path (Pointer Events unify them);
+      // we use the canvas-level pointer type recorded by init.ts on the
+      // mouseTarget slot. See init.ts where it stores the target.
+      const source: 'mouse' | 'touch' =
+        (state as unknown as { lastPointerType?: 'mouse' | 'touch' | 'pen' }).lastPointerType === 'touch'
+          ? 'touch'
+          : 'mouse';
+      const detail = `(${target.x},${target.y})`;
+      return { vx: (dx / dist) * accel, vy: (dy / dist) * accel, source, detail };
     }
   }
 
@@ -171,5 +215,5 @@ export function sampleInputs(
   // a place to live without changing the call sites.
   void w;
   void h;
-  return { vx: 0, vy: 0 };
+  return { vx: 0, vy: 0, source: 'idle', detail: '' };
 }

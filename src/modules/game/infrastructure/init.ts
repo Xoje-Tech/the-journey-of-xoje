@@ -396,6 +396,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     keys: {},
     mouseTarget: null,
     gamepadConnected: false,
+    /**
+     * Last PointerEvent.pointerType observed on the canvas. The sampler
+     * reads this to decide whether the one-shot mouseTarget came from
+     * a mouse click or a touch tap (Pointer Events unify the path; this
+     * field is how we keep the mouse/touch distinction visible for the
+     * debug HUD).
+     */
+    lastPointerType: 'mouse',
     clearMouseTarget() {
       state.mouseTarget = null;
     },
@@ -480,12 +488,26 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     if (e.key === 'p' || e.key === 'P') {
       window.dispatchEvent(new CustomEvent('print-requested'));
     }
+    // Debug HUD toggle — pressing D flips debugHud, which expands the
+    // HUD to show extra input detail. This is a dev affordance; it's
+    // safe to leave enabled in prod because it's just an extra HUD
+    // line and toggled only on explicit press.
+    if (e.key === 'd' || e.key === 'D') {
+      debugHud = !debugHud;
+    }
   }
   function onKeyUp(e: KeyboardEvent): void {
     state.keys[e.key] = false;
   }
   function onPointerDown(e: PointerEvent): void {
     state.mouseTarget = pointerEventToCanvasTarget(canvas, e);
+    // Record pointer type so the sampler can distinguish mouse vs touch
+    // in the debug HUD. Valid values: 'mouse' | 'touch' | 'pen'.
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      state.lastPointerType = e.pointerType;
+    } else {
+      state.lastPointerType = 'mouse';
+    }
   }
   function onGamepadConnected(): void {
     state.gamepadConnected = true;
@@ -580,6 +602,15 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   let paused = false;
   let lastFrameMs = performance.now();
 
+  // Debug HUD state: cached from the latest sampleInputs() call.
+  // The HUD is drawn every frame from these closure vars; we don't
+  // re-sample.
+  let lastInputSource: 'keyboard' | 'gamepad-dpad' | 'gamepad-stick' | 'mouse' | 'touch' | 'idle' = 'idle';
+  let lastInputDetail = '';
+  // Toggle: D flips this. When true, formatHud expands to one line
+  // per input path. When false, just the compact line.
+  let debugHud = false;
+
   function updateFps(now: number): void {
     frameTimes.push(now);
     if (frameTimes.length > FPS_WINDOW) frameTimes.shift();
@@ -667,6 +698,10 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       const { stick, dpad } = pollGamepad();
 
       const v = sampleInputs(state, canvas, dims.w, dims.h, stick, dpad, player);
+      // Cache the latest source + detail for the HUD. The HUD is
+      // drawn every frame from these closure vars; we don't re-sample.
+      lastInputSource = v.source;
+      lastInputDetail = v.detail;
 
       // Integrate: v = (v + input) * friction, then add to position.
       player.vx = (player.vx + v.vx) * friction;
@@ -805,7 +840,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
     ctx.restore();
 
-    drawHud(ctx, player, dims.w, dims.h, fpsValue);
+    drawHud(ctx, player, dims.w, dims.h, fpsValue, lastInputSource, lastInputDetail, debugHud);
 
     if (!paused) rafId = requestAnimationFrame(loop);
   }
@@ -854,8 +889,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 }
 
 /**
- * Render the HUD (brand + pos + vel + fps) into the top-left corner of
- * the canvas. `formatHud` returns the raw string; we draw it line-by-line.
+ * Render the HUD (brand + pos + vel + fps + input line) into the
+ * top-left corner of the canvas. `formatHud` returns the raw string;
+ * we draw it line-by-line.
  */
 function drawHud(
   ctx: CanvasRenderingContext2D,
@@ -863,13 +899,20 @@ function drawHud(
   canvasW: number,
   canvasH: number,
   fps: number,
+  inputSource: 'keyboard' | 'gamepad-dpad' | 'gamepad-stick' | 'mouse' | 'touch' | 'idle',
+  inputDetail: string,
+  debug: boolean,
 ): void {
   ctx.save();
   ctx.font = HUD_FONT;
   ctx.fillStyle = HUD_COLOR;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  const text = formatHud(player, canvasW, canvasH, fps);
+  const text = formatHud(player, canvasW, canvasH, fps, {
+    source: inputSource,
+    detail: inputDetail,
+    debug,
+  });
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i] ?? '', HUD_PAD_X, HUD_PAD_Y + i * HUD_LINE_HEIGHT);

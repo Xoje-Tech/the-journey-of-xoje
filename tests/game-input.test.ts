@@ -27,6 +27,7 @@ function makeState(overrides: Partial<InputState> = {}): InputState {
     keys: {},
     mouseTarget: null,
     gamepadConnected: false,
+    lastPointerType: 'mouse',
     clearMouseTarget: () => {
       state.mouseTarget = null;
     },
@@ -121,7 +122,9 @@ describe('sampleInputs — gamepad analog stick', () => {
   it('returns zero when no gamepad connected and no keys', () => {
     const state = makeState();
     const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
-    expect(v).toEqual({ vx: 0, vy: 0 });
+    // Use toMatchObject so we only assert on vx/vy, not the new source/detail
+    // fields added in the debug HUD slice.
+    expect(v).toMatchObject({ vx: 0, vy: 0 });
   });
 });
 
@@ -345,5 +348,87 @@ describe('pointerEventToCanvasTarget — pointer events (Slice B)', () => {
     });
     const v = sampleInputs(state, canvas, DIMS.w, DIMS.h);
     expect(v.vx).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * SampleInput contract — the debug HUD slice extends the sampler to
+ * return `{ vx, vy, source, detail }` so the canvas HUD can show what
+ * input is currently firing. Format examples:
+ *
+ *   keyboard:W       → ArrowUp / W held
+ *   keyboard:W+A     → Up + Left (WASD alias)
+ *   gamepad-dpad:D-up → D-pad up on a connected gamepad
+ *   gamepad-stick:(0.50,0.20) → analog stick position
+ *   mouse:(200,300)  → pointer click target on the canvas
+ *   touch:(150,75)   → tap target (PointerEvents.pointerType === 'touch')
+ *   idle             → no movement input active
+ *
+ * The sampler is the single source of truth for which path fired this
+ * frame, so the HUD never has to re-derive it from `vx`/`vy`.
+ */
+describe('sampleInputs — source/detail contract for debug HUD', () => {
+  it('reports source=keyboard and detail="W" when W is held', () => {
+    const state = makeState({ keys: { w: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('W');
+  });
+
+  it('reports detail="W+A" when W and A are held simultaneously', () => {
+    const state = makeState({ keys: { w: true, a: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('W+A');
+  });
+
+  it('reports detail="ArrowUp" when only the ArrowUp key is held', () => {
+    const state = makeState({ keys: { ArrowUp: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('ArrowUp');
+  });
+
+  it('reports source=gamepad-dpad and detail="D-up" on D-pad up', () => {
+    const state = makeState({ gamepadConnected: true });
+    const dpad = { up: true, down: false, left: false, right: false };
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, dpad);
+    expect(v.source).toBe('gamepad-dpad');
+    expect(v.detail).toBe('D-up');
+  });
+
+  it('reports source=gamepad-stick with formatted coordinates', () => {
+    const state = makeState({ gamepadConnected: true });
+    const stick = { x: 0.5, y: 0 };
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(v.source).toBe('gamepad-stick');
+    expect(v.detail).toBe('(0.50,0.00)');
+  });
+
+  it('reports source=mouse with coordinate detail when pointerType is mouse', () => {
+    const state = makeState({
+      mouseTarget: { x: 200, y: 300 },
+      lastPointerType: 'mouse',
+    });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 0, y: 0 });
+    expect(v.source).toBe('mouse');
+    expect(v.detail).toBe('(200,300)');
+  });
+
+  it('reports source=touch with coordinate detail when pointerType is touch', () => {
+    const state = makeState({
+      mouseTarget: { x: 150, y: 75 },
+      lastPointerType: 'touch',
+    });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 0, y: 0 });
+    expect(v.source).toBe('touch');
+    expect(v.detail).toBe('(150,75)');
+  });
+
+  it('reports source=idle and empty detail when no input is active', () => {
+    const state = makeState();
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('idle');
+    expect(v.detail).toBe('');
   });
 });
