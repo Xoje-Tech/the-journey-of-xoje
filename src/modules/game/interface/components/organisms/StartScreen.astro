@@ -3,6 +3,10 @@ import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
 import RetroButton from "@/modules/game/interface/components/atoms/RetroButton.astro";
 import startBg from "@/assets/start-bg.png";
+import iconPlay from "@/assets/icons/icon-play.png";
+import iconDownload from "@/assets/icons/icon-download.png";
+import iconSettings from "@/assets/icons/icon-settings.png";
+import iconGamepad from "@/assets/icons/icon-gamepad.png";
 
 interface Props {
   locale: 'es' | 'en';
@@ -24,10 +28,10 @@ const ui = locale === 'es' ? uiEs : uiEn;
     <h1 class="retro-title">{ui.game.startTitle}</h1>
     <p class="retro-tagline">{ui.game.startTagline}</p>
     <div class="start-buttons">
-      <RetroButton id="start-game-btn">{ui.game.startGame}</RetroButton>
-      <RetroButton id="download-cv-btn">{ui.game.downloadCv}</RetroButton>
-      <RetroButton id="settings-btn">{ui.game.settings}</RetroButton>
-      <RetroButton id="controls-btn">{ui.game.controls}</RetroButton>
+      <RetroButton id="start-game-btn" icon={{ src: iconPlay.src, alt: "" }}>{ui.game.startGame}</RetroButton>
+      <RetroButton id="download-cv-btn" icon={{ src: iconDownload.src, alt: "" }}>{ui.game.downloadCv}</RetroButton>
+      <RetroButton id="settings-btn" icon={{ src: iconSettings.src, alt: "" }}>{ui.game.settings}</RetroButton>
+      <RetroButton id="controls-btn" icon={{ src: iconGamepad.src, alt: "" }}>{ui.game.controls}</RetroButton>
     </div>
   </div>
 </main>
@@ -62,8 +66,14 @@ const ui = locale === 'es' ? uiEs : uiEn;
   }
 
   .start-content {
-    max-width: 600px;
+    position: relative;
+    z-index: 1;
+    background-color: #1c1c1f;
+    border: 2px solid #09090b;
+    box-shadow: 6px 6px 0 #09090b;
     padding: 24px;
+    border-radius: 0;
+    max-width: 600px;
   }
 
   .retro-title {
@@ -132,14 +142,19 @@ const ui = locale === 'es' ? uiEs : uiEn;
       isStartedStore.subscribe((started) => {
         if (started) {
           startScreen.classList.add('slide-up');
-          if (startGameBtn) {
-            startGameBtn.textContent = resumeLabel;
+          const labelSlot = startGameBtn?.querySelector('[data-retro-label]');
+          if (labelSlot) {
+            labelSlot.textContent = resumeLabel;
           }
         } else {
           startScreen.style.display = 'flex';
           // Force a DOM reflow to prevent CSS transition bypasses
           void startScreen.offsetHeight;
           startScreen.classList.remove('slide-up');
+          const labelSlot = startGameBtn?.querySelector('[data-retro-label]');
+          if (labelSlot) {
+            labelSlot.textContent = startLabel;
+          }
         }
       });
 

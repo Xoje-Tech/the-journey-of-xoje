@@ -3,13 +3,21 @@ interface Props {
   id?: string;
   type?: 'button' | 'submit' | 'reset';
   class?: string;
+  icon?: { src: string; alt: string };
 }
 
-const { id, type = 'button', class: className = '' } = Astro.props;
+const { id, type = 'button', class: className = '', icon } = Astro.props;
 ---
 
 <button id={id} type={type} class={`retro-btn ${className}`}>
-  <slot />
+  {icon ? (
+    <>
+      <img class="retro-btn-icon" src={icon.src} alt={icon.alt} />
+      <span data-retro-label><slot /></span>
+    </>
+  ) : (
+    <slot />
+  )}
 </button>
 
 <style>
@@ -26,8 +34,19 @@ const { id, type = 'button', class: className = '' } = Astro.props;
     box-shadow: 4px 4px 0px #09090b;
     transition: all 100ms ease;
     user-select: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
     text-align: center;
+  }
+
+  .retro-btn-icon {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+    flex-shrink: 0;
   }
 
   .retro-btn:hover {

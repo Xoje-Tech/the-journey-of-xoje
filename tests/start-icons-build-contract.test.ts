@@ -15,6 +15,10 @@ const ICON_RELATIVE_PATHS = [
   "src/assets/icons/icon-settings.png",
   "src/assets/icons/icon-gamepad.png",
 ] as const;
+const RETRO_BUTTON_RELATIVE_PATH =
+  "src/modules/game/interface/components/atoms/RetroButton.astro";
+const START_SCREEN_RELATIVE_PATH =
+  "src/modules/game/interface/components/organisms/StartScreen.astro";
 const PACKAGE_JSON_PATH = resolve(PROJECT_ROOT, "package.json");
 
 function readPngDimensions(filePath: string): { width: number; height: number } | null {
@@ -64,5 +68,72 @@ describe("StartScreen icon build contract", () => {
     expect(typeof hook).toBe("string");
     expect(hook).toMatch(/generate-start-icons\.js/);
     expect(hook).not.toMatch(/;\s*rm\s+-rf/);
+  });
+
+  it("3. RetroButton.astro declares an optional icon prop", () => {
+    const source = readFileSync(
+      resolve(PROJECT_ROOT, RETRO_BUTTON_RELATIVE_PATH),
+      "utf8",
+    );
+
+    expect(source).toMatch(/icon\?\s*:\s*\{\s*src\s*:\s*string\s*;\s*alt\s*:\s*string\s*\}/);
+  });
+
+  it("4. RetroButton.astro renders a pixel-art icon at 24x24", () => {
+    const source = readFileSync(
+      resolve(PROJECT_ROOT, RETRO_BUTTON_RELATIVE_PATH),
+      "utf8",
+    );
+
+    expect(source).toMatch(/class\s*=\s*"retro-btn-icon"/);
+    expect(source).toMatch(/image-rendering\s*:\s*pixelated/);
+    expect(source).toMatch(/image-rendering\s*:\s*crisp-edges/);
+    expect(source).toMatch(/width\s*:\s*24px/);
+    expect(source).toMatch(/height\s*:\s*24px/);
+  });
+
+  it("5. StartScreen.astro imports each icon and wires it into the matching RetroButton", () => {
+    const source = readFileSync(
+      resolve(PROJECT_ROOT, START_SCREEN_RELATIVE_PATH),
+      "utf8",
+    );
+
+    const iconBindings: Array<{ alias: string; filename: string }> = [
+      { alias: "iconPlay", filename: "icon-play.png" },
+      { alias: "iconDownload", filename: "icon-download.png" },
+      { alias: "iconSettings", filename: "icon-settings.png" },
+      { alias: "iconGamepad", filename: "icon-gamepad.png" },
+    ];
+
+    for (const binding of iconBindings) {
+      const importRegex = new RegExp(
+        `import\\s+${binding.alias}\\s+from\\s+["']\\@\\/assets\\/icons\\/${binding.filename}["']`,
+      );
+      expect(source, `missing import for ${binding.alias}`).toMatch(importRegex);
+    }
+
+    const buttonBindings: Array<{ id: string; alias: string }> = [
+      { id: "start-game-btn", alias: "iconPlay" },
+      { id: "download-cv-btn", alias: "iconDownload" },
+      { id: "settings-btn", alias: "iconSettings" },
+      { id: "controls-btn", alias: "iconGamepad" },
+    ];
+
+    for (const binding of buttonBindings) {
+      const blockRegex = new RegExp(
+        `<RetroButton[^>]*id="${binding.id}"[\\s\\S]*?<\\/RetroButton>`,
+      );
+      const block = source.match(blockRegex);
+      expect(block, `RetroButton for ${binding.id} not found`).not.toBeNull();
+      expect(block![0]).toContain(binding.alias);
+      expect(block![0]).toMatch(/alt:\s*""\s*\}/);
+    }
+
+    // The label-mutation safety: the resume/swap script must target the
+    // [data-retro-label] span so the <img> is not destroyed. The call may
+    // span multiple lines, so tolerate whitespace between the selector
+    // quotes and the brackets.
+    expect(source).toMatch(/querySelector\([\s\S]*?data-retro-label[\s\S]*?\)/);
+    expect(source).not.toMatch(/startGameBtn\.textContent\s*=\s*resumeLabel/);
   });
 });
