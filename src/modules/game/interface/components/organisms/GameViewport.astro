@@ -10,11 +10,23 @@
   import { isStartedStore, collectedSkillsStore } from "@/modules/game/application/store";
   import type { GameStateUpdateEventPayload } from "@/modules/game/domain/types";
 
+  // Dynamically resolve all skill shield sprites using Vite's glob import
+  const skillSprites = import.meta.glob<{ default: { src: string } }>('@/assets/skills/*.png', { eager: true });
+  const skillSpritePaths: Record<string, string> = {};
+  for (const [key, value] of Object.entries(skillSprites)) {
+    const filename = key.split('/').pop()?.replace('.png', '') || '';
+    skillSpritePaths[filename] = value.default.src;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const c = document.getElementById('game-canvas');
     if (c instanceof HTMLCanvasElement) {
       const locale = (document.body.getAttribute('data-locale') as 'es' | 'en') || 'es';
-      const handle = init(c, { spritesheetPath: playerSpritesheet.src, locale });
+      const handle = init(c, {
+        spritesheetPath: playerSpritesheet.src,
+        skillSpritePaths,
+        locale
+      });
       window.gameHandle = handle;
 
       // Subscribe to isStartedStore to run handle.start() when started

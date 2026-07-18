@@ -372,6 +372,23 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     gameLogger.error('Failed to load player spritesheet asynchronously:', { error: err });
   });
 
+  /** Load skill sprites asynchronously */
+  const skillImages: Record<string, HTMLImageElement> = {};
+  if (opts.skillSpritePaths) {
+    for (const [id, path] of Object.entries(opts.skillSpritePaths)) {
+      if (typeof window !== 'undefined' && typeof Image !== 'undefined') {
+        const img = new Image();
+        img.src = path;
+        img.onload = () => {
+          skillImages[id] = img;
+        };
+        img.onerror = (err) => {
+          gameLogger.error(`Failed to load skill sprite for: ${id} from ${path}`, { error: err });
+        };
+      }
+    }
+  }
+
   /** Ring buffer of trail points. Mutated by `updateTrail` per frame. */
   let trail: TrailPoint[] = [];
 
@@ -646,7 +663,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
     if (hasStarted) {
       // Draw Collectibles
-      drawCollectibles(ctx, collectibles, camera.y, dims.h);
+      drawCollectibles(ctx, collectibles, camera.y, dims.h, skillImages);
 
       // Draw Bottom CTA
       drawBottomCTA(ctx, dims.w, camera.y, dims.h);
