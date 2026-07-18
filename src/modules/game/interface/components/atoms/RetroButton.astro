@@ -32,7 +32,16 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
     font-weight: bold;
     cursor: pointer;
     box-shadow: 4px 4px 0px #09090b;
-    transition: all 100ms ease;
+    /*
+     * Transition only the background-color. Animating `all` causes a
+     * visible blink when focus moves between buttons via JS
+     * (the browser paints the "no-focus" frame before the focused
+     * frame, and the transition interpolates across the discontinuity).
+     * Animating background-color only keeps hover/focus transitions
+     * smooth without affecting layout-affecting properties like
+     * box-shadow or transform.
+     */
+    transition: background-color 100ms ease;
     user-select: none;
     display: inline-flex;
     align-items: center;
@@ -61,34 +70,17 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
 
   /*
    * Focus ring — Slice D (WU-1) needs a visible focus indicator so
-   * keyboard and gamepad navigation is usable.
+   * keyboard and gamepad navigation is usable. Focus MUST look exactly
+   * like hover: same background, same drop-shadow, same depth. No
+   * extras, no outlines — the only visual cue is the lighter
+   * background that hover already provides.
    *
-   * Design rule: a focused button MUST look the same as a hovered
-   * button (selected-and-ready-to-fire semantics). We copy :hover
-   * styles verbatim and add a single extra indicator on top — the
-   * white border color — so keyboard users see a clear "I'm here"
-   * cue without losing the retro chunky-shadow aesthetic.
-   *
-   * Adding `, :focus-visible` to the hover rule would work too but
-   * creates a selector-list coupling that future tweaks might miss;
-   * duplicating the three properties here keeps the contract local
-   * and explicit.
+   * The selector-list groups :hover and :focus-visible so the two
+   * states stay coupled by construction. If hover changes later, focus
+   * changes with it.
    */
   .retro-btn:hover,
   .retro-btn:focus-visible {
     background-color: #27272a;
-    border-color: #f4f4f5;
-  }
-
-  /*
-   * Extra focus-only cue beyond the hover look: a 2px solid black ring
-   * just outside the border. This survives on any background and is
-   * distinguishable from the drop-shadow. We don't reuse the
-   * drop-shadow slot here — that one carries the "selected" 3D depth
-   * and changing it for focus would diverge from hover too much.
-   */
-  .retro-btn:focus-visible {
-    outline: 2px solid #09090b;
-    outline-offset: 2px;
   }
 </style>
