@@ -620,8 +620,11 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
         }
       }
 
-      // Proximity scan for tooltips (Euclidean distance < 40px)
-      let closestItem: any = null;
+      // Proximity scan for tooltips (Euclidean distance < 40px).
+      // Type narrowed to the closest matching element of `collectibles`,
+      // unknown at compile-time, so we use a permissive cast at the call site.
+      type Collectible = (typeof collectibles)[number];
+      let closestItem: Collectible | null = null;
       let minDistance = Infinity;
       for (const item of collectibles) {
         if (!item.collected) {

@@ -2,6 +2,7 @@
 import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
 import RetroButton from "@/modules/game/interface/components/atoms/RetroButton.astro";
+import startBg from "@/assets/start-bg.png";
 
 interface Props {
   locale: 'es' | 'en';
@@ -17,6 +18,7 @@ const ui = locale === 'es' ? uiEs : uiEn;
   aria-label="Start screen"
   data-start-label={ui.game.startGame}
   data-resume-label={ui.game.resumeGame}
+  style={`background-color: #1c1c1f; background-image: url(${startBg.src}); background-size: cover; background-position: center bottom; background-repeat: no-repeat;`}
 >
   <div class="start-content">
     <h1 class="retro-title">{ui.game.startTitle}</h1>
@@ -36,7 +38,6 @@ const ui = locale === 'es' ? uiEs : uiEn;
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #1c1c1f;
     color: #f4f4f5;
     display: flex;
     flex-direction: column;
@@ -46,6 +47,14 @@ const ui = locale === 'es' ? uiEs : uiEn;
     z-index: 15;
     font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
     transition: transform 600ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  #start-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.85) 100%);
+    pointer-events: none;
   }
 
   #start-screen.slide-up {
