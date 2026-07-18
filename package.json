@@ -9,6 +9,7 @@
     "predev": "node scripts/build-cv-static.mjs",
     "dev": "astro dev",
     "generate-skill-sprites": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-skill-sprites.js",
+    "generate-start-icons": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-start-icons.js",
     "build:astro": "astro build",
     "prebuild": "node scripts/build-cv-static.mjs",
     "build": "pnpm build:cv && astro build",
