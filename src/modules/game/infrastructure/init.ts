@@ -453,6 +453,33 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
   function onKeyDown(e: KeyboardEvent): void {
     state.keys[e.key] = true;
+
+    // Keyboard shortcut for Print CV (Slice C WU-2). Fires once per
+    // physical press — `e.repeat` is true while the key is held and we
+    // don't want to spam the print dialog. The DOM PrintButton listens
+    // to this CustomEvent and calls window.print(); decoupling here
+    // keeps init.ts free of UI concerns.
+    //
+    // Ignore the shortcut when the user is typing in an input field
+    // (future-proofing: today there are no text inputs in the game, but
+    // if a settings form is ever added, this guard prevents P from
+    // hijacking keystrokes inside it).
+    //
+    // The `typeof X === 'undefined'` guards exist because the test env
+    // (Vitest without a DOM) doesn't define HTMLInputElement /
+    // HTMLTextAreaElement as globals — a pattern we already use for
+    // setInterval / clearInterval in this same engine. We use string
+    // names instead of referencing the constructors directly so the
+    // type-checker doesn't error out at compile time.
+    const target = e.target as unknown as { tagName?: string; isContentEditable?: boolean } | null;
+    const isTyping =
+      target?.tagName === 'INPUT' ||
+      target?.tagName === 'TEXTAREA' ||
+      (target?.isContentEditable ?? false);
+    if (isTyping || e.repeat) return;
+    if (e.key === 'p' || e.key === 'P') {
+      window.dispatchEvent(new CustomEvent('print-requested'));
+    }
   }
   function onKeyUp(e: KeyboardEvent): void {
     state.keys[e.key] = false;

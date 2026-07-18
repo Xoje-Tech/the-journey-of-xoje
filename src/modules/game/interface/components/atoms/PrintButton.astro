@@ -81,5 +81,15 @@ const ui = locale === 'es' ? uiEs : uiEn;
         container.style.display = started ? 'block' : 'none';
       }
     });
+
+    // Keyboard shortcut (P) — Slice C WU-2. The engine in init.ts dispatches
+    // a `print-requested` CustomEvent on keydown('p'). We listen here so
+    // the same print handler serves both the button click and the
+    // keyboard shortcut. The event is dispatched even when the button is
+    // hidden (Start Screen open) because the start screen also benefits
+    // from the P shortcut; visibility is purely a styling concern.
+    window.addEventListener('print-requested', () => {
+      window.print();
+    });
   });
 </script>

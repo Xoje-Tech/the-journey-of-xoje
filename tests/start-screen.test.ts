@@ -348,4 +348,100 @@ describe('Start Screen Core Engine Suspension', () => {
       expect(startScreenMock.classList.add).toHaveBeenCalledWith('slide-up');
     });
   });
+
+  describe('Slice C WU-2: keyboard P shortcut dispatches print-requested', () => {
+    it('keydown "p" dispatches a print-requested CustomEvent on window', () => {
+      const { canvas } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      let printRequestedCount = 0;
+      const onPrint = () => { printRequestedCount++; };
+      window.addEventListener('print-requested', onPrint);
+
+      window.dispatchEvent({ type: 'keydown', key: 'p' } as any);
+
+      expect(printRequestedCount).toBe(1);
+
+      window.removeEventListener('print-requested', onPrint);
+      handle.stop();
+    });
+
+    it('keydown "P" (shift) also dispatches print-requested', () => {
+      const { canvas } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      let count = 0;
+      const onPrint = () => { count++; };
+      window.addEventListener('print-requested', onPrint);
+
+      window.dispatchEvent({ type: 'keydown', key: 'P' } as any);
+
+      expect(count).toBe(1);
+
+      window.removeEventListener('print-requested', onPrint);
+      handle.stop();
+    });
+
+    it('holding P (e.repeat=true) does NOT spam print-requested', () => {
+      const { canvas } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      let count = 0;
+      const onPrint = () => { count++; };
+      window.addEventListener('print-requested', onPrint);
+
+      // First press: real keydown, no repeat → triggers once.
+      window.dispatchEvent({ type: 'keydown', key: 'p', repeat: false } as any);
+      // Auto-repeat events while held: e.repeat=true → ignored.
+      window.dispatchEvent({ type: 'keydown', key: 'p', repeat: true } as any);
+      window.dispatchEvent({ type: 'keydown', key: 'p', repeat: true } as any);
+      window.dispatchEvent({ type: 'keydown', key: 'p', repeat: true } as any);
+
+      expect(count).toBe(1);
+
+      window.removeEventListener('print-requested', onPrint);
+      handle.stop();
+    });
+
+    it('typing inside an <input> does NOT trigger the print shortcut', () => {
+      const { canvas } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      let count = 0;
+      const onPrint = () => { count++; };
+      window.addEventListener('print-requested', onPrint);
+
+      // Synthesize a keydown whose target.tagName === 'INPUT'.
+      // The engine checks the tagName string, so a plain object works
+      // without a real HTMLInputElement (test env has no DOM).
+      window.dispatchEvent({
+        type: 'keydown',
+        key: 'p',
+        target: { tagName: 'INPUT' },
+      } as any);
+
+      expect(count).toBe(0);
+
+      window.removeEventListener('print-requested', onPrint);
+      handle.stop();
+    });
+
+    it('movement keys (ArrowRight, Space, Enter) do NOT trigger print-requested', () => {
+      const { canvas } = makeFakeCanvas();
+      const handle = init(canvas as any);
+
+      let count = 0;
+      const onPrint = () => { count++; };
+      window.addEventListener('print-requested', onPrint);
+
+      window.dispatchEvent({ type: 'keydown', key: 'ArrowRight' } as any);
+      window.dispatchEvent({ type: 'keydown', key: ' ' } as any);
+      window.dispatchEvent({ type: 'keydown', key: 'Enter' } as any);
+
+      expect(count).toBe(0);
+
+      window.removeEventListener('print-requested', onPrint);
+      handle.stop();
+    });
+  });
 });
