@@ -7,6 +7,7 @@ import StartScreen from "@/modules/game/interface/components/organisms/StartScre
 import SettingsPanel from "@/modules/game/interface/components/organisms/SettingsPanel.astro";
 import ControlsGuide from "@/modules/game/interface/components/organisms/ControlsGuide.astro";
 import PauseButton from "@/modules/game/interface/components/atoms/PauseButton.astro";
+import PrintButton from "@/modules/game/interface/components/atoms/PrintButton.astro";
 import TechBag from "@/modules/game/interface/components/organisms/TechBag.astro";
 import QualBag from "@/modules/game/interface/components/organisms/QualBag.astro";
 import SoftBag from "@/modules/game/interface/components/organisms/SoftBag.astro";
@@ -44,6 +45,7 @@ const { Content } = await render(entry);
   <!-- Top-right HUD buttons container -->
   <div class="hud-top-right no-print">
     <PauseButton locale={locale} />
+    <PrintButton locale={locale} />
     <SoftBag locale={locale} />
     <QualBag locale={locale} />
     <TechBag locale={locale} />

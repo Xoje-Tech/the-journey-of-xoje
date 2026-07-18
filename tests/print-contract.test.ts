@@ -166,3 +166,56 @@ describe('TooltipOverlay.astro — print safety', () => {
     expect(src).toMatch(/class="[^"]*no-print[^"]*"/);
   });
 });
+
+/**
+ * Slice C WU-1: PrintButton appears in the built HTML so users can print
+ * from inside the game (Brecha 8: window.print() was only reachable from
+ * the Start Screen before).
+ *
+ * We verify the static contract — the print button element exists in
+ * both locales and is marked no-print so it doesn't pollute the CV PDF.
+ */
+describe('PrintButton.astro — Slice C WU-1', () => {
+  const PRINT_BTN_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/PrintButton.astro');
+
+  it('PrintButton.astro source exists', () => {
+    expect(existsSync(PRINT_BTN_PATH)).toBe(true);
+  });
+
+  it('PrintButton source declares no-print on the wrapper', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // The wrapper MUST be no-print so it doesn't show up in the PDF.
+    expect(src).toMatch(/class="[^"]*no-print[^"]*"/);
+  });
+
+  it('PrintButton source wires click → window.print()', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // Same handler as StartScreen's Download CV button — single source
+    // of truth for the print action.
+    expect(src).toMatch(/window\.print\(\)/);
+  });
+
+  it('PrintButton source subscribes to isStartedStore for visibility', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // Visible only while the game is running (same pattern as PauseButton).
+    expect(src).toMatch(/isStartedStore/);
+  });
+
+  it('built ES HTML contains the print button id', () => {
+    const html = readFileSync(resolve(DIST, 'index.html'), 'utf8');
+    expect(html).toMatch(/id="print-cv-btn"/);
+  });
+
+  it('built EN HTML contains the print button id', () => {
+    const html = readFileSync(resolve(DIST, 'en/index.html'), 'utf8');
+    expect(html).toMatch(/id="print-cv-btn"/);
+  });
+
+  it('built HTML localizes the print button label correctly', () => {
+    const esHtml = readFileSync(resolve(DIST, 'index.html'), 'utf8');
+    const enHtml = readFileSync(resolve(DIST, 'en/index.html'), 'utf8');
+    // Spanish: "Imprimir CV"; English: "Print CV" — both from ui.{es,en}.json.
+    expect(esHtml).toMatch(/Imprimir\s*CV/);
+    expect(enHtml).toMatch(/Print\s*CV/);
+  });
+});
