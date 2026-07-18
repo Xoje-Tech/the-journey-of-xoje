@@ -324,3 +324,71 @@ describe('Gamepad D-pad navigation in modals — Slice C WU-4 source contract', 
     expect(src).toMatch(/if\s*\(\s*!modal\.open\s*\)/);
   });
 });
+
+/**
+ * Slice D — StartScreen keyboard + gamepad navigation. Closes the
+ * Brecha 5 from the inputs audit (no way to control the start screen
+ * with anything other than a mouse click).
+ *
+ * We verify the static contract: the start screen source wires
+ * keyboard arrow listeners, gamepad D-pad listeners, and gamepad A
+ * activation. Runtime behavior is covered by integration tests in
+ * start-screen.test.ts (which uses the engine mock).
+ */
+describe('StartScreen navigation — Slice D source contract', () => {
+  const START_SCREEN_PATH = resolve(
+    PROJECT_ROOT,
+    'src/modules/game/interface/components/organisms/StartScreen.astro',
+  );
+  const RETRO_BTN_PATH = resolve(
+    PROJECT_ROOT,
+    'src/modules/game/interface/components/atoms/RetroButton.astro',
+  );
+
+  it('StartScreen source auto-focuses the first button on DOMContentLoaded', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // The auto-focus should run inside DOMContentLoaded.
+    expect(src).toMatch(/startGameBtn\.focus\(\)/);
+  });
+
+  it.each(['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'] as const)(
+    'StartScreen source handles keyboard %s',
+    (key) => {
+      const src = readFileSync(START_SCREEN_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`['"]${key}['"]`));
+    },
+  );
+
+  it('StartScreen source wires moveFocus with wrap-around (modulo)', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // The modulo + double-modulo idiom handles negative deltas correctly.
+    expect(src).toMatch(/% total/);
+  });
+
+  it.each(['gamepad-dpad-up', 'gamepad-dpad-down', 'gamepad-dpad-left', 'gamepad-dpad-right'] as const)(
+    'StartScreen source listens for gamepad D-pad %s',
+    (event) => {
+      const src = readFileSync(START_SCREEN_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`addEventListener\\(['"]${event}['"]`));
+    },
+  );
+
+  it('StartScreen source handles gamepad-a activation', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]gamepad-a['"]/);
+    // And calls click on the focused button.
+    expect(src).toMatch(/active\.click\(\)/);
+  });
+
+  it('StartScreen source does NOT intercept navigation while a modal is open', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // Modals have their own focus management (Slice C WU-4).
+    expect(src).toMatch(/settingsModal\?\.open\s*\|\|\s*controlsModal\?\.open/);
+  });
+
+  it('RetroButton source has a visible :focus-visible style', () => {
+    const src = readFileSync(RETRO_BTN_PATH, 'utf8');
+    // Required so keyboard navigation is actually visible to the user.
+    expect(src).toMatch(/:focus-visible/);
+  });
+});
