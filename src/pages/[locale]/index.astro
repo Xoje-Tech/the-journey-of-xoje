@@ -11,6 +11,7 @@ import TechBag from "@/modules/game/interface/components/organisms/TechBag.astro
 import QualBag from "@/modules/game/interface/components/organisms/QualBag.astro";
 import SoftBag from "@/modules/game/interface/components/organisms/SoftBag.astro";
 import DialogOverlay from "@/modules/game/interface/components/organisms/DialogOverlay.astro";
+import TooltipOverlay from "@/modules/game/interface/components/organisms/TooltipOverlay.astro";
 import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
 
@@ -44,6 +45,7 @@ const { Content } = await render(entry);
   <!-- Game engine viewport and retro screen-only overlays -->
   <GameViewport />
   <DialogOverlay locale={locale} />
+  <TooltipOverlay locale={locale} />
   <StartScreen locale={locale} />
   <SettingsPanel locale={locale} />
   <ControlsGuide locale={locale} />

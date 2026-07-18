@@ -38,7 +38,7 @@
  */
 import { applyFriction, clampPlayerY, checkCollision } from '@/modules/game/application/physics';
 import { sampleInputs } from '@/modules/game/application/input';
-import { isStartedStore, activeDialogStore } from '@/modules/game/application/store';
+import { isStartedStore, activeDialogStore, activeTooltipStore } from '@/modules/game/application/store';
 import {
   drawGrid,
   drawTrail,
@@ -602,6 +602,33 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
           }
         }
       }
+
+      // Proximity scan for tooltips (Euclidean distance < 40px)
+      let closestItem: any = null;
+      let minDistance = Infinity;
+      for (const item of collectibles) {
+        if (!item.collected) {
+          const dist = Math.hypot(player.x - item.x, player.y - item.y);
+          if (dist < 40 && dist < minDistance) {
+            minDistance = dist;
+            closestItem = item;
+          }
+        }
+      }
+
+      if (closestItem) {
+        activeTooltipStore.set({
+          id: closestItem.id,
+          type: closestItem.npc ? 'npc' : 'skill',
+          name: closestItem.npc ? closestItem.npc.name : closestItem.name,
+          screenX: closestItem.x,
+          screenY: closestItem.y - camera.y,
+        });
+      } else {
+        activeTooltipStore.set(null);
+      }
+    } else {
+      activeTooltipStore.set(null);
     }
 
     // Render. Logical-pixel coordinates because we already scaled the ctx.
@@ -674,6 +701,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     start(): void {
       started = true;
     },
+    player,
+    collectibles,
+    camera,
   };
 }
 

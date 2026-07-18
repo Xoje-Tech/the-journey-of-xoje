@@ -136,6 +136,9 @@ export interface GameHandle {
   stop(): void;
   getFps(): number;
   start(): void;
+  player?: Player;
+  collectibles?: CollectibleItem[];
+  camera?: Camera;
 }
 
 declare global {
