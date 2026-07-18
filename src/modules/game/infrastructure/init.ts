@@ -488,6 +488,40 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
   document.addEventListener('visibilitychange', onVisibility);
 
+  // Gamepad A/B edge-detect (Slice A, WU-2). The dialog overlay and the
+  // retro modals live in the DOM, not on the canvas, so they need to react
+  // to gamepad input even when the RAF loop is paused (e.g. dialog open).
+  // We poll at 10 Hz — fast enough for a confirm button, slow enough not
+  // to compete with the per-frame loop on the same getGamepads() call.
+  //
+  // Edge detection: only fire when the button transitions from
+  // released → pressed. Without this, holding A would spam clicks every
+  // 100 ms.
+  let prevAPressed = false;
+  let prevBPressed = false;
+  const BUTTON_POLL_MS = 100;
+  // Defensive: tests that mock `window` may not provide setInterval.
+  // The interval id defaults to 0 (a falsy timer handle that
+  // clearInterval tolerates), so stop() can always call clearInterval
+  // safely even when no timer was created.
+  let gamepadButtonTimer = 0;
+  if (typeof window.setInterval === 'function') {
+    gamepadButtonTimer = window.setInterval(() => {
+      if (!state.gamepadConnected) return;
+      const { a, b } = pollGamepadOnce();
+      const aPressed = !!a;
+      const bPressed = !!b;
+      if (aPressed && !prevAPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-a'));
+      }
+      if (bPressed && !prevBPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-b'));
+      }
+      prevAPressed = aPressed;
+      prevBPressed = bPressed;
+    }, BUTTON_POLL_MS);
+  }
+
   let rafId = 0;
   let paused = false;
   let lastFrameMs = performance.now();
@@ -511,9 +545,27 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     return now - blinkStart < BLINK_DURATION_MS;
   }
 
-  function pollGamepad(): { stick?: { x: number; y: number }; dpad?: { up: boolean; down: boolean; left: boolean; right: boolean } } {
+  /**
+   * Polled once per frame (during play) for stick + dpad; also polled at
+   * 10 Hz by a separate interval for the A/B edge-detect that drives
+   * dialog advance and modal close — those events can fire while the RAF
+   * loop is paused (e.g. dialog overlay open), so the polling can't depend
+   * on `loop()` being scheduled.
+   *
+   * Standard mapping: buttons[0] = A (south), buttons[1] = B (east).
+   * We treat "pressed" as `pressed || touched` so soft-presses on
+   * triggerless controllers still register.
+   */
+  function pollGamepadOnce(): {
+    stick?: { x: number; y: number };
+    dpad?: { up: boolean; down: boolean; left: boolean; right: boolean };
+    a?: boolean;
+    b?: boolean;
+  } {
     let stick: { x: number; y: number } | undefined;
     let dpad: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined;
+    let a: boolean | undefined;
+    let b: boolean | undefined;
     if (state.gamepadConnected && typeof navigator.getGamepads === 'function') {
       const pads = navigator.getGamepads();
       const pad = pads && pads[0];
@@ -525,8 +577,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
           left: !!pad.buttons[14]?.pressed,
           right: !!pad.buttons[15]?.pressed,
         };
+        // Standard mapping (W3C gamepad): 0 = A (south), 1 = B (east).
+        a = !!(pad.buttons[0]?.pressed || pad.buttons[0]?.touched);
+        b = !!(pad.buttons[1]?.pressed || pad.buttons[1]?.touched);
       }
     }
+    return { stick, dpad, a, b };
+  }
+
+  function pollGamepad(): { stick?: { x: number; y: number }; dpad?: { up: boolean; down: boolean; left: boolean; right: boolean } } {
+    const { stick, dpad } = pollGamepadOnce();
     return { stick, dpad };
   }
 
@@ -706,6 +766,9 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       pause();
       unsubscribe();
       unsubscribeDialog();
+      if (typeof window.clearInterval === 'function') {
+        window.clearInterval(gamepadButtonTimer);
+      }
       if (typeof window !== 'undefined') {
         window.removeEventListener('dialog-dismissed', onDialogDismissed);
       }

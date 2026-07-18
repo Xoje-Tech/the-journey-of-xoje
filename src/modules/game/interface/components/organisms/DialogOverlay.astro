@@ -199,6 +199,28 @@ const ui = locale === 'es' ? uiEs : uiEn;
       { capture: true },
     );
 
+    // Gamepad A → same as Space (advance / complete typewriter).
+    // Edge-triggered upstream in init.ts: fires once per physical press,
+    // not while held. We re-check the store here because the DOM event
+    // can fire after the dialog was already dismissed by another path.
+    window.addEventListener('gamepad-a', () => {
+      if (activeDialogStore.get()) {
+        handleAdvance();
+      }
+    });
+
+    // Gamepad B → dismiss the dialog immediately, skipping the typewriter.
+    // Symmetric to the click-outside behavior of RetroModal: B is "cancel".
+    window.addEventListener('gamepad-b', () => {
+      if (activeDialogStore.get()) {
+        // Stop the typewriter, mark complete, then trigger the dismiss
+        // path on the next call by advancing once with full text already
+        // shown.
+        completeTypewriter();
+        handleAdvance();
+      }
+    });
+
     overlay.addEventListener('click', (e) => {
       e.stopPropagation();
       handleAdvance();
