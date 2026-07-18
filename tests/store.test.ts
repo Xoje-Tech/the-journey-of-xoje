@@ -5,6 +5,8 @@ import {
   gamepadConnectedStore,
   collectedSkillsStore,
   activeDialogStore,
+  activeTooltipStore,
+  type TooltipState,
 } from "../src/modules/game/application/store";
 
 describe('Nanostores state management', () => {
@@ -38,5 +40,24 @@ describe('Nanostores state management', () => {
 
     isStartedStore.set(false); // Reset
     unsubscribe();
+  });
+
+  it('should initialize activeTooltipStore to null', () => {
+    expect(activeTooltipStore.get()).toBeNull();
+  });
+
+  it('should update and clear activeTooltipStore', () => {
+    const tooltip: TooltipState = {
+      id: 'coin-1',
+      type: 'skill',
+      name: 'TypeScript',
+      screenX: 100,
+      screenY: 150,
+    };
+    activeTooltipStore.set(tooltip);
+    expect(activeTooltipStore.get()).toEqual(tooltip);
+
+    activeTooltipStore.set(null);
+    expect(activeTooltipStore.get()).toBeNull();
   });
 });

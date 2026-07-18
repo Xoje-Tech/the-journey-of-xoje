@@ -153,3 +153,16 @@ describe('print-preview-headless.mjs — issue #9 regression', () => {
     expect(src).toMatch(/\.replace\([^)]+\)/);
   });
 });
+
+describe('TooltipOverlay.astro — print safety', () => {
+  const TOOLTIP_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/organisms/TooltipOverlay.astro');
+
+  it('component exists and is readable', () => {
+    expect(existsSync(TOOLTIP_PATH)).toBe(true);
+  });
+
+  it('component includes the no-print class on its main wrapper', () => {
+    const src = readFileSync(TOOLTIP_PATH, 'utf8');
+    expect(src).toMatch(/class="[^"]*no-print[^"]*"/);
+  });
+});
