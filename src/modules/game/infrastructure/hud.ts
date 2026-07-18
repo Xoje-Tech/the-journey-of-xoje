@@ -41,35 +41,61 @@
 import type { Player } from "@/modules/game/domain/types";
 
 /**
- * Render the HUD text shown in the top-left of the canvas.
+ * Build the debug HUD string from current state. Two layouts:
  *
- * @param player   Current player state (position + velocity).
- * @param canvasW  Logical canvas width in CSS pixels (NOT backing-store px).
- * @param canvasH  Logical canvas height in CSS pixels.
- * @param fps      Current frames-per-second; rounded to the nearest whole.
+ * - Compact (debug = false): one line summarising the current input
+ *   source and what specifically is being pressed. Format: `input: <source>:<detail>`.
+ *   Examples: `input: keyboard:W+A`, `input: gamepad-dpad:D-up`, `input: touch:(150,75)`,
+ *   `input: idle` when no input is active.
+ *
+ * - Detailed (debug = true): four lines, one per path, listing what's
+ *   currently pressed for that path. The detailed view is toggled by
+ *   the D key in init.ts.
+ *
+ * The compact line always renders so dev has visibility by default;
+ * the detailed view is opt-in.
  */
-export function formatHud(player: Player, canvasW: number, canvasH: number, fps: number): string {
-  // Position: 1 decimal place. `toFixed(1)` is locale-independent (always
-  // a `.`), which matters because ctx.fillText uses the runtime's locale
-  // for `toString()` and we don't want a Spanish printout to suddenly
-  // render "412,5".
+export function formatHud(
+  player: Player,
+  canvasW: number,
+  canvasH: number,
+  fps: number,
+  input: { source: string; detail: string; debug?: boolean },
+): string {
   const px = player.x.toFixed(1);
   const py = player.y.toFixed(1);
-
-  // Velocity: 2 decimals with explicit sign. `formatSigned` collapses
-  // negative-zero to "+0.00" so a value like -1e-17 doesn't print "-0.00".
   const vx = formatSigned(player.vx);
   const vy = formatSigned(player.vy);
-
-  // fps: integer. Round rather than floor — 59.7 should read 60, not 59.
   const fpsRounded = Math.round(fps);
-
-  // canvasW/canvasH are part of the signature for forward-compat
-  // (e.g. a future "x%, y%" indicator); suppress unused-arg lint cleanly.
   void canvasW;
   void canvasH;
 
-  return ['xoje.dev', `pos  (${px}, ${py})`, `vel  (${vx}, ${vy})`, `fps ${fpsRounded}`].join('\n');
+  // Compact line: "<source>:<detail>" or "idle" when nothing.
+  // Format matches the user's spec verbatim: e.g. "keyboard:W",
+  // "gamepad-dpad:D-up", "touch:(150,75)", or just "idle".
+  const compactLine =
+    input.source === 'idle'
+      ? 'idle'
+      : `${input.source}:${input.detail}`;
+
+  const lines = [
+    'xoje.dev',
+    `pos  (${px}, ${py})`,
+    `vel  (${vx}, ${vy})`,
+    compactLine,
+    `fps ${fpsRounded}`,
+  ];
+
+  if (input.debug) {
+    // Detailed view: append an extra line with full source detail
+    // (the compact line already shows source + detail; the extra line
+    // repeats for readability while D is held).
+    lines.push(
+      `detail: ${input.source}${input.detail ? ':' + input.detail : ''}`,
+    );
+  }
+
+  return lines.join('\n');
 }
 
 /**

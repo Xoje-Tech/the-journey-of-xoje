@@ -51,6 +51,12 @@ export interface InputState {
   mouseTarget: { x: number; y: number } | null;
   /** True when at least one gamepad has fired `gamepadconnected`. */
   gamepadConnected: boolean;
+  /**
+   * Last PointerEvent.pointerType observed on the canvas. Used by the
+   * sampler to label the one-shot mouseTarget as mouse vs touch in the
+   * debug HUD.
+   */
+  lastPointerType: 'mouse' | 'touch' | 'pen';
   /** Idempotent — clears the pending click target. */
   clearMouseTarget(): void;
 }
