@@ -127,6 +127,34 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
         }
       });
 
+      // Gamepad A → simulate Enter on the currently-focused element.
+      // Mirrors what keyboard users get for free: if focus is on a button,
+      // pressing A activates it (e.g. closing the modal via close-btn).
+      // We do NOT force-close the modal here so the focus-trap semantics
+      // are preserved: A respects whatever the user has navigated to with
+      // the focus trap (upcoming slice will add D-pad navigation; until
+      // then, Tab is the navigation path and A activates the focused
+      // element).
+      modal.addEventListener('gamepad-a', () => {
+        if (!modal.open) return;
+        const active = document.activeElement as HTMLElement | null;
+        if (active && modal.contains(active)) {
+          active.click();
+        } else {
+          // No focus inside: behave like a primary action — close.
+          modal.close();
+          handleClose();
+        }
+      });
+
+      // Gamepad B → close the modal (cancel semantics). Symmetric to the
+      // click-outside handler below.
+      modal.addEventListener('gamepad-b', () => {
+        if (!modal.open) return;
+        modal.close();
+        handleClose();
+      });
+
       // Move focus into the modal when it opens.
       const observer = new MutationObserver(() => {
         if (modal.open) {
