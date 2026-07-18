@@ -326,6 +326,44 @@ describe('Gamepad D-pad navigation in modals — Slice C WU-4 source contract', 
 });
 
 /**
+ * Slice F — fix for click-camera-offset bug.
+ *
+ * Before the fix, pointerEventToCanvasTarget returned screen-space
+ * coordinates (clientX - rect.left, clientY - rect.top), but the sampler
+ * compared those against player.y in WORLD coordinates. When the camera
+ * had scrolled (player.y > viewport.h / 2), clicking below the visible
+ * player stored a Y value that was ABOVE player.y in world space, and
+ * the sampler steered the player toward it — visually the player
+ * "didn't progress" toward where you clicked.
+ *
+ * The fix lives in onPointerDown (init.ts): add camera.y to the
+ * screen-space Y before storing it. pointerEventToCanvasTarget stays
+ * pure (it has no access to camera) — the conversion happens in the
+ * handler that owns the engine state.
+ */
+describe('Click→world coordinate fix — Slice F source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+
+  it('init.ts onPointerDown adds camera.y to the screen-space Y', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The fix is a literal `screen.y + camera.y` in onPointerDown.
+    // We anchor it to the handler by looking for the constant substring
+    // adjacent to `state.mouseTarget =`.
+    expect(src).toMatch(/screen\.y\s*\+\s*camera\.y/);
+  });
+
+  it('init.ts onPointerDown does NOT store pointerEventToCanvasTarget directly', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // Regression guard: the old (buggy) line was
+    //   state.mouseTarget = pointerEventToCanvasTarget(canvas, e);
+    // The fix stores screen.x / screen.y separately and adds camera.y.
+    // We assert the buggy literal is gone so future refactors don't
+    // silently regress.
+    expect(src).not.toMatch(/state\.mouseTarget\s*=\s*pointerEventToCanvasTarget/);
+  });
+});
+
+/**
  * Slice D — StartScreen keyboard + gamepad navigation. Closes the
  * Brecha 5 from the inputs audit (no way to control the start screen
  * with anything other than a mouse click).

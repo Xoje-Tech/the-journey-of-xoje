@@ -500,7 +500,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     state.keys[e.key] = false;
   }
   function onPointerDown(e: PointerEvent): void {
-    state.mouseTarget = pointerEventToCanvasTarget(canvas, e);
+    // pointerEventToCanvasTarget returns SCREEN-relative coordinates
+    // (clientX - rect.left, clientY - rect.top). The sampler compares
+    // state.mouseTarget against player.x / player.y, which are in WORLD
+    // coordinates. Without adding camera.y, the target sits in screen
+    // space while the player lives in world space — clicking below the
+    // visible player in a scrolled viewport would store a Y value
+    // below the player's world Y, and the sampler would steer the
+    // player toward it (effectively upward in world space, since the
+    // visible "below" was already offset by the camera).
+    //
+    // See PR #47 / Slice-F for the full bug report and reproduction.
+    const screen = pointerEventToCanvasTarget(canvas, e);
+    state.mouseTarget = { x: screen.x, y: screen.y + camera.y };
     // Record pointer type so the sampler can distinguish mouse vs touch
     // in the debug HUD. Valid values: 'mouse' | 'touch' | 'pen'.
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
