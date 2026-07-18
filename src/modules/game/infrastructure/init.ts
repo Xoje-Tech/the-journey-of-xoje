@@ -389,6 +389,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     }
   }
 
+  /** Load LCS building sprite asynchronously */
+  let lcsBuildingImg: HTMLImageElement | null = null;
+  if (opts.lcsBuildingPath && typeof window !== 'undefined' && typeof Image !== 'undefined') {
+    lcsBuildingImg = new Image();
+    lcsBuildingImg.src = opts.lcsBuildingPath;
+    lcsBuildingImg.onerror = (err) => {
+      gameLogger.error(`Failed to load LCS building sprite from ${opts.lcsBuildingPath}`, { error: err });
+    };
+  }
+
   /** Ring buffer of trail points. Mutated by `updateTrail` per frame. */
   let trail: TrailPoint[] = [];
 
@@ -659,7 +669,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     ctx.translate(0, -camera.y);
 
     // Draw Biomes
-    drawBiomes(ctx, dims.w, camera.y, dims.h);
+    drawBiomes(ctx, dims.w, camera.y, dims.h, lcsBuildingImg);
 
     if (hasStarted) {
       // Draw Collectibles

@@ -7,6 +7,7 @@
 <script>
   import { init } from "@/modules/game/infrastructure/init";
   import playerSpritesheet from '@/assets/player.png';
+  import lcsBuilding from '@/assets/lcs-building.png';
   import { isStartedStore, collectedSkillsStore } from "@/modules/game/application/store";
   import type { GameStateUpdateEventPayload } from "@/modules/game/domain/types";
 
@@ -25,6 +26,7 @@
       const handle = init(c, {
         spritesheetPath: playerSpritesheet.src,
         skillSpritePaths,
+        lcsBuildingPath: lcsBuilding.src,
         locale
       });
       window.gameHandle = handle;

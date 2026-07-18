@@ -83,6 +83,8 @@ export interface InitOptions {
   spritesheetPath?: string;
   /** Paths/URLs of generated skill sprites. */
   skillSpritePaths?: Record<string, string>;
+  /** Path/URL of LCS building sprite. */
+  lcsBuildingPath?: string;
   /** Locale language 'es' | 'en' passed from the front-end */
   locale?: 'es' | 'en';
 }

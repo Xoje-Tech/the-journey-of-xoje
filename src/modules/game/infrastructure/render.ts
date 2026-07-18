@@ -149,7 +149,13 @@ export function drawBiomes(
   w: number,
   cameraY: number,
   viewportH: number,
+  lcsBuildingImg: HTMLImageElement | null = null,
 ): void {
+  // Draw background building scenery first (behind boundaries and labels)
+  if (lcsBuildingImg && isWithinViewport(150, 32, cameraY, viewportH)) {
+    ctx.drawImage(lcsBuildingImg, 60, 150, 64, 64);
+  }
+
   const biomes = [
     { name: 'LCS Robotics', yStart: 0, yEnd: 1000 },
     { name: 'Crmble', yStart: 1000, yEnd: 2000 },
