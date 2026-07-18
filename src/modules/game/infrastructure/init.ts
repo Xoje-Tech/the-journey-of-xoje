@@ -37,8 +37,8 @@
  * Return value: `{ stop() }` cancels the RAF loop and detaches listeners.
  */
 import { applyFriction, clampPlayerY, checkCollision } from '@/modules/game/application/physics';
-import { sampleInputs } from '@/modules/game/application/input';
-import { isStartedStore, activeDialogStore } from '@/modules/game/application/store';
+import { sampleInputs, pointerEventToCanvasTarget } from '@/modules/game/application/input';
+import { isStartedStore, activeDialogStore, activeTooltipStore } from '@/modules/game/application/store';
 import {
   drawGrid,
   drawTrail,
@@ -372,6 +372,23 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     gameLogger.error('Failed to load player spritesheet asynchronously:', { error: err });
   });
 
+  /** Load skill sprites asynchronously */
+  const skillImages: Record<string, HTMLImageElement> = {};
+  if (opts.skillSpritePaths) {
+    for (const [id, path] of Object.entries(opts.skillSpritePaths)) {
+      if (typeof window !== 'undefined' && typeof Image !== 'undefined') {
+        const img = new Image();
+        img.src = path;
+        img.onload = () => {
+          skillImages[id] = img;
+        };
+        img.onerror = (err) => {
+          gameLogger.error(`Failed to load skill sprite for: ${id} from ${path}`, { error: err });
+        };
+      }
+    }
+  }
+
   /** Ring buffer of trail points. Mutated by `updateTrail` per frame. */
   let trail: TrailPoint[] = [];
 
@@ -379,6 +396,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     keys: {},
     mouseTarget: null,
     gamepadConnected: false,
+    /**
+     * Last PointerEvent.pointerType observed on the canvas. The sampler
+     * reads this to decide whether the one-shot mouseTarget came from
+     * a mouse click or a touch tap (Pointer Events unify the path; this
+     * field is how we keep the mouse/touch distinction visible for the
+     * debug HUD).
+     */
+    lastPointerType: 'mouse',
     clearMouseTarget() {
       state.mouseTarget = null;
     },
@@ -436,16 +461,65 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
   function onKeyDown(e: KeyboardEvent): void {
     state.keys[e.key] = true;
+
+    // Keyboard shortcut for Print CV (Slice C WU-2). Fires once per
+    // physical press — `e.repeat` is true while the key is held and we
+    // don't want to spam the print dialog. The DOM PrintButton listens
+    // to this CustomEvent and calls window.print(); decoupling here
+    // keeps init.ts free of UI concerns.
+    //
+    // Ignore the shortcut when the user is typing in an input field
+    // (future-proofing: today there are no text inputs in the game, but
+    // if a settings form is ever added, this guard prevents P from
+    // hijacking keystrokes inside it).
+    //
+    // The `typeof X === 'undefined'` guards exist because the test env
+    // (Vitest without a DOM) doesn't define HTMLInputElement /
+    // HTMLTextAreaElement as globals — a pattern we already use for
+    // setInterval / clearInterval in this same engine. We use string
+    // names instead of referencing the constructors directly so the
+    // type-checker doesn't error out at compile time.
+    const target = e.target as unknown as { tagName?: string; isContentEditable?: boolean } | null;
+    const isTyping =
+      target?.tagName === 'INPUT' ||
+      target?.tagName === 'TEXTAREA' ||
+      (target?.isContentEditable ?? false);
+    if (isTyping || e.repeat) return;
+    if (e.key === 'p' || e.key === 'P') {
+      window.dispatchEvent(new CustomEvent('print-requested'));
+    }
+    // Debug HUD toggle — pressing D flips debugHud, which expands the
+    // HUD to show extra input detail. This is a dev affordance; it's
+    // safe to leave enabled in prod because it's just an extra HUD
+    // line and toggled only on explicit press.
+    if (e.key === 'd' || e.key === 'D') {
+      debugHud = !debugHud;
+    }
   }
   function onKeyUp(e: KeyboardEvent): void {
     state.keys[e.key] = false;
   }
-  function onMouseDown(e: MouseEvent): void {
-    const rect = canvas.getBoundingClientRect();
-    state.mouseTarget = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
+  function onPointerDown(e: PointerEvent): void {
+    // pointerEventToCanvasTarget returns SCREEN-relative coordinates
+    // (clientX - rect.left, clientY - rect.top). The sampler compares
+    // state.mouseTarget against player.x / player.y, which are in WORLD
+    // coordinates. Without adding camera.y, the target sits in screen
+    // space while the player lives in world space — clicking below the
+    // visible player in a scrolled viewport would store a Y value
+    // below the player's world Y, and the sampler would steer the
+    // player toward it (effectively upward in world space, since the
+    // visible "below" was already offset by the camera).
+    //
+    // See PR #47 / Slice-F for the full bug report and reproduction.
+    const screen = pointerEventToCanvasTarget(canvas, e);
+    state.mouseTarget = { x: screen.x, y: screen.y + camera.y };
+    // Record pointer type so the sampler can distinguish mouse vs touch
+    // in the debug HUD. Valid values: 'mouse' | 'touch' | 'pen'.
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      state.lastPointerType = e.pointerType;
+    } else {
+      state.lastPointerType = 'mouse';
+    }
   }
   function onGamepadConnected(): void {
     state.gamepadConnected = true;
@@ -466,14 +540,88 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
   window.addEventListener('resize', resize);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('gamepadconnected', onGamepadConnected);
   window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
   document.addEventListener('visibilitychange', onVisibility);
 
+  // Gamepad A/B/Start edge-detect (Slice A, WU-2; Slice C WU-3 adds Start).
+  // The dialog overlay and the retro modals live in the DOM, not on the
+  // canvas, so they need to react to gamepad input even when the RAF
+  // loop is paused (e.g. dialog open). We poll at 10 Hz — fast enough for
+  // a confirm button, slow enough not to compete with the per-frame loop
+  // on the same getGamepads() call.
+  //
+  // Edge detection: only fire when the button transitions from
+  // released → pressed. Without this, holding A would spam clicks every
+  // 100 ms.
+  let prevAPressed = false;
+  let prevBPressed = false;
+  let prevStartPressed = false;
+  let prevDpadState = { up: false, down: false, left: false, right: false };
+  const BUTTON_POLL_MS = 100;
+  // Defensive: tests that mock `window` may not provide setInterval.
+  // The interval id defaults to 0 (a falsy timer handle that
+  // clearInterval tolerates), so stop() can always call clearInterval
+  // safely even when no timer was created.
+  let gamepadButtonTimer = 0;
+  if (typeof window.setInterval === 'function') {
+    gamepadButtonTimer = window.setInterval(() => {
+      if (!state.gamepadConnected) return;
+      const { dpad, a, b, start } = pollGamepadOnce();
+      const aPressed = !!a;
+      const bPressed = !!b;
+      const startPressed = !!start;
+      // D-pad edge-detect: dispatch per-direction events for D-pad
+      // navigation inside modals (Slice C WU-4). The game-loop's
+      // existing dpad path handles character movement; this only
+      // emits CustomEvents for the DOM modal layer.
+      const prevDpadUp = prevDpadState.up;
+      const prevDpadDown = prevDpadState.down;
+      const prevDpadLeft = prevDpadState.left;
+      const prevDpadRight = prevDpadState.right;
+      if (dpad) {
+        if (dpad.up && !prevDpadUp) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-up'));
+        }
+        if (dpad.down && !prevDpadDown) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-down'));
+        }
+        if (dpad.left && !prevDpadLeft) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-left'));
+        }
+        if (dpad.right && !prevDpadRight) {
+          window.dispatchEvent(new CustomEvent('gamepad-dpad-right'));
+        }
+        prevDpadState = { up: dpad.up, down: dpad.down, left: dpad.left, right: dpad.right };
+      }
+      if (aPressed && !prevAPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-a'));
+      }
+      if (bPressed && !prevBPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-b'));
+      }
+      if (startPressed && !prevStartPressed) {
+        window.dispatchEvent(new CustomEvent('gamepad-start'));
+      }
+      prevAPressed = aPressed;
+      prevBPressed = bPressed;
+      prevStartPressed = startPressed;
+    }, BUTTON_POLL_MS);
+  }
+
   let rafId = 0;
   let paused = false;
   let lastFrameMs = performance.now();
+
+  // Debug HUD state: cached from the latest sampleInputs() call.
+  // The HUD is drawn every frame from these closure vars; we don't
+  // re-sample.
+  let lastInputSource: 'keyboard' | 'gamepad-dpad' | 'gamepad-stick' | 'mouse' | 'touch' | 'idle' = 'idle';
+  let lastInputDetail = '';
+  // Toggle: D flips this. When true, formatHud expands to one line
+  // per input path. When false, just the compact line.
+  let debugHud = false;
 
   function updateFps(now: number): void {
     frameTimes.push(now);
@@ -494,9 +642,33 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     return now - blinkStart < BLINK_DURATION_MS;
   }
 
-  function pollGamepad(): { stick?: { x: number; y: number }; dpad?: { up: boolean; down: boolean; left: boolean; right: boolean } } {
+  /**
+   * Polled once per frame (during play) for stick + dpad; also polled at
+   * 10 Hz by a separate interval for the A/B/Start edge-detect that drives
+   * dialog advance, modal close, and settings open — those events can fire
+   * while the RAF loop is paused (e.g. dialog overlay open), so the polling
+   * can't depend on `loop()` being scheduled.
+   *
+   * Standard mapping:
+   *   buttons[0]  = A (south / confirm)
+   *   buttons[1]  = B (east / cancel)
+   *   buttons[9]  = Start (menu — NES-style Start button)
+   *
+   * We treat "pressed" as `pressed || touched` so soft-presses on
+   * triggerless controllers still register.
+   */
+  function pollGamepadOnce(): {
+    stick?: { x: number; y: number };
+    dpad?: { up: boolean; down: boolean; left: boolean; right: boolean };
+    a?: boolean;
+    b?: boolean;
+    start?: boolean;
+  } {
     let stick: { x: number; y: number } | undefined;
     let dpad: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined;
+    let a: boolean | undefined;
+    let b: boolean | undefined;
+    let start: boolean | undefined;
     if (state.gamepadConnected && typeof navigator.getGamepads === 'function') {
       const pads = navigator.getGamepads();
       const pad = pads && pads[0];
@@ -508,8 +680,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
           left: !!pad.buttons[14]?.pressed,
           right: !!pad.buttons[15]?.pressed,
         };
+        // Standard mapping (W3C gamepad).
+        a = !!(pad.buttons[0]?.pressed || pad.buttons[0]?.touched);
+        b = !!(pad.buttons[1]?.pressed || pad.buttons[1]?.touched);
+        // Start button is buttons[9] in standard mapping (between
+        // shoulder buttons and stick clicks).
+        start = !!(pad.buttons[9]?.pressed || pad.buttons[9]?.touched);
       }
     }
+    return { stick, dpad, a, b, start };
+  }
+
+  function pollGamepad(): { stick?: { x: number; y: number }; dpad?: { up: boolean; down: boolean; left: boolean; right: boolean } } {
+    const { stick, dpad } = pollGamepadOnce();
     return { stick, dpad };
   }
 
@@ -527,6 +710,10 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       const { stick, dpad } = pollGamepad();
 
       const v = sampleInputs(state, canvas, dims.w, dims.h, stick, dpad, player);
+      // Cache the latest source + detail for the HUD. The HUD is
+      // drawn every frame from these closure vars; we don't re-sample.
+      lastInputSource = v.source;
+      lastInputDetail = v.detail;
 
       // Integrate: v = (v + input) * friction, then add to position.
       player.vx = (player.vx + v.vx) * friction;
@@ -602,6 +789,36 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
           }
         }
       }
+
+      // Proximity scan for tooltips (Euclidean distance < 40px).
+      // Type narrowed to the closest matching element of `collectibles`,
+      // unknown at compile-time, so we use a permissive cast at the call site.
+      type Collectible = (typeof collectibles)[number];
+      let closestItem: Collectible | null = null;
+      let minDistance = Infinity;
+      for (const item of collectibles) {
+        if (!item.collected) {
+          const dist = Math.hypot(player.x - item.x, player.y - item.y);
+          if (dist < 40 && dist < minDistance) {
+            minDistance = dist;
+            closestItem = item;
+          }
+        }
+      }
+
+      if (closestItem) {
+        activeTooltipStore.set({
+          id: closestItem.id,
+          type: closestItem.npc ? 'npc' : 'skill',
+          name: closestItem.npc ? closestItem.npc.name : closestItem.name,
+          screenX: closestItem.x,
+          screenY: closestItem.y - camera.y,
+        });
+      } else {
+        activeTooltipStore.set(null);
+      }
+    } else {
+      activeTooltipStore.set(null);
     }
 
     // Render. Logical-pixel coordinates because we already scaled the ctx.
@@ -619,7 +836,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
     if (hasStarted) {
       // Draw Collectibles
-      drawCollectibles(ctx, collectibles, camera.y, dims.h);
+      drawCollectibles(ctx, collectibles, camera.y, dims.h, skillImages);
 
       // Draw Bottom CTA
       drawBottomCTA(ctx, dims.w, camera.y, dims.h);
@@ -635,7 +852,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
     ctx.restore();
 
-    drawHud(ctx, player, dims.w, dims.h, fpsValue);
+    drawHud(ctx, player, dims.w, dims.h, fpsValue, lastInputSource, lastInputDetail, debugHud);
 
     if (!paused) rafId = requestAnimationFrame(loop);
   }
@@ -659,13 +876,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       pause();
       unsubscribe();
       unsubscribeDialog();
+      if (typeof window.clearInterval === 'function') {
+        window.clearInterval(gamepadButtonTimer);
+      }
       if (typeof window !== 'undefined') {
         window.removeEventListener('dialog-dismissed', onDialogDismissed);
       }
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
-      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('gamepadconnected', onGamepadConnected);
       window.removeEventListener('gamepaddisconnected', onGamepadDisconnected);
       document.removeEventListener('visibilitychange', onVisibility);
@@ -674,12 +894,16 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     start(): void {
       started = true;
     },
+    player,
+    collectibles,
+    camera,
   };
 }
 
 /**
- * Render the HUD (brand + pos + vel + fps) into the top-left corner of
- * the canvas. `formatHud` returns the raw string; we draw it line-by-line.
+ * Render the HUD (brand + pos + vel + fps + input line) into the
+ * top-left corner of the canvas. `formatHud` returns the raw string;
+ * we draw it line-by-line.
  */
 function drawHud(
   ctx: CanvasRenderingContext2D,
@@ -687,13 +911,20 @@ function drawHud(
   canvasW: number,
   canvasH: number,
   fps: number,
+  inputSource: 'keyboard' | 'gamepad-dpad' | 'gamepad-stick' | 'mouse' | 'touch' | 'idle',
+  inputDetail: string,
+  debug: boolean,
 ): void {
   ctx.save();
   ctx.font = HUD_FONT;
   ctx.fillStyle = HUD_COLOR;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  const text = formatHud(player, canvasW, canvasH, fps);
+  const text = formatHud(player, canvasW, canvasH, fps, {
+    source: inputSource,
+    detail: inputDetail,
+    debug,
+  });
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i] ?? '', HUD_PAD_X, HUD_PAD_Y + i * HUD_LINE_HEIGHT);

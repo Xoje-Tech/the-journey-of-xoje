@@ -35,35 +35,37 @@ function makePlayer(x: number, y: number, vx: number, vy: number): Player {
 }
 
 describe('formatHud — multiline shape', () => {
-  it('renders exactly 4 lines in the documented order', () => {
-    const out = formatHud(makePlayer(100, 200, 0, 0), 800, 600, 60);
+  it('renders exactly 5 lines in the documented order (input inserted before fps)', () => {
+    const out = formatHud(makePlayer(100, 200, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     const lines = out.split('\n');
-    expect(lines).toHaveLength(4);
+    expect(lines).toHaveLength(5);
     expect(lines[0]).toBe('xoje.dev');
     expect(lines[1]).toMatch(/^pos\s+\(/);
     expect(lines[2]).toMatch(/^vel\s+\(/);
-    expect(lines[3]).toMatch(/^fps\s+\d+$/);
+    // Line 3 is the new input line: "<source>:<detail>" or "idle".
+    expect(lines[3]).toMatch(/^(idle|[a-z-]+:.+)$/);
+    expect(lines[4]).toMatch(/^fps\s+\d+$/);
   });
 
   it('starts with the brand line "xoje.dev"', () => {
-    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out.startsWith('xoje.dev\n')).toBe(true);
   });
 
   it('places the fps line LAST so callers can split-on-newline safely', () => {
-    const out = formatHud(makePlayer(1, 2, 3, 4), 100, 100, 60);
+    const out = formatHud(makePlayer(1, 2, 3, 4), 100, 100, 60, { source: 'idle', detail: '' });
     expect(out.endsWith('fps 60')).toBe(true);
   });
 });
 
 describe('formatHud — position formatting (1 decimal place)', () => {
   it('renders an integer-valued position as ".0"', () => {
-    const out = formatHud(makePlayer(412, 187, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(412, 187, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('pos  (412.0, 187.0)');
   });
 
   it('renders a fractional position with one decimal', () => {
-    const out = formatHud(makePlayer(412.5, 187.04, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(412.5, 187.04, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('pos  (412.5, 187.0)');
   });
 
@@ -71,36 +73,36 @@ describe('formatHud — position formatting (1 decimal place)', () => {
     // toFixed(1) of 187.04 = "187.0"; of 187.05 = "187.1" (banker's rounding in V8
     // is actually "187.1" for 187.05 — depends on the float representation).
     // Either way the format MUST be one decimal place.
-    const out = formatHud(makePlayer(0, 187.05, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 187.05, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toMatch(/pos\s+\(0\.0, 187\.[01]\)/);
   });
 });
 
 describe('formatHud — velocity formatting (signed, 2 decimals)', () => {
   it('renders positive velocity with explicit "+" sign', () => {
-    const out = formatHud(makePlayer(0, 0, 2.45, 0.13), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, 2.45, 0.13), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('vel  (+2.45, +0.13)');
   });
 
   it('renders negative velocity with "-" sign', () => {
-    const out = formatHud(makePlayer(0, 0, -2.45, -0.13), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, -2.45, -0.13), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('vel  (-2.45, -0.13)');
   });
 
   it('renders mixed-sign velocity correctly', () => {
-    const out = formatHud(makePlayer(0, 0, 2.45, -0.13), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, 2.45, -0.13), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('vel  (+2.45, -0.13)');
   });
 
   it('renders EXACT zero as "+0.00" (no negative zero, no bare "0")', () => {
-    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('vel  (+0.00, +0.00)');
   });
 
   it('coerces negative-zero velocity to "+0.00" so the column does not flicker', () => {
     // -1e-17 is the canonical negative-zero after friction snaps to 1e-3.
     // Without an explicit guard, "-0.00" would print and look broken.
-    const out = formatHud(makePlayer(0, 0, -1e-17, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, -1e-17, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('vel  (+0.00, +0.00)');
     expect(out).not.toContain('-0.00');
   });
@@ -108,17 +110,17 @@ describe('formatHud — velocity formatting (signed, 2 decimals)', () => {
 
 describe('formatHud — fps formatting', () => {
   it('renders an integer fps verbatim', () => {
-    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60);
+    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 60, { source: 'idle', detail: '' });
     expect(out).toContain('fps 60');
   });
 
   it('rounds fractional fps to the nearest whole number', () => {
-    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 59.7);
+    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 59.7, { source: 'idle', detail: '' });
     expect(out).toContain('fps 60');
   });
 
   it('rounds 59.4 down to 59', () => {
-    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 59.4);
+    const out = formatHud(makePlayer(0, 0, 0, 0), 800, 600, 59.4, { source: 'idle', detail: '' });
     expect(out).toContain('fps 59');
   });
 });

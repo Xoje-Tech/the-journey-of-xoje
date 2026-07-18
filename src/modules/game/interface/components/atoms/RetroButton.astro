@@ -3,13 +3,21 @@ interface Props {
   id?: string;
   type?: 'button' | 'submit' | 'reset';
   class?: string;
+  icon?: { src: string; alt: string };
 }
 
-const { id, type = 'button', class: className = '' } = Astro.props;
+const { id, type = 'button', class: className = '', icon } = Astro.props;
 ---
 
 <button id={id} type={type} class={`retro-btn ${className}`}>
-  <slot />
+  {icon ? (
+    <>
+      <img class="retro-btn-icon" src={icon.src} alt={icon.alt} />
+      <span data-retro-label><slot /></span>
+    </>
+  ) : (
+    <slot />
+  )}
 </button>
 
 <style>
@@ -26,8 +34,19 @@ const { id, type = 'button', class: className = '' } = Astro.props;
     box-shadow: 4px 4px 0px #09090b;
     transition: all 100ms ease;
     user-select: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
     text-align: center;
+  }
+
+  .retro-btn-icon {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+    flex-shrink: 0;
   }
 
   .retro-btn:hover {
@@ -38,5 +57,17 @@ const { id, type = 'button', class: className = '' } = Astro.props;
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0px #09090b;
     background-color: #3f3f46;
+  }
+
+  /*
+   * Focus ring — Slice D (WU-1) needs a visible focus indicator so
+   * keyboard and gamepad navigation is usable. The retro aesthetic
+   * uses a chunky pixel border instead of a thin outline; the white
+   * drop-shadow matches the Lisa: The Painful visual canon.
+   */
+  .retro-btn:focus-visible {
+    outline: none;
+    border-color: #f4f4f5;
+    box-shadow: 4px 4px 0px #f4f4f5, 0 0 0 2px #09090b;
   }
 </style>

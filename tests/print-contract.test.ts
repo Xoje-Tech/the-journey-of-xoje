@@ -153,3 +153,280 @@ describe('print-preview-headless.mjs — issue #9 regression', () => {
     expect(src).toMatch(/\.replace\([^)]+\)/);
   });
 });
+
+describe('TooltipOverlay.astro — print safety', () => {
+  const TOOLTIP_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/organisms/TooltipOverlay.astro');
+
+  it('component exists and is readable', () => {
+    expect(existsSync(TOOLTIP_PATH)).toBe(true);
+  });
+
+  it('component includes the no-print class on its main wrapper', () => {
+    const src = readFileSync(TOOLTIP_PATH, 'utf8');
+    expect(src).toMatch(/class="[^"]*no-print[^"]*"/);
+  });
+});
+
+/**
+ * Slice C WU-1: PrintButton appears in the built HTML so users can print
+ * from inside the game (Brecha 8: window.print() was only reachable from
+ * the Start Screen before).
+ *
+ * We verify the static contract — the print button element exists in
+ * both locales and is marked no-print so it doesn't pollute the CV PDF.
+ */
+describe('PrintButton.astro — Slice C WU-1', () => {
+  const PRINT_BTN_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/PrintButton.astro');
+
+  it('PrintButton.astro source exists', () => {
+    expect(existsSync(PRINT_BTN_PATH)).toBe(true);
+  });
+
+  it('PrintButton source declares no-print on the wrapper', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // The wrapper MUST be no-print so it doesn't show up in the PDF.
+    expect(src).toMatch(/class="[^"]*no-print[^"]*"/);
+  });
+
+  it('PrintButton source wires click → window.print()', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // Same handler as StartScreen's Download CV button — single source
+    // of truth for the print action.
+    expect(src).toMatch(/window\.print\(\)/);
+  });
+
+  it('PrintButton source subscribes to isStartedStore for visibility', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    // Visible only while the game is running (same pattern as PauseButton).
+    expect(src).toMatch(/isStartedStore/);
+  });
+
+  it('built ES HTML contains the print button id', () => {
+    const html = readFileSync(resolve(DIST, 'index.html'), 'utf8');
+    expect(html).toMatch(/id="print-cv-btn"/);
+  });
+
+  it('built EN HTML contains the print button id', () => {
+    const html = readFileSync(resolve(DIST, 'en/index.html'), 'utf8');
+    expect(html).toMatch(/id="print-cv-btn"/);
+  });
+
+  it('built HTML localizes the print button label correctly', () => {
+    const esHtml = readFileSync(resolve(DIST, 'index.html'), 'utf8');
+    const enHtml = readFileSync(resolve(DIST, 'en/index.html'), 'utf8');
+    // Spanish: "Imprimir CV"; English: "Print CV" — both from ui.{es,en}.json.
+    expect(esHtml).toMatch(/Imprimir\s*CV/);
+    expect(enHtml).toMatch(/Print\s*CV/);
+  });
+});
+
+/**
+ * Slice C WU-2: keyboard P shortcut. The engine in init.ts dispatches a
+ * 'print-requested' CustomEvent on keydown('p'). PrintButton listens to
+ * it. We verify the source contract here because the runtime dispatch
+ * path is covered by integration tests in start-screen.test.ts.
+ */
+describe('Print requested event — Slice C WU-2 source contract', () => {
+  const PRINT_BTN_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/PrintButton.astro');
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+
+  it('PrintButton source listens for print-requested', () => {
+    const src = readFileSync(PRINT_BTN_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]print-requested['"]/);
+  });
+
+  it('init.ts source dispatches print-requested on keydown "p"', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The dispatch happens inside the onKeyDown handler.
+    expect(src).toMatch(/'print-requested'/);
+    expect(src).toMatch(/e\.key === ['"]p['"]/);
+  });
+
+  it('init.ts source respects e.repeat to avoid auto-repeat spam', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The guard must check e.repeat BEFORE dispatching.
+    expect(src).toMatch(/e\.repeat/);
+  });
+});
+
+/**
+ * Slice C WU-3: gamepad Start button (buttons[9]) opens the Settings
+ * modal. The engine dispatches 'gamepad-start' on edge-detect, and
+ * SettingsPanel.astro listens for it.
+ */
+describe('Gamepad Start → Settings — Slice C WU-3 source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+  const SETTINGS_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/organisms/SettingsPanel.astro');
+
+  it('init.ts source polls buttons[9] (Start) in pollGamepadOnce', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // buttons[9] is Start in standard W3C gamepad mapping.
+    expect(src).toMatch(/buttons\[9\]/);
+  });
+
+  it('init.ts source dispatches gamepad-start on edge-detect', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    expect(src).toMatch(/'gamepad-start'/);
+    // Edge-detect must track previous state to avoid spam.
+    expect(src).toMatch(/prevStartPressed/);
+  });
+
+  it('SettingsPanel source listens for gamepad-start and opens the modal', () => {
+    const src = readFileSync(SETTINGS_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]gamepad-start['"]/);
+    expect(src).toMatch(/showModal\(\)/);
+  });
+
+  it('SettingsPanel source does not double-open the modal if already open', () => {
+    const src = readFileSync(SETTINGS_PATH, 'utf8');
+    // Guard: don't call showModal() if already open (it would throw or
+    // be a no-op depending on the browser).
+    expect(src).toMatch(/!settingsModal\.open/);
+  });
+});
+
+/**
+ * Slice C WU-4: D-pad navigation inside modals. The engine dispatches
+ * per-direction CustomEvents; RetroModal listens and cycles focus
+ * through the modal's focusables.
+ */
+describe('Gamepad D-pad navigation in modals — Slice C WU-4 source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+  const MODAL_PATH = resolve(PROJECT_ROOT, 'src/modules/game/interface/components/atoms/RetroModal.astro');
+
+  it('init.ts source tracks previous D-pad state for edge detection', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The per-direction dispatch only fires on released → press transition.
+    expect(src).toMatch(/prevDpadState/);
+  });
+
+  it.each(['up', 'down', 'left', 'right'] as const)(
+    'init.ts source dispatches gamepad-dpad-%s on edge transition',
+    (dir) => {
+      const src = readFileSync(INIT_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`'gamepad-dpad-${dir}'`));
+    },
+  );
+
+  it.each(['up', 'down', 'left', 'right'] as const)(
+    'RetroModal source listens for gamepad-dpad-%s',
+    (dir) => {
+      const src = readFileSync(MODAL_PATH, 'utf8');
+      // The modal cycles focus on any direction event.
+      expect(src).toMatch(new RegExp(`addEventListener\\(['"]gamepad-dpad-${dir}['"]`));
+    },
+  );
+
+  it('RetroModal source guards navigation behind modal.open check', () => {
+    const src = readFileSync(MODAL_PATH, 'utf8');
+    // The D-pad handler must check modal.open before touching focus,
+    // otherwise it would intercept D-pad events meant for the game.
+    expect(src).toMatch(/if\s*\(\s*!modal\.open\s*\)/);
+  });
+});
+
+/**
+ * Slice F — fix for click-camera-offset bug.
+ *
+ * Before the fix, pointerEventToCanvasTarget returned screen-space
+ * coordinates (clientX - rect.left, clientY - rect.top), but the sampler
+ * compared those against player.y in WORLD coordinates. When the camera
+ * had scrolled (player.y > viewport.h / 2), clicking below the visible
+ * player stored a Y value that was ABOVE player.y in world space, and
+ * the sampler steered the player toward it — visually the player
+ * "didn't progress" toward where you clicked.
+ *
+ * The fix lives in onPointerDown (init.ts): add camera.y to the
+ * screen-space Y before storing it. pointerEventToCanvasTarget stays
+ * pure (it has no access to camera) — the conversion happens in the
+ * handler that owns the engine state.
+ */
+describe('Click→world coordinate fix — Slice F source contract', () => {
+  const INIT_PATH = resolve(PROJECT_ROOT, 'src/modules/game/infrastructure/init.ts');
+
+  it('init.ts onPointerDown adds camera.y to the screen-space Y', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // The fix is a literal `screen.y + camera.y` in onPointerDown.
+    // We anchor it to the handler by looking for the constant substring
+    // adjacent to `state.mouseTarget =`.
+    expect(src).toMatch(/screen\.y\s*\+\s*camera\.y/);
+  });
+
+  it('init.ts onPointerDown does NOT store pointerEventToCanvasTarget directly', () => {
+    const src = readFileSync(INIT_PATH, 'utf8');
+    // Regression guard: the old (buggy) line was
+    //   state.mouseTarget = pointerEventToCanvasTarget(canvas, e);
+    // The fix stores screen.x / screen.y separately and adds camera.y.
+    // We assert the buggy literal is gone so future refactors don't
+    // silently regress.
+    expect(src).not.toMatch(/state\.mouseTarget\s*=\s*pointerEventToCanvasTarget/);
+  });
+});
+
+/**
+ * Slice D — StartScreen keyboard + gamepad navigation. Closes the
+ * Brecha 5 from the inputs audit (no way to control the start screen
+ * with anything other than a mouse click).
+ *
+ * We verify the static contract: the start screen source wires
+ * keyboard arrow listeners, gamepad D-pad listeners, and gamepad A
+ * activation. Runtime behavior is covered by integration tests in
+ * start-screen.test.ts (which uses the engine mock).
+ */
+describe('StartScreen navigation — Slice D source contract', () => {
+  const START_SCREEN_PATH = resolve(
+    PROJECT_ROOT,
+    'src/modules/game/interface/components/organisms/StartScreen.astro',
+  );
+  const RETRO_BTN_PATH = resolve(
+    PROJECT_ROOT,
+    'src/modules/game/interface/components/atoms/RetroButton.astro',
+  );
+
+  it('StartScreen source auto-focuses the first button on DOMContentLoaded', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // The auto-focus should run inside DOMContentLoaded.
+    expect(src).toMatch(/startGameBtn\.focus\(\)/);
+  });
+
+  it.each(['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'] as const)(
+    'StartScreen source handles keyboard %s',
+    (key) => {
+      const src = readFileSync(START_SCREEN_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`['"]${key}['"]`));
+    },
+  );
+
+  it('StartScreen source wires moveFocus with wrap-around (modulo)', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // The modulo + double-modulo idiom handles negative deltas correctly.
+    expect(src).toMatch(/% total/);
+  });
+
+  it.each(['gamepad-dpad-up', 'gamepad-dpad-down', 'gamepad-dpad-left', 'gamepad-dpad-right'] as const)(
+    'StartScreen source listens for gamepad D-pad %s',
+    (event) => {
+      const src = readFileSync(START_SCREEN_PATH, 'utf8');
+      expect(src).toMatch(new RegExp(`addEventListener\\(['"]${event}['"]`));
+    },
+  );
+
+  it('StartScreen source handles gamepad-a activation', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    expect(src).toMatch(/addEventListener\(['"]gamepad-a['"]/);
+    // And calls click on the focused button.
+    expect(src).toMatch(/active\.click\(\)/);
+  });
+
+  it('StartScreen source does NOT intercept navigation while a modal is open', () => {
+    const src = readFileSync(START_SCREEN_PATH, 'utf8');
+    // Modals have their own focus management (Slice C WU-4).
+    expect(src).toMatch(/settingsModal\?\.open\s*\|\|\s*controlsModal\?\.open/);
+  });
+
+  it('RetroButton source has a visible :focus-visible style', () => {
+    const src = readFileSync(RETRO_BTN_PATH, 'utf8');
+    // Required so keyboard navigation is actually visible to the user.
+    expect(src).toMatch(/:focus-visible/);
+  });
+});

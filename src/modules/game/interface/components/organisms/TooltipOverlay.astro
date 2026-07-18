@@ -1,0 +1,158 @@
+---
+// src/modules/game/interface/components/organisms/TooltipOverlay.astro
+interface Props {
+  locale: 'es' | 'en';
+}
+
+const { locale } = Astro.props;
+
+// Localized strings
+const labels = {
+  es: {
+    technical: "Habilidad Técnica",
+    qualitative: "Habilidad Cualitativa",
+    soft: "Habilidad Blanda",
+    npc: "Colega / Colaborador",
+    biome: "Entorno / Proyecto:",
+    proximity: "¡Estás cerca!",
+  },
+  en: {
+    technical: "Technical Skill",
+    qualitative: "Qualitative Skill",
+    soft: "Soft Skill",
+    npc: "Coworker / NPC",
+    biome: "Environment / Project:",
+    proximity: "You are close!",
+  }
+}[locale];
+---
+
+<div
+  id="game-tooltip"
+  class="game-tooltip no-print"
+  style="display: none;"
+  data-label-technical={labels.technical}
+  data-label-qualitative={labels.qualitative}
+  data-label-soft={labels.soft}
+  data-label-npc={labels.npc}
+  data-label-biome={labels.biome}
+  data-label-proximity={labels.proximity}
+>
+  <div class="tooltip-card">
+    <div id="tooltip-category" class="tooltip-category"></div>
+    <h3 id="tooltip-title" class="tooltip-title"></h3>
+    <div id="tooltip-biome" class="tooltip-biome"></div>
+  </div>
+</div>
+
+<style>
+  .game-tooltip {
+    position: fixed;
+    z-index: 15; /* sits above #game-canvas (z-index 10) but below dialogs/HUD */
+    pointer-events: none; /* passes clicks through to the canvas underneath */
+    user-select: none;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    width: max-content;
+    max-width: 280px;
+    image-rendering: pixelated;
+  }
+
+  .tooltip-card {
+    position: relative;
+    background: #1c1c1f;
+    border: 2px solid #fff;
+    padding: 12px 16px;
+    color: #fff;
+    box-shadow: 4px 4px 0px #09090b;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* NES Double-border inside style */
+  .tooltip-card::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+  }
+
+  .tooltip-category {
+    font-size: 9px;
+    font-weight: bold;
+    color: #f1c40f;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tooltip-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .tooltip-biome {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+</style>
+
+<script>
+  import { activeTooltipStore } from "@/modules/game/application/store";
+  import { SKILL_TEMPLATES } from "@/modules/game/infrastructure/init";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tooltip = document.getElementById('game-tooltip');
+    const categoryEl = document.getElementById('tooltip-category');
+    const titleEl = document.getElementById('tooltip-title');
+    const biomeEl = document.getElementById('tooltip-biome');
+
+    if (!tooltip || !categoryEl || !titleEl || !biomeEl) return;
+
+    // Localized labels from data-attributes
+    const technical = tooltip.getAttribute('data-label-technical') || '';
+    const qualitative = tooltip.getAttribute('data-label-qualitative') || '';
+    const soft = tooltip.getAttribute('data-label-soft') || '';
+    const npc = tooltip.getAttribute('data-label-npc') || '';
+    const biomeLabel = tooltip.getAttribute('data-label-biome') || '';
+
+    // Track active state via store subscription
+    activeTooltipStore.subscribe((state) => {
+      if (state) {
+        // Find biome information from SKILL_TEMPLATES
+        const itemTemplate = SKILL_TEMPLATES.find((t) => t.id === state.id);
+        const biome = itemTemplate?.biome || '';
+
+        // Populate title
+        titleEl.textContent = state.name;
+
+        // Populate category & biome
+        if (state.type === 'npc') {
+          categoryEl.textContent = npc;
+        } else {
+          const category = itemTemplate?.category || 'technical';
+          if (category === 'technical') {
+            categoryEl.textContent = technical;
+          } else if (category === 'qualitative') {
+            categoryEl.textContent = qualitative;
+          } else {
+            categoryEl.textContent = soft;
+          }
+        }
+
+        biomeEl.textContent = `${biomeLabel} ${biome}`;
+
+        // Positioning: Horizontally centered, offset above the collectible item (item.radius is 12)
+        tooltip.style.left = `${state.screenX}px`;
+        tooltip.style.top = `${state.screenY - 24}px`; // Offset above the item
+        tooltip.style.transform = 'translate(-50%, -100%)';
+        tooltip.style.display = 'block';
+      } else {
+        tooltip.style.display = 'none';
+      }
+    });
+  });
+</script>

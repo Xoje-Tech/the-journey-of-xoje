@@ -2,6 +2,11 @@
 import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
 import RetroButton from "@/modules/game/interface/components/atoms/RetroButton.astro";
+import startBg from "@/assets/start-bg.png";
+import iconPlay from "@/assets/icons/icon-play.png";
+import iconDownload from "@/assets/icons/icon-download.png";
+import iconSettings from "@/assets/icons/icon-settings.png";
+import iconGamepad from "@/assets/icons/icon-gamepad.png";
 
 interface Props {
   locale: 'es' | 'en';
@@ -17,15 +22,16 @@ const ui = locale === 'es' ? uiEs : uiEn;
   aria-label="Start screen"
   data-start-label={ui.game.startGame}
   data-resume-label={ui.game.resumeGame}
+  style={`background-color: #1c1c1f; background-image: url(${startBg.src}); background-size: cover; background-position: center bottom; background-repeat: no-repeat;`}
 >
   <div class="start-content">
     <h1 class="retro-title">{ui.game.startTitle}</h1>
     <p class="retro-tagline">{ui.game.startTagline}</p>
     <div class="start-buttons">
-      <RetroButton id="start-game-btn">{ui.game.startGame}</RetroButton>
-      <RetroButton id="download-cv-btn">{ui.game.downloadCv}</RetroButton>
-      <RetroButton id="settings-btn">{ui.game.settings}</RetroButton>
-      <RetroButton id="controls-btn">{ui.game.controls}</RetroButton>
+      <RetroButton id="start-game-btn" icon={{ src: iconPlay.src, alt: "" }}>{ui.game.startGame}</RetroButton>
+      <RetroButton id="download-cv-btn" icon={{ src: iconDownload.src, alt: "" }}>{ui.game.downloadCv}</RetroButton>
+      <RetroButton id="settings-btn" icon={{ src: iconSettings.src, alt: "" }}>{ui.game.settings}</RetroButton>
+      <RetroButton id="controls-btn" icon={{ src: iconGamepad.src, alt: "" }}>{ui.game.controls}</RetroButton>
     </div>
   </div>
 </main>
@@ -36,7 +42,6 @@ const ui = locale === 'es' ? uiEs : uiEn;
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #1c1c1f;
     color: #f4f4f5;
     display: flex;
     flex-direction: column;
@@ -48,13 +53,27 @@ const ui = locale === 'es' ? uiEs : uiEn;
     transition: transform 600ms cubic-bezier(0.25, 1, 0.5, 1);
   }
 
+  #start-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.85) 100%);
+    pointer-events: none;
+  }
+
   #start-screen.slide-up {
     transform: translateY(-100%);
   }
 
   .start-content {
-    max-width: 600px;
+    position: relative;
+    z-index: 1;
+    background-color: #1c1c1f;
+    border: 2px solid #09090b;
+    box-shadow: 6px 6px 0 #09090b;
     padding: 24px;
+    border-radius: 0;
+    max-width: 600px;
   }
 
   .retro-title {
@@ -92,6 +111,11 @@ const ui = locale === 'es' ? uiEs : uiEn;
     const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
     const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
 
+    // Slice D (WU-1): all four buttons are wired to keyboard activation
+    // for free because they are real <button> elements (Enter / Space
+    // trigger click automatically). We just add explicit click→click
+    // handlers below for the actions themselves.
+
     if (startGameBtn) {
       startGameBtn.addEventListener('click', () => {
         isStartedStore.set(true);
@@ -116,6 +140,116 @@ const ui = locale === 'es' ? uiEs : uiEn;
       });
     }
 
+    // Slice D (WU-2): 2D grid navigation for keyboard + gamepad.
+    // The 4 buttons are laid out 2x2:
+    //   [0] Start Game   [1] Download CV
+    //   [2] Settings     [3] Controls
+    // ArrowRight / D-pad-right → idx +1 (wrap row 0→1 at column 1)
+    // ArrowLeft  / D-pad-left  → idx -1 (wrap row 1→0 at column 0)
+    // ArrowDown  / D-pad-down  → idx +2 (next row, wrap last→first)
+    // ArrowUp    / D-pad-up    → idx -2 (previous row, wrap first→last)
+    //
+    // Gamepad A activation: dispatched by init.ts as a 'gamepad-a'
+    // CustomEvent (Slice A). When the focused element is one of our 4
+    // buttons, we just call .click() on it.
+    const buttons: HTMLElement[] = [
+      startGameBtn,
+      downloadCvBtn,
+      settingsBtn,
+      controlsBtn,
+    ].filter((b): b is HTMLElement => b !== null);
+
+    const getCurrentIndex = (): number => {
+      const active = document.activeElement as HTMLElement | null;
+      const idx = active ? buttons.indexOf(active) : -1;
+      return idx;
+    };
+
+    const moveFocus = (delta: number) => {
+      if (buttons.length === 0) return;
+      // Don't intercept navigation while a modal is open — modals have
+      // their own focus management (RetroModal + Slice C WU-4).
+      if (settingsModal?.open || controlsModal?.open) return;
+      const current = getCurrentIndex();
+      const total = buttons.length;
+      // If nothing is focused yet, default to the first button (idx 0).
+      const base = current === -1 ? 0 : current;
+      const next = ((base + delta) % total + total) % total;
+      buttons[next]?.focus();
+    };
+
+    const isStartScreenActive = (): boolean => {
+      // The start screen is the active input target only when it's
+      // visible (display !== 'none') AND the game hasn't started yet.
+      if (!startScreen) return false;
+      const style = window.getComputedStyle(startScreen);
+      if (style.display === 'none') return false;
+      // If a modal is open, modal nav (Slice C WU-4) takes precedence.
+      if (settingsModal?.open || controlsModal?.open) return false;
+      return true;
+    };
+
+    // Keyboard arrow navigation. Listener attached to window so it works
+    // regardless of which element has focus (within reason — guard below).
+    window.addEventListener('keydown', (e) => {
+      if (!isStartScreenActive()) return;
+      // tagName string check is test-env-safe (HTMLInputElement isn't
+      // defined in Vitest without DOM — same trick as the P-shortcut
+      // in init.ts).
+      const target = e.target as unknown as { tagName?: string } | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
+        return;
+      }
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          moveFocus(1);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          moveFocus(-1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          moveFocus(2);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          moveFocus(-2);
+          break;
+      }
+    });
+
+    // Gamepad D-pad navigation. init.ts dispatches 'gamepad-dpad-up/
+    // down/left/right' on edge transitions (Slice C WU-4 added this).
+    // We reuse the same moveFocus logic. The Slice C listener on
+    // RetroModal handles D-pad nav inside modals; here we handle the
+    // start screen.
+    const onDpad = (delta: number) => () => {
+      if (!isStartScreenActive()) return;
+      moveFocus(delta);
+    };
+    window.addEventListener('gamepad-dpad-right', onDpad(1));
+    window.addEventListener('gamepad-dpad-left', onDpad(-1));
+    window.addEventListener('gamepad-dpad-down', onDpad(2));
+    window.addEventListener('gamepad-dpad-up', onDpad(-2));
+
+    // Gamepad A activation. init.ts dispatches 'gamepad-a' on edge
+    // transition. If the focused element is one of our 4 buttons, fire
+    // a synthetic click so the existing click handlers do their work.
+    // This mirrors the Slice C modal pattern (A activates focused).
+    window.addEventListener('gamepad-a', () => {
+      if (!isStartScreenActive()) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (active && buttons.includes(active)) {
+        active.click();
+      }
+    });
+
+    // Note: Gamepad B (cancel) is intentionally NOT wired here. There
+    // is nothing to "cancel" on the start screen — B's semantic meaning
+    // (close modal) doesn't apply.
+
     if (startScreen) {
       const startLabel = startScreen.dataset.startLabel || 'Start Game';
       const resumeLabel = startScreen.dataset.resumeLabel || 'Resume Game';
@@ -123,14 +257,19 @@ const ui = locale === 'es' ? uiEs : uiEn;
       isStartedStore.subscribe((started) => {
         if (started) {
           startScreen.classList.add('slide-up');
-          if (startGameBtn) {
-            startGameBtn.textContent = resumeLabel;
+          const labelSlot = startGameBtn?.querySelector('[data-retro-label]');
+          if (labelSlot) {
+            labelSlot.textContent = resumeLabel;
           }
         } else {
           startScreen.style.display = 'flex';
           // Force a DOM reflow to prevent CSS transition bypasses
           void startScreen.offsetHeight;
           startScreen.classList.remove('slide-up');
+          const labelSlot = startGameBtn?.querySelector('[data-retro-label]');
+          if (labelSlot) {
+            labelSlot.textContent = startLabel;
+          }
         }
       });
 
@@ -140,6 +279,25 @@ const ui = locale === 'es' ? uiEs : uiEn;
             startScreen.style.display = 'none';
           }
         }
+      });
+    }
+
+    // Slice D (WU-1): auto-focus the first button when the page loads.
+    // A native <button> reacts to Enter/Space automatically, so just
+    // landing focus on startGameBtn is enough for keyboard activation.
+    // Gamepad A activation is wired separately in WU-2 by dispatching
+    // a synthetic click on the focused element.
+    //
+    // We focus only once, on initial load. When the user pauses and the
+    // start screen reappears, we do NOT steal focus — that would be
+    // surprising mid-game (e.g. the user is reading a dialog and the
+    // game pauses from elsewhere). They can Tab back if they want.
+    if (startGameBtn) {
+      // requestAnimationFrame ensures the start screen has been laid
+      // out and visible (display:flex is set inline by the subscription
+      // on DOMContentLoaded) before we move focus to it.
+      requestAnimationFrame(() => {
+        startGameBtn.focus();
       });
     }
   });

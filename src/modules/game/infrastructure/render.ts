@@ -192,6 +192,7 @@ export function drawCollectibles(
   items: CollectibleItem[],
   cameraY: number,
   viewportH: number,
+  skillImages: Record<string, HTMLImageElement> = {},
 ): void {
   ctx.save();
   ctx.font = '10px ui-monospace, "JetBrains Mono", monospace';
@@ -228,22 +229,28 @@ export function drawCollectibles(
       continue;
     }
 
-    // Draw circular skill coin
-    ctx.beginPath();
-    ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
-    if (item.category === 'technical') {
-      ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
-      ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
-    } else if (item.category === 'qualitative') {
-      ctx.fillStyle = 'rgba(255, 180, 100, 0.2)';
-      ctx.strokeStyle = 'rgba(255, 180, 100, 0.8)';
+    // Draw skill sprite if available, otherwise fallback to circular skill coin
+    const img = skillImages[item.id];
+    if (img) {
+      // Shield is 24x24 px, centered around item.x, item.y
+      ctx.drawImage(img, item.x - 12, item.y - 12, 24, 24);
     } else {
-      ctx.fillStyle = 'rgba(100, 255, 100, 0.2)';
-      ctx.strokeStyle = 'rgba(100, 255, 100, 0.8)';
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+      if (item.category === 'technical') {
+        ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
+        ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+      } else if (item.category === 'qualitative') {
+        ctx.fillStyle = 'rgba(255, 180, 100, 0.2)';
+        ctx.strokeStyle = 'rgba(255, 180, 100, 0.8)';
+      } else {
+        ctx.fillStyle = 'rgba(100, 255, 100, 0.2)';
+        ctx.strokeStyle = 'rgba(100, 255, 100, 0.8)';
+      }
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
     }
-    ctx.lineWidth = 1.5;
-    ctx.fill();
-    ctx.stroke();
 
     // Draw skill name label above the circle
     ctx.fillStyle = '#ffffff';

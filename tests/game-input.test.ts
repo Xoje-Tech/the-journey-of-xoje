@@ -19,7 +19,7 @@
  * the caller owns, which is how we keep tests DOM-free.
  */
 import { describe, it, expect } from 'vitest';
-import { sampleInputs } from '../src/modules/game/application/input';
+import { sampleInputs, pointerEventToCanvasTarget } from '../src/modules/game/application/input';
 import type { InputState, CanvasDims } from '../src/modules/game/domain/types';
 
 function makeState(overrides: Partial<InputState> = {}): InputState {
@@ -27,6 +27,7 @@ function makeState(overrides: Partial<InputState> = {}): InputState {
     keys: {},
     mouseTarget: null,
     gamepadConnected: false,
+    lastPointerType: 'mouse',
     clearMouseTarget: () => {
       state.mouseTarget = null;
     },
@@ -121,7 +122,9 @@ describe('sampleInputs — gamepad analog stick', () => {
   it('returns zero when no gamepad connected and no keys', () => {
     const state = makeState();
     const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
-    expect(v).toEqual({ vx: 0, vy: 0 });
+    // Use toMatchObject so we only assert on vx/vy, not the new source/detail
+    // fields added in the debug HUD slice.
+    expect(v).toMatchObject({ vx: 0, vy: 0 });
   });
 });
 
@@ -152,6 +155,54 @@ describe('sampleInputs — D-pad overrides analog', () => {
   });
 });
 
+describe('sampleInputs — gamepad overrides mouseTarget (Slice-A fix)', () => {
+  // Symmetry with the keyboard path (lines 76-94): the OQ2 rule says "any
+  // active movement input overrides mouse". Before Slice-A, only the
+  // keyboard path called state.clearMouseTarget(). Releasing the D-pad or
+  // stick left the player drifting back to a stale click point.
+
+  it('D-pad press clears a pending mouseTarget (mirror of the keyboard path)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const dpad = { up: false, down: false, left: false, right: true };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, dpad);
+    expect(state.mouseTarget).toBeNull();
+  });
+
+  it('analog stick above deadzone clears a pending mouseTarget', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0.5, y: 0 };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(state.mouseTarget).toBeNull();
+  });
+
+  it('analog stick inside deadzone does NOT clear mouseTarget (rest state, not intent)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0.05, y: 0.05 }; // below deadzone
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(state.mouseTarget).not.toBeNull();
+  });
+
+  it('D-pad NOT pressed and stick at zero does NOT clear mouseTarget (mirror of no-keys case)', () => {
+    const state = makeState({
+      gamepadConnected: true,
+      mouseTarget: { x: 150, y: 50 },
+    });
+    const stick = { x: 0, y: 0 };
+    const dpad = { up: false, down: false, left: false, right: false };
+    sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick, dpad);
+    expect(state.mouseTarget).not.toBeNull();
+  });
+});
+
 describe('sampleInputs — mouse-target steering', () => {
   it('produces a vector toward the click target', () => {
     // Player is conceptually at (0,0); target is straight to the right.
@@ -173,5 +224,211 @@ describe('sampleInputs — mouse-target steering', () => {
     const state = makeState({ mouseTarget: { x: 50, y: 50 } });
     sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 51, y: 51 });
     expect(state.mouseTarget).toBeNull();
+  });
+});
+
+/**
+ * Slice-B (pointer events) — `pointerEventToCanvasTarget` covers the
+ * canvas-local coordinate mapping for the unified mouse/touch/pen path.
+ * We don't need a real DOM: a stub canvas with a fixed bounding rect
+ * is enough, and the function only reads three things from the event:
+ * `offsetX`/`offsetY` (when present) and `clientX`/`clientY`.
+ */
+describe('pointerEventToCanvasTarget — pointer events (Slice B)', () => {
+  function makeCanvas(rect: DOMRect): HTMLCanvasElement {
+    return {
+      getBoundingClientRect: () => rect,
+    } as HTMLCanvasElement;
+  }
+
+  it('uses offsetX/offsetY directly when present (modern PointerEvent path)', () => {
+    const canvas = makeCanvas({
+      left: 100,
+      top: 50,
+      right: 700,
+      bottom: 650,
+      width: 600,
+      height: 600,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      offsetX: 42,
+      offsetY: 17,
+      clientX: 999, // ignored when offsetX is present
+      clientY: 999,
+    });
+    expect(target).toEqual({ x: 42, y: 17 });
+  });
+
+  it('falls back to clientX - rect.left when offsetX is missing (legacy path)', () => {
+    const canvas = makeCanvas({
+      left: 100,
+      top: 50,
+      right: 700,
+      bottom: 650,
+      width: 600,
+      height: 600,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      clientX: 142, // 142 - 100 = 42
+      clientY: 67, // 67 - 50 = 17
+    });
+    expect(target).toEqual({ x: 42, y: 17 });
+  });
+
+  it('handles a tap at the canvas origin (top-left) correctly', () => {
+    const canvas = makeCanvas({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      clientX: 0,
+      clientY: 0,
+    });
+    expect(target).toEqual({ x: 0, y: 0 });
+  });
+
+  it('handles offsetX=0 / offsetY=0 distinctly from "missing" (type guard)', () => {
+    // This is the regression that bites if you use `|| e.offsetX`:
+    // `0 || fallback` evaluates to fallback. The `typeof === 'number'`
+    // check correctly accepts 0 as a valid coordinate.
+    const canvas = makeCanvas({
+      left: 10,
+      top: 20,
+      right: 410,
+      bottom: 320,
+      width: 400,
+      height: 300,
+      x: 10,
+      y: 20,
+      toJSON: () => ({}),
+    });
+    const target = pointerEventToCanvasTarget(canvas, {
+      offsetX: 0,
+      offsetY: 0,
+      clientX: 999,
+      clientY: 999,
+    });
+    expect(target).toEqual({ x: 0, y: 0 });
+  });
+
+  it('produces a target the sampler can steer toward (integration with sampleInputs)', () => {
+    // End-to-end: simulate a tap on the right half of the canvas and
+    // verify sampleInputs produces a rightward vector toward it.
+    const canvas = makeCanvas({
+      left: 0,
+      top: 0,
+      right: DIMS.w,
+      bottom: DIMS.h,
+      width: DIMS.w,
+      height: DIMS.h,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const state = makeState({
+      mouseTarget: pointerEventToCanvasTarget(canvas, {
+        offsetX: 180,
+        offsetY: 0,
+        clientX: 180,
+        clientY: 0,
+      }),
+    });
+    const v = sampleInputs(state, canvas, DIMS.w, DIMS.h);
+    expect(v.vx).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * SampleInput contract — the debug HUD slice extends the sampler to
+ * return `{ vx, vy, source, detail }` so the canvas HUD can show what
+ * input is currently firing. Format examples:
+ *
+ *   keyboard:W       → ArrowUp / W held
+ *   keyboard:W+A     → Up + Left (WASD alias)
+ *   gamepad-dpad:D-up → D-pad up on a connected gamepad
+ *   gamepad-stick:(0.50,0.20) → analog stick position
+ *   mouse:(200,300)  → pointer click target on the canvas
+ *   touch:(150,75)   → tap target (PointerEvents.pointerType === 'touch')
+ *   idle             → no movement input active
+ *
+ * The sampler is the single source of truth for which path fired this
+ * frame, so the HUD never has to re-derive it from `vx`/`vy`.
+ */
+describe('sampleInputs — source/detail contract for debug HUD', () => {
+  it('reports source=keyboard and detail="W" when W is held', () => {
+    const state = makeState({ keys: { w: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('W');
+  });
+
+  it('reports detail="W+A" when W and A are held simultaneously', () => {
+    const state = makeState({ keys: { w: true, a: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('W+A');
+  });
+
+  it('reports detail="ArrowUp" when only the ArrowUp key is held', () => {
+    const state = makeState({ keys: { ArrowUp: true } });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('keyboard');
+    expect(v.detail).toBe('ArrowUp');
+  });
+
+  it('reports source=gamepad-dpad and detail="D-up" on D-pad up', () => {
+    const state = makeState({ gamepadConnected: true });
+    const dpad = { up: true, down: false, left: false, right: false };
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, dpad);
+    expect(v.source).toBe('gamepad-dpad');
+    expect(v.detail).toBe('D-up');
+  });
+
+  it('reports source=gamepad-stick with formatted coordinates', () => {
+    const state = makeState({ gamepadConnected: true });
+    const stick = { x: 0.5, y: 0 };
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, stick);
+    expect(v.source).toBe('gamepad-stick');
+    expect(v.detail).toBe('(0.50,0.00)');
+  });
+
+  it('reports source=mouse with coordinate detail when pointerType is mouse', () => {
+    const state = makeState({
+      mouseTarget: { x: 200, y: 300 },
+      lastPointerType: 'mouse',
+    });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 0, y: 0 });
+    expect(v.source).toBe('mouse');
+    expect(v.detail).toBe('(200,300)');
+  });
+
+  it('reports source=touch with coordinate detail when pointerType is touch', () => {
+    const state = makeState({
+      mouseTarget: { x: 150, y: 75 },
+      lastPointerType: 'touch',
+    });
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h, undefined, undefined, { x: 0, y: 0 });
+    expect(v.source).toBe('touch');
+    expect(v.detail).toBe('(150,75)');
+  });
+
+  it('reports source=idle and empty detail when no input is active', () => {
+    const state = makeState();
+    const v = sampleInputs(state, FAKE_CANVAS, DIMS.w, DIMS.h);
+    expect(v.source).toBe('idle');
+    expect(v.detail).toBe('');
   });
 });
