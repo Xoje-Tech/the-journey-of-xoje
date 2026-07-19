@@ -71,7 +71,14 @@ export const BIOMES: readonly BiomeConfig[] = [
         xRatio: 0.5,
       },
     ],
-    decorations: [],
+    decorations: [
+      {
+        sprite: 'biomes/lcs/lcs-building.png',
+        yOffset: 100,
+        xRatio: 0.5,
+        scale: 1,
+      },
+    ],
   },
   {
     id: 'crmble',
