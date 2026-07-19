@@ -19,8 +19,8 @@ import {
   NPCS,
   MAP_HEIGHT,
   buildCollectibles,
-  type BiomeId,
 } from '../src/modules/game/infrastructure/biome-config';
+import type { BiomeConfig, BiomeId, NPCConfig } from '../src/modules/game/domain/types';
 
 const BIOME_ORDER: readonly BiomeId[] = ['lcs-robotics', 'crmble', 'twinny', 'ride-on'];
 const PER_BIOME_COUNTS = [4, 5, 5, 5] as const;
@@ -32,6 +32,17 @@ describe('BIOMES — authoring surface', () => {
 
   it('uses BiomeId literals in declared order: lcs-robotics, crmble, twinny, ride-on', () => {
     expect(BIOMES.map((b) => b.id)).toEqual([...BIOME_ORDER]);
+  });
+
+  it('attaches the LCS building decoration at yOffset 100', () => {
+    expect(BIOMES.find((b) => b.id === 'lcs-robotics')?.decorations).toEqual([
+      {
+        sprite: 'biomes/lcs/lcs-building.png',
+        yOffset: 100,
+        xRatio: 0.5,
+        scale: 1,
+      },
+    ]);
   });
 
   it('has unique BiomeId per biome', () => {
@@ -113,7 +124,7 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
       'ride-on': 0,
     };
     for (const item of items) {
-      perBiome[item.biome] += 1;
+      perBiome[item.biome] = (perBiome[item.biome] ?? 0) + 1;
     }
     expect(perBiome['lcs-robotics']).toBe(4);
     expect(perBiome['crmble']).toBe(5);
@@ -138,9 +149,9 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
   });
 
   it('rejects a skill whose yOffset is below 0', () => {
-    const broken = [
+    const broken: BiomeConfig[] = [
       {
-        id: 'b1',
+        id: 'lcs-robotics',
         label: 'Broken',
         height: 1000,
         skills: [
@@ -153,9 +164,9 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
   });
 
   it('rejects a skill whose yOffset exceeds the biome height', () => {
-    const broken = [
+    const broken: BiomeConfig[] = [
       {
-        id: 'b1',
+        id: 'lcs-robotics',
         label: 'Broken',
         height: 1000,
         skills: [
@@ -168,7 +179,9 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
   });
 
   it('rejects an orphan npcId that no NPC owns', () => {
-    const ghostNpcs = [{ biomeId: 'twinny', name: 'Ghost', initial: 'G', dialogue: { es: '', en: '' } }];
+    const ghostNpcs: NPCConfig[] = [
+      { biomeId: 'twinny', name: 'Ghost', initial: 'G', dialogue: { es: '', en: '' } },
+    ];
     expect(() => buildCollectibles(BIOMES, ghostNpcs)).toThrow(/orphan/i);
   });
 });
