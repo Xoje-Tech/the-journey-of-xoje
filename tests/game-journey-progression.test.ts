@@ -7,22 +7,27 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { clampPlayerY, checkCollision } from "../src/modules/game/application/physics";
-import { SKILL_TEMPLATES, MAP_HEIGHT } from "../src/modules/game/infrastructure/init";
+import { BIOMES, MAP_HEIGHT, buildCollectibles } from "../src/modules/game/infrastructure/biome-config";
 import type { Player, CollectibleItem } from "../src/modules/game/domain/types";
 
 describe('Journey Progression Integration', () => {
-  it('SKILL_TEMPLATES defines exactly 19 collectibles distributed across 4 biomes', () => {
-    expect(SKILL_TEMPLATES).toHaveLength(19);
+  it('BIOMES defines exactly 19 collectibles distributed across 4 biome IDs', () => {
+    const skills = BIOMES.flatMap((biome) => biome.skills);
+    expect(skills).toHaveLength(19);
 
-    const biomes = SKILL_TEMPLATES.map((t) => t.biome);
-    expect(biomes.filter((b) => b === 'LCS Robotics')).toHaveLength(4);
-    expect(biomes.filter((b) => b === 'Crmble')).toHaveLength(5);
-    expect(biomes.filter((b) => b === 'Twinny')).toHaveLength(5);
-    expect(biomes.filter((b) => b === 'RIDE ON')).toHaveLength(5);
+    expect(BIOMES.find((b) => b.id === 'lcs-robotics')?.skills).toHaveLength(4);
+    expect(BIOMES.find((b) => b.id === 'crmble')?.skills).toHaveLength(5);
+    expect(BIOMES.find((b) => b.id === 'twinny')?.skills).toHaveLength(5);
+    expect(BIOMES.find((b) => b.id === 'ride-on')?.skills).toHaveLength(5);
 
-    // Assert chronological vertical order
-    for (let i = 0; i < SKILL_TEMPLATES.length - 1; i++) {
-      expect(SKILL_TEMPLATES[i]!.y).toBeLessThanOrEqual(SKILL_TEMPLATES[i + 1]!.y);
+    const items = buildCollectibles(BIOMES, [
+      { biomeId: 'lcs-robotics', name: 'Héctor', initial: 'H', dialogue: { es: '¡Ey!', en: 'Hey!' } },
+      { biomeId: 'crmble', name: 'Laura', initial: 'L', dialogue: { es: 'Hola', en: 'Hi' } },
+      { biomeId: 'twinny', name: 'Dani', initial: 'D', dialogue: { es: 'Hola', en: 'Hi' } },
+      { biomeId: 'ride-on', name: 'Marcos', initial: 'M', dialogue: { es: 'Hola', en: 'Hi' } },
+    ]);
+    for (let i = 0; i < items.length - 1; i++) {
+      expect(items[i]!.y).toBeLessThanOrEqual(items[i + 1]!.y);
     }
   });
 
@@ -44,7 +49,7 @@ describe('Journey Progression Integration', () => {
       id: 'react',
       name: 'React',
       category: 'technical',
-      biome: 'LCS Robotics',
+      biome: 'lcs-robotics',
       x: 100,
       y: 100,
       radius: 12,
@@ -94,7 +99,7 @@ describe('CustomEvent dispatching', () => {
         id: 'ts',
         name: 'TypeScript',
         category: 'technical',
-        biome: 'LCS',
+        biome: 'lcs-robotics',
         x: 100,
         y: 100,
         radius: 12,
@@ -104,7 +109,7 @@ describe('CustomEvent dispatching', () => {
         id: 'vue',
         name: 'Vue',
         category: 'technical',
-        biome: 'RIDE ON',
+        biome: 'ride-on',
         x: 200,
         y: 200,
         radius: 12,
