@@ -126,7 +126,7 @@ describe('checkCollision — pure function', () => {
     id: 'typescript',
     name: 'TypeScript',
     category: 'technical',
-    biome: 'LCS Robotics',
+    biome: 'lcs-robotics',
     x: 100,
     y: 100,
     radius: 15,

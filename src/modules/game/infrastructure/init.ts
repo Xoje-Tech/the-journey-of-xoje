@@ -52,6 +52,7 @@ import {
 import { formatHud } from './hud';
 import { PlayerEntity } from '@/modules/game/application/player';
 import { createLogger } from '@/shared/lib/logger';
+import { BIOMES, NPCS, MAP_HEIGHT, buildCollectibles } from './biome-config';
 import type {
   CanvasDims,
   InitOptions,
@@ -71,206 +72,32 @@ export const DEFAULT_FRICTION = 0.92; // OQ1: smooth glide
 export const DEFAULT_GRID_SIZE = 40;
 export const DEFAULT_PLAYER_SIZE = 14;
 export const DEFAULT_ACCEL = 0.6;
-export const MAP_HEIGHT = 4000;
+// Re-export the derived MAP_HEIGHT so downstream consumers (tests, init
+// callers) can keep importing it from init.ts without learning a new
+// module. The numeric value is owned by biome-config.ts.
+export { MAP_HEIGHT };
 
-const BIOME_LCS_ROBOTICS = 'LCS Robotics';
-const BIOME_CRMBLE = 'Crmble';
-const BIOME_TWINNY = 'Twinny';
-const BIOME_RIDE_ON = 'RIDE ON';
-
-export const SKILL_TEMPLATES = [
-  // LCS Robotics (0 - 1000)
-  {
-    id: 'kuka-robotics',
-    name: 'KUKA robotics tooling',
-    category: 'technical' as const,
-    biome: BIOME_LCS_ROBOTICS,
-    xRatio: 0.3,
-    y: 250,
-  },
-  {
-    id: 'cultural-adaptability',
-    name: 'Cultural adaptability',
-    category: 'soft' as const,
-    biome: BIOME_LCS_ROBOTICS,
-    xRatio: 0.4,
-    y: 350,
-  },
-  {
-    id: 'international-ops',
-    name: 'Operacion en entorno internacional',
-    category: 'qualitative' as const,
-    biome: BIOME_LCS_ROBOTICS,
-    xRatio: 0.7,
-    y: 500,
-    npc: {
-      name: 'Héctor',
-      initial: 'H',
-      dialogue: {
-        es: '¡Ey Xoje! Bienvenido a bordo. En este entorno internacional de automoción vas a tener que comunicarte con equipos de todo el mundo. ¡La adaptabilidad es clave!',
-        en: 'Hey Xoje! Welcome aboard. In this international automotive environment, you will have to communicate with teams from all over the world. Adaptability is key!',
-      },
-    },
-  },
-  {
-    id: 'typescript',
-    name: 'TypeScript',
-    category: 'technical' as const,
-    biome: BIOME_LCS_ROBOTICS,
-    xRatio: 0.5,
-    y: 750,
-  },
-
-  // Crmble (1000 - 2000)
-  {
-    id: 'sass',
-    name: 'Sass',
-    category: 'technical' as const,
-    biome: BIOME_CRMBLE,
-    xRatio: 0.25,
-    y: 1200,
-  },
-  {
-    id: 'bootstrap',
-    name: 'Bootstrap',
-    category: 'technical' as const,
-    biome: BIOME_CRMBLE,
-    xRatio: 0.75,
-    y: 1400,
-  },
-  {
-    id: 'collaborative-creativity',
-    name: 'Collaborative creativity',
-    category: 'soft' as const,
-    biome: BIOME_CRMBLE,
-    xRatio: 0.5,
-    y: 1500,
-  },
-  {
-    id: 'design-system',
-    name: 'Design system',
-    category: 'qualitative' as const,
-    biome: BIOME_CRMBLE,
-    xRatio: 0.4,
-    y: 1600,
-    npc: {
-      name: 'Laura',
-      initial: 'L',
-      dialogue: {
-        es: 'Hola Jose. Diseñé estos componentes píxel-perfect. Vamos a construir juntos un sistema de componentes sólido para que sirva como única fuente de verdad.',
-        en: "Hi Jose. I designed these pixel-perfect components. Let's build a solid component system together to serve as our single source of truth.",
-      },
-    },
-  },
-  {
-    id: 'pixel-perfect',
-    name: 'Pixel-perfect implementation',
-    category: 'qualitative' as const,
-    biome: BIOME_CRMBLE,
-    xRatio: 0.6,
-    y: 1800,
-  },
-
-  // Twinny (2000 - 3000)
-  {
-    id: 'angular',
-    name: 'Angular',
-    category: 'technical' as const,
-    biome: BIOME_TWINNY,
-    xRatio: 0.3,
-    y: 2200,
-  },
-  {
-    id: 'jira',
-    name: 'Jira',
-    category: 'technical' as const,
-    biome: BIOME_TWINNY,
-    xRatio: 0.7,
-    y: 2400,
-  },
-  {
-    id: 'peer-mentoring',
-    name: 'Peer mentoring',
-    category: 'soft' as const,
-    biome: BIOME_TWINNY,
-    xRatio: 0.6,
-    y: 2500,
-    npc: {
-      name: 'Dani',
-      initial: 'D',
-      dialogue: {
-        es: '¡Hola Xoje! Gracias por guiarme con Angular y explicarme los patrones de DDD. Tener un mentor en el equipo hace que aprender sea mucho más fácil.',
-        en: 'Hi Xoje! Thanks for guiding me with Angular and explaining DDD patterns. Having a mentor in the team makes learning so much easier.',
-      },
-    },
-  },
-  {
-    id: 'swagger',
-    name: 'Swagger',
-    category: 'technical' as const,
-    biome: BIOME_TWINNY,
-    xRatio: 0.5,
-    y: 2600,
-  },
-  {
-    id: 'ddd',
-    name: 'Domain-Driven Design (DDD)',
-    category: 'qualitative' as const,
-    biome: BIOME_TWINNY,
-    xRatio: 0.4,
-    y: 2800,
-  },
-
-  // RIDE ON (3000 - 4000)
-  {
-    id: 'astro',
-    name: 'Astro',
-    category: 'technical' as const,
-    biome: BIOME_RIDE_ON,
-    xRatio: 0.2,
-    y: 3200,
-  },
-  {
-    id: 'vue',
-    name: 'Vue',
-    category: 'technical' as const,
-    biome: BIOME_RIDE_ON,
-    xRatio: 0.8,
-    y: 3400,
-  },
-  {
-    id: 'continuous-learning',
-    name: 'Continuous learning',
-    category: 'soft' as const,
-    biome: BIOME_RIDE_ON,
-    xRatio: 0.45,
-    y: 3500,
-  },
-  {
-    id: 'nodejs',
-    name: 'Node.js',
-    category: 'technical' as const,
-    biome: BIOME_RIDE_ON,
-    xRatio: 0.5,
-    y: 3600,
-  },
-  {
-    id: 'tdd',
-    name: 'Test-Driven Development (TDD)',
-    category: 'qualitative' as const,
-    biome: BIOME_RIDE_ON,
-    xRatio: 0.6,
-    y: 3800,
-    npc: {
-      name: 'Marcos',
-      initial: 'M',
-      dialogue: {
-        es: 'Qué tal, Xoje. Aquí en RIDE ON la calidad es innegociable. No subas nada sin escribir primero sus tests unitarios. ¡TDD es el camino!',
-        en: "Hey Xoje. Here at RIDE ON, quality is non-negotiable. Don't upload anything without writing its unit tests first. TDD is the way!",
-      },
-    },
-  },
-];
+/**
+ * Flattened skill view consumed by the HUD bag and tooltip Astro
+ * components. They only need `{id, name, category, biome}`; the richer
+ * `SkillTemplate` (yOffset, npcId, xRatio) is preserved internally in
+ * `BIOMES` and projected into `CollectibleItem` at spawn time. This
+ * re-export lets the .astro files keep their import contract while the
+ * engine's authoritative authoring surface remains biome-config.ts.
+ */
+export const SKILL_TEMPLATES: ReadonlyArray<{
+  id: string;
+  name: string;
+  category: 'technical' | 'qualitative' | 'soft';
+  biome: import('@/modules/game/domain/types').BiomeId;
+}> = BIOMES.flatMap((b) =>
+  b.skills.map((s) => ({
+    id: s.id,
+    name: s.name,
+    category: s.category,
+    biome: b.id,
+  })),
+);
 
 // Phase-2 polish constants. Keep them next to the slice so anyone reading
 // init.ts sees the magic numbers in context.
@@ -354,17 +181,7 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
 
   const camera: Camera = { y: 0 };
 
-  const collectibles: CollectibleItem[] = SKILL_TEMPLATES.map((t) => ({
-    id: t.id,
-    name: t.name,
-    category: t.category,
-    biome: t.biome,
-    x: 0, // dynamic X coordinates mapped in resize()
-    y: t.y,
-    radius: 12,
-    collected: false,
-    npc: t.npc,
-  }));
+  const collectibles: CollectibleItem[] = buildCollectibles(BIOMES, NPCS);
 
   /** Instantiate the clean architecture PlayerEntity and load spritesheet */
   const playerEntity = new PlayerEntity(opts.spritesheetPath);
@@ -384,6 +201,23 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
         };
         img.onerror = (err) => {
           gameLogger.error(`Failed to load skill sprite for: ${id} from ${path}`, { error: err });
+        };
+      }
+    }
+  }
+
+  /** Load biome decoration sprites asynchronously (same pattern as skills). */
+  const decorationImages: Record<string, HTMLImageElement> = {};
+  if (opts.decorationSpritePaths) {
+    for (const [key, path] of Object.entries(opts.decorationSpritePaths)) {
+      if (typeof window !== 'undefined' && typeof Image !== 'undefined') {
+        const img = new Image();
+        img.src = path;
+        img.onload = () => {
+          decorationImages[key] = img;
+        };
+        img.onerror = (err) => {
+          gameLogger.error(`Failed to load decoration sprite for: ${key} from ${path}`, { error: err });
         };
       }
     }
@@ -450,11 +284,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       player.y = playerSize;
     }
 
-    // Map collectible positions on resize based on screen width
+    // Map collectible positions on resize based on screen width.
+    // The xRatio is read from the BIOMES config (flatMap preserves
+    // chronological order matching the collectibles array).
+    const skillRatios = BIOMES.flatMap((b) => b.skills.map((s) => s.xRatio));
     collectibles.forEach((item, idx) => {
-      const template = SKILL_TEMPLATES[idx];
-      if (template) {
-        item.x = cssW * template.xRatio;
+      const ratio = skillRatios[idx];
+      if (ratio !== undefined) {
+        item.x = cssW * ratio;
       }
     });
   }
@@ -759,11 +596,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       // Collisions check & Dispatch CustomEvent
       for (const item of collectibles) {
         if (!item.collected && checkCollision(player, item)) {
-          if (item.npc) {
+          if (item.npcId !== undefined) {
+            // Resolve NPC from external table via biomeId lookup.
+            const npc = NPCS.find((n) => n.biomeId === item.npcId);
+            if (!npc) continue; // unreachable in well-formed config; defensive guard
             // Trigger dialog overlay instead of direct collection
-            const dialogText = locale === 'es' ? item.npc.dialogue.es : item.npc.dialogue.en;
+            const dialogText = locale === 'es' ? npc.dialogue.es : npc.dialogue.en;
             activeDialogStore.set({
-              npcName: item.npc.name,
+              npcName: npc.name,
               skillId: item.id,
               text: dialogText,
             });
@@ -807,10 +647,14 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       }
 
       if (closestItem) {
+        const tooltipNpc =
+          closestItem.npcId !== undefined
+            ? NPCS.find((n) => n.biomeId === closestItem.npcId)
+            : undefined;
         activeTooltipStore.set({
           id: closestItem.id,
-          type: closestItem.npc ? 'npc' : 'skill',
-          name: closestItem.npc ? closestItem.npc.name : closestItem.name,
+          type: tooltipNpc ? 'npc' : 'skill',
+          name: tooltipNpc ? tooltipNpc.name : closestItem.name,
           screenX: closestItem.x,
           screenY: closestItem.y - camera.y,
         });
@@ -832,14 +676,23 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     ctx.translate(0, -camera.y);
 
     // Draw Biomes
-    drawBiomes(ctx, dims.w, camera.y, dims.h);
+    drawBiomes(
+      ctx,
+      dims.w,
+      BIOMES,
+      MAP_HEIGHT,
+      camera.y,
+      dims.h,
+      opts.decorationSpritePaths ?? {},
+      decorationImages,
+    );
 
     if (hasStarted) {
       // Draw Collectibles
-      drawCollectibles(ctx, collectibles, camera.y, dims.h, skillImages);
+      drawCollectibles(ctx, collectibles, camera.y, dims.h, skillImages, NPCS);
 
       // Draw Bottom CTA
-      drawBottomCTA(ctx, dims.w, camera.y, dims.h);
+      drawBottomCTA(ctx, dims.w, MAP_HEIGHT, camera.y, dims.h);
 
       // Draw Trail
       drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);

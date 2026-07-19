@@ -16,7 +16,7 @@
  * Visual language is deliberately minimal: the player is the only moving
  * thing on screen, so all the polish lives here.
  */
-import type { TrailPoint, CollectibleItem } from "@/modules/game/domain/types";
+import type { TrailPoint, CollectibleItem, BiomeConfig, NPCConfig } from "@/modules/game/domain/types";
 
 /* ------------------------------------------------------------------ */
 /*  Constants — exported so init.ts and tests share the same numbers. */
@@ -27,6 +27,14 @@ export const TRAIL_MAX_AGE_MS = 280;
 
 /** Maximum number of trail points retained in the buffer (ring-style). */
 export const TRAIL_MAX_LEN = 14;
+
+/**
+ * Placeholder fill style for missing decoration sprites. Kept here so
+ * `drawBiomes` can render a deterministic fallback without depending on
+ * the asset loader.
+ */
+const PLACEHOLDER_FILL = 'rgba(180, 180, 180, 0.25)';
+const PLACEHOLDER_STROKE = 'rgba(180, 180, 180, 0.7)';
 
 /* ------------------------------------------------------------------ */
 /*  Pure helpers                                                      */
@@ -142,21 +150,25 @@ export function isWithinViewport(
 }
 
 /**
- * Draw chronological career biome boundaries and labels in world space.
+ * Draw chronological career biome boundaries, labels, and decorations in
+ * world space. `BIOMES` is the single source of truth — biome heights
+ * and labels are derived at the call site by accumulating heights
+ * (mirrors `buildCollectibles` in biome-config.ts).
+ *
+ * Decoration sprites are looked up in `decorationSpritePaths` (a flat
+ * map of biome-relative keys to image URLs); missing sprites fall back
+ * to a deterministic placeholder rect per the spec.
  */
 export function drawBiomes(
   ctx: CanvasRenderingContext2D,
   w: number,
+  biomes: readonly BiomeConfig[],
+  mapHeight: number,
   cameraY: number,
   viewportH: number,
+  decorationSpritePaths: Record<string, string> = {},
+  decorationImages: Record<string, HTMLImageElement> = {},
 ): void {
-  const biomes = [
-    { name: 'LCS Robotics', yStart: 0, yEnd: 1000 },
-    { name: 'Crmble', yStart: 1000, yEnd: 2000 },
-    { name: 'Twinny', yStart: 2000, yEnd: 3000 },
-    { name: 'RIDE ON', yStart: 3000, yEnd: 4000 },
-  ];
-
   ctx.save();
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
@@ -164,28 +176,82 @@ export function drawBiomes(
   ctx.lineWidth = 1;
   ctx.setLineDash([5, 5]);
 
+  // Compute yStart per biome by accumulating heights.
+  const starts: number[] = [];
+  let cursor = 0;
   for (const b of biomes) {
-    // Draw bottom border of biome if it's less than MAP_HEIGHT (4000)
-    if (b.yEnd < 4000) {
-      if (isWithinViewport(b.yEnd, 0, cameraY, viewportH)) {
+    starts.push(cursor);
+    cursor += b.height;
+  }
+
+  for (let i = 0; i < biomes.length; i++) {
+    const biome = biomes[i]!;
+    const yStart = starts[i]!;
+    const yEnd = yStart + biome.height;
+
+    // Bottom border of biome unless it is the last one (matches map edge).
+    if (yEnd < mapHeight) {
+      if (isWithinViewport(yEnd, 0, cameraY, viewportH)) {
         ctx.beginPath();
-        ctx.moveTo(0, b.yEnd);
-        ctx.lineTo(w, b.yEnd);
+        ctx.moveTo(0, yEnd);
+        ctx.lineTo(w, yEnd);
         ctx.stroke();
       }
     }
 
-    // Draw biome label near the top/start of the biome
-    const labelY = b.yStart + 30;
+    // Biome label near the top/start of the biome.
+    const labelY = yStart + 30;
     if (isWithinViewport(labelY, 10, cameraY, viewportH)) {
-      ctx.fillText(b.name.toUpperCase(), 16, labelY);
+      ctx.fillText(biome.label.toUpperCase(), 16, labelY);
+    }
+  }
+  ctx.restore();
+
+  // Decorations: drawn after biome chrome so they overlay labels naturally.
+  // The render order inside a biome is intentionally fixed (background
+  // chrome, then decorations, then collectibles).
+  ctx.save();
+  for (let i = 0; i < biomes.length; i++) {
+    const biome = biomes[i]!;
+    const yStart = starts[i]!;
+    for (const deco of biome.decorations) {
+      if (deco.yOffset < 0 || deco.yOffset > biome.height) continue;
+      const y = yStart + deco.yOffset;
+      if (!isWithinViewport(y, 0, cameraY, viewportH)) continue;
+      const x = w * deco.xRatio;
+      const img = decorationImages[deco.sprite];
+      if (img) {
+        const drawW = (img.naturalWidth || 64) * (deco.scale ?? 1);
+        const drawH = (img.naturalHeight || 64) * (deco.scale ?? 1);
+        ctx.drawImage(img, x - drawW / 2, y - drawH, drawW, drawH);
+      } else {
+        // Deterministic placeholder rect — never crashes, never logs.
+        const phW = 60;
+        const phH = 80;
+        ctx.fillStyle = PLACEHOLDER_FILL;
+        ctx.strokeStyle = PLACEHOLDER_STROKE;
+        ctx.lineWidth = 1;
+        ctx.fillRect(x - phW / 2, y - phH, phW, phH);
+        ctx.strokeRect(x - phW / 2, y - phH, phW, phH);
+        ctx.fillStyle = 'rgba(180, 180, 180, 0.9)';
+        ctx.font = '10px ui-monospace, "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(deco.sprite, x, y - phH / 2);
+        // Track that we at least attempted this decoration — used to
+        // detect path-key normalization drift in tests.
+        void decorationSpritePaths[deco.sprite];
+      }
     }
   }
   ctx.restore();
 }
 
 /**
- * Draw collectible items that have not been collected yet and are inside the viewport.
+ * Draw collectible items that have not been collected yet and are inside
+ * the viewport. NPC rendering resolves the NPC config via
+ * `NPCS.find((n) => n.biomeId === item.npcId)` — the collectible itself
+ * carries only the typed `npcId` reference.
  */
 export function drawCollectibles(
   ctx: CanvasRenderingContext2D,
@@ -193,6 +259,7 @@ export function drawCollectibles(
   cameraY: number,
   viewportH: number,
   skillImages: Record<string, HTMLImageElement> = {},
+  npcs: readonly NPCConfig[] = [],
 ): void {
   ctx.save();
   ctx.font = '10px ui-monospace, "JetBrains Mono", monospace';
@@ -206,7 +273,12 @@ export function drawCollectibles(
       continue;
     }
 
-    if (item.npc) {
+    const npc =
+      item.npcId !== undefined
+        ? npcs.find((n) => n.biomeId === item.npcId)
+        : undefined;
+
+    if (npc) {
       // Draw circular yellow NPC coin
       ctx.beginPath();
       ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
@@ -220,12 +292,12 @@ export function drawCollectibles(
       ctx.save();
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 11px ui-monospace, "JetBrains Mono", monospace';
-      ctx.fillText(item.npc.initial, item.x, item.y);
+      ctx.fillText(npc.initial, item.x, item.y);
       ctx.restore();
 
       // Draw NPC name label above the circle
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(`${item.npc.name} (NPC)`, item.x, item.y - item.radius - 8);
+      ctx.fillText(`${npc.name} (NPC)`, item.x, item.y - item.radius - 8);
       continue;
     }
 
@@ -260,15 +332,18 @@ export function drawCollectibles(
 }
 
 /**
- * Draw Journey End CTA at the bottom of the map.
+ * Draw Journey End CTA at the bottom of the map. `mapHeight` is the
+ * derived `MAP_HEIGHT` value; the CTA sits 100 px above the bottom
+ * edge, computed from the config rather than a hard-coded 3900.
  */
 export function drawBottomCTA(
   ctx: CanvasRenderingContext2D,
   w: number,
+  mapHeight: number,
   cameraY: number,
   viewportH: number,
 ): void {
-  const ctaY = 3900;
+  const ctaY = mapHeight - 100;
   if (isWithinViewport(ctaY, 50, cameraY, viewportH)) {
     ctx.save();
 
