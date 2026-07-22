@@ -14,6 +14,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { updateTrail, isWithinViewport, drawCollectibles } from "../src/modules/game/infrastructure/render";
 import type { CollectibleItem } from "../src/modules/game/domain/types";
+import { NPCS } from "../src/modules/game/infrastructure/biome-config";
 
 describe('updateTrail — append + age + drop', () => {
   it('appends the current position as a fresh point (age = 0)', () => {
@@ -128,20 +129,16 @@ describe('drawCollectibles — NPC rendering checks', () => {
         id: 'international-ops',
         name: 'Operacion en entorno internacional',
         category: 'qualitative',
-        biome: 'LCS Robotics',
+        biome: 'lcs-robotics',
         x: 100,
         y: 500,
         radius: 12,
         collected: false,
-        npc: {
-          name: 'Héctor',
-          initial: 'H',
-          dialogue: { es: '¡Ey!', en: 'Hey!' },
-        },
+        npcId: 'lcs-robotics',
       },
     ];
 
-    drawCollectibles(ctx, items, 0, 800);
+    drawCollectibles(ctx, items, 0, 800, {}, NPCS);
 
     // Verify NPC custom drawing calls
     expect(ctx.beginPath).toHaveBeenCalled();

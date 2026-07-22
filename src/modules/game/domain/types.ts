@@ -89,6 +89,12 @@ export interface InitOptions {
   spritesheetPath?: string;
   /** Paths/URLs of generated skill sprites. */
   skillSpritePaths?: Record<string, string>;
+  /**
+   * Paths/URLs of biome decoration sprites keyed by their biome-relative
+   * path (e.g. `biomes/lcs/lcs-building.png`). Loaded by `GameViewport`
+   * via an eager import.meta.glob over @/assets/biomes/.
+   */
+  decorationSpritePaths?: Record<string, string>;
   /** Locale language 'es' | 'en' passed from the front-end */
   locale?: 'es' | 'en';
 }
@@ -97,13 +103,66 @@ export interface Camera {
   y: number; // Viewport top coordinate in world-space [0, MAP_HEIGHT - viewportHeight]
 }
 
-export interface NPCMetadata {
+/**
+ * Closed union of the four biome identifiers. The biome-engine change
+ * promotes these from free-form strings (e.g. 'LCS Robotics') to a typed
+ * literal union so that `pnpm typecheck` rejects typo'd references in
+ * tests, configs, and engine wiring.
+ */
+export type BiomeId = 'lcs-robotics' | 'crmble' | 'twinny' | 'ride-on';
+
+/**
+ * Skill authored inside a biome. `yOffset` is relative to the start of
+ * the owning biome (0 ≤ yOffset ≤ biome.height); the engine resolves it
+ * to an absolute world Y at spawn time via `buildCollectibles`.
+ */
+export interface SkillTemplate {
+  id: string;
+  name: string;
+  category: 'technical' | 'qualitative' | 'soft';
+  /** 0 ≤ yOffset ≤ owning biome.height */
+  yOffset: number;
+  /** 0..1 of CSS width; mapped to absolute X in resize() */
+  xRatio: number;
+  /** When set, the collectible resolves to an NPCConfig in NPCS */
+  npcId?: BiomeId;
+}
+
+/**
+ * Background decoration placed inside a biome. Authored relative to the
+ * biome start; resolved to absolute world Y at spawn.
+ */
+export interface Decoration {
+  /** Glob key under @/assets/biomes/{biomeId}/<sprite> */
+  sprite: string;
+  yOffset: number;
+  xRatio: number;
+  scale?: number;
+}
+
+/**
+ * Chronological career biome. The vertical order of the BIOMES array
+ * defines world-space ordering; `MAP_HEIGHT` is derived from the sum of
+ * every biome's height.
+ */
+export interface BiomeConfig {
+  id: BiomeId;
+  label: string;
+  height: number;
+  background?: string;
+  skills: SkillTemplate[];
+  decorations: Decoration[];
+}
+
+/**
+ * External NPC table. NPCs are resolved from collectibles via
+ * `NPCS.find((n) => n.biomeId === collectible.npcId)`.
+ */
+export interface NPCConfig {
+  biomeId: BiomeId;
   name: string;
   initial: string;
-  dialogue: {
-    es: string;
-    en: string;
-  };
+  dialogue: { es: string; en: string };
 }
 
 export interface ActiveDialog {
@@ -116,12 +175,13 @@ export interface CollectibleItem {
   id: string; // Slugified name of the skill
   name: string;
   category: 'technical' | 'qualitative' | 'soft';
-  biome: string;
+  biome: BiomeId;
   x: number;
   y: number;
   radius: number;
   collected: boolean;
-  npc?: NPCMetadata;
+  /** When set, NPCS.find((n) => n.biomeId === npcId) returns the NPC */
+  npcId?: BiomeId;
 }
 
 export interface PlayerState {

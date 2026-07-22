@@ -18,6 +18,15 @@
     skillSpritePaths[filename] = value.default.src;
   }
 
+  // Dynamically resolve biome decoration sprites using Vite's glob import
+  const decorationSprites = import.meta.glob<{ default: { src: string } }>('@/assets/biomes/**/*.png', { eager: true });
+  const decorationSpritePaths: Record<string, string> = {};
+  for (const [key, value] of Object.entries(decorationSprites)) {
+    const marker = '/assets/';
+    const assetPath = key.includes(marker) ? key.slice(key.indexOf(marker) + marker.length) : key;
+    decorationSpritePaths[assetPath] = value.default.src;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const c = document.getElementById('game-canvas');
     if (c instanceof HTMLCanvasElement) {
@@ -25,6 +34,7 @@
       const handle = init(c, {
         spritesheetPath: playerSpritesheet.src,
         skillSpritePaths,
+        decorationSpritePaths,
         locale
       });
       window.gameHandle = handle;
