@@ -40,6 +40,11 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'lcs-robotics',
     label: 'LCS Robotics',
     height: 1000,
+    // Tileable biome background authored in
+    // scripts/generate-lcs-background.js (128x512 RGBA). `drawBiomes`
+    // resolves this via the same `decorationSpritePaths` glob the
+    // engine already loads for `decorations[]`.
+    background: 'biomes/lcs/lcs-background.png',
     skills: [
       {
         id: 'kuka-robotics',
