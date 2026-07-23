@@ -104,6 +104,15 @@ const ui = locale === 'es' ? uiEs : uiEn;
 <script>
   import { activeDialogStore } from "@/modules/game/application/store";
 
+  // E2E hook: expose the store on `window` so Playwright can drive the
+  // dialog overlay without simulating a multi-second keywalk + collision
+  // detection. The production code path (NPC collision in init.ts) still
+  // owns the store. Production callers should ignore window.__heroDialogStore.
+  if (typeof window !== "undefined") {
+    (window as unknown as { __heroDialogStore: typeof activeDialogStore }).__heroDialogStore =
+      activeDialogStore;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('dialog-overlay');
     const nameEl = document.getElementById('dialog-npc-name');

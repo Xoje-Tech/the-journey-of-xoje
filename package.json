@@ -9,6 +9,8 @@
     "predev": "node scripts/build-cv-static.mjs",
     "dev": "astro dev",
     "generate-skill-sprites": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-skill-sprites.js",
+    "generate-lcs-building": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-lcs-building.js",
+    "generate-lcs-background": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-lcs-background.js",
     "generate-start-bg": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-start-bg.js",
     "generate-start-icons": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-start-icons.js",
     "build:astro": "astro build",
@@ -17,6 +19,8 @@
     "preview": "astro preview",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,astro,json,md,mjs,yml,yaml}\""
@@ -32,6 +36,7 @@
   "devDependencies": {
     "@axe-core/cli": "4.12.1",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.61.1",
     "@types/node": "^22.0.0",
     "eslint": "10.7.0",
     "eslint-plugin-astro": "3.0.1",
