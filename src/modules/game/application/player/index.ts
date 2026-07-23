@@ -82,20 +82,27 @@ export class PlayerEntity {
     vy: number,
     dtMs: number,
     blinkActive: boolean,
+    cameraY: number = 0,
   ): void {
     // 1. Progress the animation frame logic (pure helper)
     this.animState = pickFrame(vx, vy, dtMs, this.animState);
 
-    // 2. Render if loaded (skip silently to avoid canvas crashes if loading lags)
+    // 2. Self-translate (world coords inside, screen coords outside). See
+    //    the note in `drawBiomes` (render.ts) for the rationale: every
+    //    world-space draw helper owns its own save + translate + restore.
+    ctx.save();
+    ctx.translate(0, -cameraY);
+
+    // 3. Render if loaded (skip silently to avoid canvas crashes if loading lags)
     if (this.isLoaded && this.img) {
       drawPlayerFrame(ctx, this.img, this.animState, playerX, playerY, blinkActive, vx);
     } else {
       // Fallback: draw a simple outline of the sprite size while loading
-      ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.setLineDash([2, 2]);
       ctx.strokeRect(playerX - 16, playerY - 24, 32, 48);
-      ctx.restore();
     }
+
+    ctx.restore();
   }
 }
