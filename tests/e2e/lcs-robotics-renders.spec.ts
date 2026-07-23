@@ -116,4 +116,78 @@ test.describe('LCS Robotics — Golden Biome render', () => {
     await expect(page.locator(startScreen)).toBeHidden();
     await expect(page.locator(canvas)).toBeAttached();
   });
+
+  // Regression guard for the biome-background drift bug: with a
+  // double-translate or pattern-tile bug, the LCS background would slide
+  // out of view as the player advanced past the biome midpoint, leaving
+  // the grid (or transparent canvas) visible in the upper half of the
+  // biome. We sample a pixel high up in the canvas (above the player
+  // sprite) before and after a SHORT downward keywalk that stops inside
+  // LCS, and assert the left-edge coverage of the canvas is still high.
+  // If the player crosses into Crmble the test is invalid because
+  // Crmble has no `background` declared (decorations: []) — that is a
+  // separate decision, not this bug.
+  test('LCS background stays anchored to the biome as the player advances past the midpoint', async ({ page }) => {
+    await page.goto('/');
+    await page.locator(startBtn).click();
+    await expect(page.locator(canvas)).toBeAttached();
+
+    const sample = async (): Promise<readonly [number, number, number, number]> => {
+      return await page.evaluate(() => {
+        const c = document.getElementById('game-canvas') as HTMLCanvasElement | null;
+        if (!c) return [0, 0, 0, 0] as const;
+        const ctx = (c as HTMLCanvasElement).getContext('2d');
+        if (!ctx) return [0, 0, 0, 0] as const;
+        const x = 10;
+        const y = Math.floor(c.height * 0.2);
+        const data = ctx.getImageData(x, y, 1, 1).data;
+        return [data[0]!, data[1]!, data[2]!, data[3]!] as const;
+      });
+    };
+
+    // 1. Baseline: at boot, player is at the top of LCS.
+    const before = await sample();
+
+    // 2. Drive the player into the upper-middle of LCS (target world
+    //    y around 400-700). 1.5s of ArrowDown moves the player ~400-500
+    //    world px at typical keywalk speed, well inside LCS (height 1000).
+    await page.focus('body');
+    await page.keyboard.down('ArrowDown');
+    await page.waitForTimeout(1_500);
+    await page.keyboard.up('ArrowDown');
+
+    // 3. Sample the same pixel after the keywalk.
+    const after = await sample();
+
+    // 4. Coverage check: count non-zero pixels in a vertical strip on
+    //    the left edge of the canvas. If the biome background is being
+    //    painted, the strip should have many non-zero alpha pixels. If
+    //    the bug is present (background disappears off the top), the
+    //    strip will be mostly transparent (grid is 6% alpha → many
+    //    pixels below 16).
+    const coverage = await page.evaluate(() => {
+      const c = document.getElementById('game-canvas') as HTMLCanvasElement | null;
+      if (!c) return { total: 0, painted: 0, ratio: 0 };
+      const ctx = (c as HTMLCanvasElement).getContext('2d');
+      if (!ctx) return { total: 0, painted: 0, ratio: 0 };
+      const stripW = 4;
+      const data = ctx.getImageData(0, 0, stripW, c.height).data;
+      let painted = 0;
+      const total = data.length / 4;
+      for (let i = 0; i < data.length; i += 4) {
+        if ((data[i + 3] ?? 0) > 16) painted++;
+      }
+      return { total, painted, ratio: painted / total };
+    });
+
+    const lum = (rgba: readonly number[]) =>
+      0.299 * rgba[0]! + 0.587 * rgba[1]! + 0.114 * rgba[2]!;
+    const lBefore = lum(before);
+    const lAfter = lum(after);
+
+    expect(
+      coverage.ratio,
+      `left-strip coverage after keywalk = ${coverage.ratio.toFixed(2)} (${coverage.painted}/${coverage.total}); sample pixel luma before=${lBefore.toFixed(1)} after=${lAfter.toFixed(1)}`
+    ).toBeGreaterThan(0.5);
+  });
 });
