@@ -89,6 +89,11 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'crmble',
     label: 'Crmble',
     height: 1000,
+    // Tileable biome background authored in
+    // scripts/generate-crmble-background.js (128x512 RGBA). `drawBiomes`
+    // resolves this via the same `decorationSpritePaths` glob the
+    // engine already loads for `decorations[]`.
+    background: 'biomes/crmble/crmble-background.png',
     skills: [
       {
         id: 'sass',
@@ -133,6 +138,11 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'twinny',
     label: 'Twinny',
     height: 1000,
+    // Tileable biome background authored in
+    // scripts/generate-twinny-background.js (128x512 RGBA). `drawBiomes`
+    // resolves this via the same `decorationSpritePaths` glob the
+    // engine already loads for `decorations[]`.
+    background: 'biomes/twinny/twinny-background.png',
     skills: [
       {
         id: 'angular',
@@ -177,6 +187,11 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'ride-on',
     label: 'RIDE ON',
     height: 1000,
+    // Tileable biome background authored in
+    // scripts/generate-rideon-background.js (128x512 RGBA). `drawBiomes`
+    // resolves this via the same `decorationSpritePaths` glob the
+    // engine already loads for `decorations[]`.
+    background: 'biomes/ride-on/ride-on-background.png',
     skills: [
       {
         id: 'astro',
