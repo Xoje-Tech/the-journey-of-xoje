@@ -25,7 +25,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint .",
+    "lint:agents": "node scripts/validate-agents.mjs",
+    "lint": "eslint . && pnpm lint:agents",
     "format": "prettier --write \"**/*.{ts,astro,json,md,mjs,yml,yaml}\""
   },
   "engines": {
