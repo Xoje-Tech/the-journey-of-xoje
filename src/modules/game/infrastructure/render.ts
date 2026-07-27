@@ -121,9 +121,11 @@ export function drawTrail(
   ctx: CanvasRenderingContext2D,
   trail: TrailPoint[],
   maxAgeMs: number,
+  cameraY: number = 0,
 ): void {
   if (trail.length === 0) return;
   ctx.save();
+  ctx.translate(0, -cameraY);
   ctx.fillStyle = '#7a7a7e';
   for (const p of trail) {
     const alpha = (1 - p.age / maxAgeMs) * 0.5;
@@ -169,20 +171,65 @@ export function drawBiomes(
   decorationSpritePaths: Record<string, string> = {},
   decorationImages: Record<string, HTMLImageElement> = {},
 ): void {
+  // `drawBiomes` owns its own camera translate (save + translate + restore)
+  // so callers do not need to wrap the call in `ctx.translate(0, -cameraY)`.
+  // Inside this function everything is drawn in world coordinates; the
+  // translate step is what keeps world Y anchored to screen Y. This makes
+  // the contract explicit instead of relying on a caller-side side effect
+  // (the previous design silently depended on the caller having already
+  // translated the context, which made it easy to introduce double-translate
+  // bugs — see fix `85dbf38` and its successor).
   ctx.save();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-  ctx.font = '12px ui-monospace, "JetBrains Mono", monospace';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([5, 5]);
+  ctx.translate(0, -cameraY);
 
-  // Compute yStart per biome by accumulating heights.
+  // Compute yStart per biome by accumulating heights. Used for the
+  // background fill, the bottom-border, the label, and the
+  // decoration loop below.
   const starts: number[] = [];
   let cursor = 0;
   for (const b of biomes) {
     starts.push(cursor);
     cursor += b.height;
   }
+
+  // 0. Biome backgrounds: drawn FIRST so every later layer (grid was
+  //    already painted by drawGrid in init.ts; we are below the grid
+  //    pass, so biome backgrounds overwrite grid lines that fall
+  //    inside the biome's y-range). Each biome can declare an
+  //    optional `background` sprite which `decorationSpritePaths`
+  //    already maps to a URL (the same glob that feeds `decorations`
+  //    feeds the background loader — no new wiring needed).
+  //
+  //    The sprite is treated as a 1-D tile (texture) and stretched
+  //    to the biome width via `drawImage` — no `createPattern('repeat')`.
+  //    Tiling would cause visible vertical seams every `naturalHeight`
+  //    pixels (128×512 tile inside a 1000px biome). A single `drawImage`
+  //    stretched to the biome's world rect, combined with this function's
+  //    own camera translate, gives a stable, parallax-free background.
+  for (let i = 0; i < biomes.length; i++) {
+    const biome = biomes[i]!;
+    const yStart = starts[i]!;
+    const yEnd = yStart + biome.height;
+
+    if (!biome.background) continue;
+    if (yEnd < cameraY || yStart > cameraY + viewportH) continue;
+
+    const url = decorationSpritePaths[biome.background];
+    if (!url) continue;
+    const img = decorationImages[biome.background];
+    if (!img || !img.complete || img.naturalWidth === 0) continue;
+
+    // Paint the sprite stretched to the biome's full world rect.
+    // Coordinates are world coords; the ctx.translate above maps to screen.
+    ctx.drawImage(img, 0, yStart, w, biome.height);
+  }
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.font = '12px ui-monospace, "JetBrains Mono", monospace';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
 
   for (let i = 0; i < biomes.length; i++) {
     const biome = biomes[i]!;
@@ -245,6 +292,7 @@ export function drawBiomes(
     }
   }
   ctx.restore();
+  ctx.restore();
 }
 
 /**
@@ -261,7 +309,12 @@ export function drawCollectibles(
   skillImages: Record<string, HTMLImageElement> = {},
   npcs: readonly NPCConfig[] = [],
 ): void {
+  // Self-translate (world coords inside, screen coords outside). See the
+  // note in `drawBiomes` for the rationale: each world-space draw helper
+  // owns its own save + translate + restore so callers do not need to wrap
+  // them in an outer camera translation.
   ctx.save();
+  ctx.translate(0, -cameraY);
   ctx.font = '10px ui-monospace, "JetBrains Mono", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -322,11 +375,11 @@ export function drawCollectibles(
       ctx.lineWidth = 1.5;
       ctx.fill();
       ctx.stroke();
-    }
 
-    // Draw skill name label above the circle
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(item.name, item.x, item.y - item.radius - 8);
+      // Draw skill name label above the circle
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(item.name, item.x, item.y - item.radius - 8);
+    }
   }
   ctx.restore();
 }
@@ -345,7 +398,10 @@ export function drawBottomCTA(
 ): void {
   const ctaY = mapHeight - 100;
   if (isWithinViewport(ctaY, 50, cameraY, viewportH)) {
+    // Self-translate (world coords inside, screen coords outside). See the
+    // note in `drawBiomes` for the rationale.
     ctx.save();
+    ctx.translate(0, -cameraY);
 
     // Draw a prominent finishing line
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';

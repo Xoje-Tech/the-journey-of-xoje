@@ -1,8 +1,9 @@
-# Journey Progression Specification
+# Journey Progression Specification (MODIFIED)
 
 ## Purpose
 
-Expose linear vertical gameplay with chronological career biomes, collectible skills, separate HUD skill bags, and category-specific modals/inventories.
+Expose linear vertical gameplay with chronological career biomes, collectible
+skills, separate HUD skill bags, and category-specific modals/inventories.
 
 ## Requirements
 
@@ -144,6 +145,9 @@ Upon collision with an NPC, the system MUST freeze player physics, trail updates
 
 ### Requirement: REQ-NPC-DIALOG-ACTIVATION-TYPEWRITER
 
+> Unchanged. Verified 2026-07-18 (biome-engine change). NPC dialogue text,
+> overlay mount behavior, and typewriter effect contract remain as written.
+
 When `activeDialogStore` is populated with an active NPC, the `<DialogOverlay />` component MUST mount and render. The overlay MUST display the NPC's name and a retro text box with localized dialogue. The text MUST animate progressively using a retro NES-style typewriter effect.
 
 | NPC Name | Language | Dialogue Content                                                                    |
@@ -165,6 +169,10 @@ When `activeDialogStore` is populated with an active NPC, the `<DialogOverlay />
 - AND the text MUST display progressively using a typewriter animation
 
 ### Requirement: REQ-NPC-PROGRESSION-DISMISSAL
+
+> Unchanged. Verified 2026-07-18 (biome-engine change). Dismissal,
+> `activeDialogStore = null`, `'dialog-dismissed'` CustomEvent, and
+> `collectedSkillsStore` membership contract remain as written.
 
 Pressing Space or clicking the `<DialogOverlay />` when the dialogue typewriter effect is complete MUST close the overlay, set `activeDialogStore` to `null`, dispatch a `'dialog-dismissed'` CustomEvent, and mark the associated skill as collected.
 
