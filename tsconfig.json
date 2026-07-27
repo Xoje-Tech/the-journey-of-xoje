@@ -18,6 +18,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["src/**/*", "tests/**/*", "scripts/**/*", "astro.config.mjs"],
+  "include": ["src/**/*", "tests/**/*", "scripts/**/*", "astro.config.mjs", "playwright.config.ts"],
   "exclude": ["dist", "node_modules", ".astro"]
 }
