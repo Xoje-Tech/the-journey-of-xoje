@@ -13,3 +13,5 @@ allowBuilds:
   esbuild: true
   puppeteer: true
   sharp: true
+minimumReleaseAgeExclude:
+  - astro@7.1.4
