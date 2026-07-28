@@ -156,6 +156,7 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 
 - **No sudo.** If a command needs root, surface it and stop.
 - **No auto-merge, no auto-push.** The user merges PRs and pushes. The agent validates locally.
+- **Always use clean feature branches starting from develop.** NEVER make or commit changes directly on the `develop` branch (and never on `master`/`main`). All development MUST take place on a separate, dedicated feature branch starting from a fresh `develop`, so that a clean Pull Request (PR) can be opened.
 - **No inline destructive git operations.** Multi-step git chains (rebase, merge, push) go into reusable scripts under `~/.hermes/credentials/` or skill assets, not inline.
 - **No invented DATA.** If you don't know it, ask the user. See G04.
 - **No Playwright.** Doctrine is lightweight. Use `chromium --headless` (see `scripts/print-preview-headless.mjs`).
