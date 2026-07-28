@@ -156,6 +156,7 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 
 - **No sudo.** If a command needs root, surface it and stop.
 - **No auto-merge, no auto-push.** The user merges PRs and pushes. The agent validates locally.
+- **Always use clean feature branches starting from develop.** NEVER make or commit changes directly on the `develop` branch (and never on `master`/`main`). All development MUST take place on a separate, dedicated feature branch starting from a fresh `develop`, so that a clean Pull Request (PR) can be opened.
 - **No inline destructive git operations.** Multi-step git chains (rebase, merge, push) go into reusable scripts under `~/.hermes/credentials/` or skill assets, not inline.
 - **No invented DATA.** If you don't know it, ask the user. See G04.
 - **No Playwright.** Doctrine is lightweight. Use `chromium --headless` (see `scripts/print-preview-headless.mjs`).
@@ -234,3 +235,21 @@ Quality/debt closure before deploy:
 #### Site name — resolved
 
 **"The Journey of Xoje"** is the H1 of every page in every locale. Tagline is screen-only (hidden in print). Resolved 2026-07-15; see `SPEC.md` → "Resolved decisions". If you ever need to revisit this, change it in `src/i18n/ui.{es,en}.json` AND update `SPEC.md` so they stay aligned.
+
+---
+
+## Known System Gaps & Ignored Errors
+
+Use this section to record any local/environmental errors or workarounds used to keep the system green, ensuring complete transparency across sessions and preventing silent drift.
+
+### 1. Puppeteer / Chromium post-install download failures
+- **Symptom**: `pnpm install` crashes with `Failed to set up chrome-headless-shell` or similar, because of a corrupted or incomplete download in `~/.cache/puppeteer/`.
+- **Workaround (Low-risk bypass)**: If running tests isn't required for the immediate task, skip the heavy browser download by running:
+  ```bash
+  PUPPETEER_SKIP_DOWNLOAD=1 pnpm install
+  ```
+- **Remediation**: If a clean, full test environment is required, purge the corrupted cache directory completely before installing:
+  ```bash
+  rm -rf ~/.cache/puppeteer
+  pnpm install
+  ```

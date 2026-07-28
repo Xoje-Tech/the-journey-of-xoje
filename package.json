@@ -34,7 +34,7 @@
   },
   "packageManager": "pnpm@11.9.0",
   "dependencies": {
-    "astro": "^6.0.0",
+    "astro": "7.1.4",
     "nanostores": "1.4.0"
   },
   "devDependencies": {
@@ -47,16 +47,10 @@
     "eslint-plugin-sonarjs": "4.2.0",
     "lighthouse": "13.4.0",
     "pa11y": "9.1.1",
-    "prettier": "^3.0.0",
+    "prettier": "3.9.5",
     "prettier-plugin-astro": "0.14.1",
-    "typescript": "^5.0.0",
+    "typescript": "5.9.3",
     "typescript-eslint": "8.64.0",
-    "vitest": "^1.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "chromedriver",
-      "puppeteer"
-    ]
+    "vitest": "1.6.1"
   }
 }
