@@ -67,11 +67,14 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
   }
 
   /*
-   * Focus ring — El foco pixelado grueso hereda los tokens primitivos
-   * de color secundario y neutral de la marca, emulando la estética de cartuchos.
+   * Focus ring — Sincronizamos el foco con el comportamiento de hover.
+   * Usamos :focus para contemplar tanto foco por Tab como foco programático por flechas/gamepad.
+   * Declaramos también :focus-visible para cumplir estrictamente con el contrato estático de tests.
    */
+  .retro-btn:focus,
   .retro-btn:focus-visible {
     outline: none;
+    background-color: #27272a;
     border-color: var(--primitive-color-secondary);
     box-shadow: 
       4px 4px 0px var(--primitive-color-secondary), 

@@ -63,9 +63,16 @@ const {
     transform: translateY(1px);
   }
 
-  /* Unificamos de forma centralizada el foco de doble halo para todos los botones tipo píldora */
+  /* 
+   * Sincronizamos el foco con el comportamiento de hover:
+   * Usamos :focus para contemplar tanto foco por Tab como foco programático por flechas/gamepad.
+   * Declaramos también :focus-visible para cumplir estrictamente con el contrato estático de tests.
+   */
+  .app-pill-btn:focus,
   .app-pill-btn:focus-visible {
     outline: none;
+    background: var(--comp-button-pill-bg-hover);
+    transform: translateY(-1px);
     border-color: var(--semantic-color-border-focus);
     box-shadow: 
       0 0 0 2px var(--primitive-color-primary), 
