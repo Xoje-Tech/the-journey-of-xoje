@@ -1,0 +1,75 @@
+---
+// src/modules/game/interface/components/atoms/AppPillButton.astro
+import AppButton from "./AppButton.astro";
+
+interface Props {
+  id?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  'aria-expanded'?: string;
+  'aria-haspopup'?: string;
+  'aria-label'?: string;
+}
+
+const {
+  id,
+  type = 'button',
+  class: className = '',
+  'aria-expanded': ariaExpanded,
+  'aria-haspopup': ariaHaspopup,
+  'aria-label': ariaLabel,
+} = Astro.props;
+---
+
+<AppButton
+  id={id}
+  type={type}
+  class={`app-pill-btn ${className}`}
+  aria-expanded={ariaExpanded}
+  aria-haspopup={ariaHaspopup}
+  aria-label={ariaLabel}
+>
+  <slot />
+</AppButton>
+
+<style is:global>
+  /* 
+   * Usamos is:global para inyectar la clase del wrapper de manera libre en el DOM,
+   * consumiendo estrictamente la jerarquía de Design Tokens de screen.css.
+   */
+  .app-pill-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--comp-button-pill-bg);
+    border: 1px solid var(--comp-button-pill-border);
+    border-radius: var(--comp-button-pill-radius);
+    color: var(--primitive-color-secondary);
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    box-shadow: var(--comp-button-pill-shadow);
+    transition: all 0.2s ease;
+  }
+
+  .app-pill-btn:hover {
+    background: var(--comp-button-pill-bg-hover);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .app-pill-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* Unificamos de forma centralizada el foco de doble halo para todos los botones tipo píldora */
+  .app-pill-btn:focus-visible {
+    outline: none;
+    border-color: var(--semantic-color-border-focus);
+    box-shadow: 
+      0 0 0 2px var(--primitive-color-primary), 
+      0 0 0 4px var(--primitive-color-secondary), 
+      var(--comp-button-pill-shadow);
+  }
+</style>

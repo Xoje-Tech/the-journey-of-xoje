@@ -5,6 +5,39 @@
   --paper: #fafafa;
   --muted: #555;
   --accent: #0b66c2;
+
+  /* ========================================== */
+  /* DESIGN TOKENS (SISTEMA DE DISEÑO DE XOJE)  */
+  /* ========================================== */
+
+  /* 1. Nivel Primitivo (Valores puros) */
+  --primitive-color-primary: #1c1c1f;
+  --primitive-color-secondary: #f4f4f5;
+  --primitive-color-neutral: #09090b;
+  --primitive-color-accent: #0b66c2;
+  --primitive-color-hud-bg: rgba(30, 30, 35, 0.85);
+  --primitive-color-hud-bg-hover: rgba(45, 45, 50, 0.95);
+  --primitive-color-hud-border: rgba(255, 255, 255, 0.15);
+
+  --primitive-radius-none: 0px;
+  --primitive-radius-md: 8px;
+  --primitive-radius-pill: 20px;
+
+  /* 2. Nivel Semántico (Alias de intención) */
+  --semantic-color-bg-hud: var(--primitive-color-hud-bg);
+  --semantic-color-bg-hud-hover: var(--primitive-color-hud-bg-hover);
+  --semantic-color-border-hud: var(--primitive-color-hud-border);
+  --semantic-color-border-focus: var(--primitive-color-secondary);
+
+  --semantic-radius-pill: var(--primitive-radius-pill);
+  --semantic-radius-retro: var(--primitive-radius-none);
+
+  /* 3. Nivel de Componente (Específicos para AppPillButton) */
+  --comp-button-pill-bg: var(--semantic-color-bg-hud);
+  --comp-button-pill-bg-hover: var(--semantic-color-bg-hud-hover);
+  --comp-button-pill-border: var(--semantic-color-border-hud);
+  --comp-button-pill-radius: var(--semantic-radius-pill);
+  --comp-button-pill-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 * {
