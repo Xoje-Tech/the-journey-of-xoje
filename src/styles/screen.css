@@ -141,6 +141,7 @@ article[data-locale] li {
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: #0e0e10;
     z-index: 10;
     /*
@@ -373,6 +374,7 @@ article[data-locale] li {
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background-color: #1c1c1f;
     color: #f4f4f5;
     display: flex;
