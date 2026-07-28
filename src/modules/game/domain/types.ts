@@ -109,7 +109,17 @@ export interface Camera {
  * literal union so that `pnpm typecheck` rejects typo'd references in
  * tests, configs, and engine wiring.
  */
-export type BiomeId = 'lcs-robotics' | 'crmble' | 'twinny' | 'ride-on';
+export type BiomeId =
+  | 'infancia'
+  | 'locutorio'
+  | 'trabajos-varios'
+  | 'trabajos-varios-crupier'
+  | 'trabajos-varios-feriante'
+  | 'ciclo-superior'
+  | 'lcs-robotics'
+  | 'crmble'
+  | 'twinny'
+  | 'ride-on';
 
 /**
  * Skill authored inside a biome. `yOffset` is relative to the start of

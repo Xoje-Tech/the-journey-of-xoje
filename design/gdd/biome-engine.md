@@ -20,11 +20,15 @@ The player should feel like they are embarking on a vertical journey through tim
 ## 3. Detailed Rules
 
 ### Biome Specifications
-The world map consists of 4 stacked career biomes, each exactly 1,000 px tall (total vertical height = 4,000 px).
-- **LCS Robotics** (y-range: `[0, 1000]`): Core automotive engineering theme, featuring Héctor (NPC).
-- **Crmble** (y-range: `[1000, 2000]`): Frontend UI component theme, featuring Laura (NPC).
-- **Twinny** (y-range: `[2000, 3000]`): Fullstack Angular/DDD theme, featuring Dani (NPC).
-- **RIDE ON** (y-range: `[3000, 4000]`): Quality, TDD, and Astro/Vue theme, featuring Marcos (NPC).
+The world map consists of 8 stacked life and career biomes, each exactly 1,000 px tall (total vertical height = 8,000 px).
+- **Infancia** (y-range: `[0, 1000]`): Nostalgic era of early curiosity, featuring first contact with old PCs and consoles.
+- **El Locutorio** (y-range: `[1000, 2000]`): Internet Cafe era, featuring LAN multiplayer games (Counter-Strike), community, and console setups.
+- **Trabajos Varios** (y-range: `[2000, 3000]`): Resilience and client-facing era, featuring the Crupier (card dealer at a table) and the Feriante (serving medieval mojitos from a rustic stand).
+- **Ciclo Superior** (y-range: `[3000, 4000]`): Academic vocational path (DAM/DAW at IES Pere Maria Orts), software engineering foundations and algorithms.
+- **LCS Robotics** (y-range: `[4000, 5000]`): Core automotive engineering theme, featuring Héctor (NPC).
+- **Crmble** (y-range: `[5000, 6000]`): Frontend UI component theme, featuring Laura (NPC).
+- **Twinny** (y-range: `[6000, 7000]`): Fullstack Angular/DDD theme, featuring Dani (NPC).
+- **RIDE ON** (y-range: `[7000, 8000]`): Quality, TDD, and Astro/Vue theme, featuring Marcos (NPC).
 
 ### Spawning and Coordinates
 - **Relative Authoring**: All collectibles (skills and NPCs) and static decorations are authored with a relative `yOffset` in `[0, biome.height]`.
@@ -47,7 +51,7 @@ The world map consists of 4 stacked career biomes, each exactly 1,000 px tall (t
 | `player_y` | float | `14.0` | Player's absolute world Y position (px) |
 | `viewport_h` | float | Canvas logical height | Vertical dimension of the visible viewport (px) |
 | `camera_y` | float | `0.0` | Viewport camera Y coordinate (px) |
-| `map_height` | float | `4000.0` | Total map height derived from the sum of all biome heights |
+| `map_height` | float | `8000.0` | Total map height derived from the sum of all biome heights |
 
 ### Equation 1: Map Height Derivation
 ```text

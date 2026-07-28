@@ -8,7 +8,7 @@
 ---
 
 ## 1. Overview
-The Collectibles and NPC Dialog System manages the player's core progression loop, regulating how they collect skill items scattered across the vertical map and interact with bilingue NPC (Non-Player Character) colleagues (Héctor, Laura, Dani, Marcos). It handles collision checks, tooltip popups based on proximity, progressive text rendering (typewriter effect), and controller-to-DOM event handshakes.
+The Collectibles and NPC Dialog System manages the player's core progression loop, regulating how they collect skill items scattered across the vertical map and interact with bilingual NPC (Non-Player Character) colleagues (including Héctor, Laura, Dani, Marcos, and historical figures like the Crupier and the Feriante with his medieval mojito stand). It handles collision checks, tooltip popups based on proximity, progressive text rendering (typewriter effect), and controller-to-DOM event handshakes.
 
 ---
 
