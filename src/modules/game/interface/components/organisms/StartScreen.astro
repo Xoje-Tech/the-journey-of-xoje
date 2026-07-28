@@ -102,43 +102,42 @@ const ui = locale === 'es' ? uiEs : uiEn;
 <script>
   import { isStartedStore } from "@/modules/game/application/store";
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const startScreen = document.getElementById('start-screen');
-    const startGameBtn = document.getElementById('start-game-btn');
-    const downloadCvBtn = document.getElementById('download-cv-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const controlsBtn = document.getElementById('controls-btn');
-    const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
-    const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
+  const startScreen = document.getElementById('start-screen');
+  const startGameBtn = document.getElementById('start-game-btn');
+  const downloadCvBtn = document.getElementById('download-cv-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const controlsBtn = document.getElementById('controls-btn');
+  const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
+  const controlsModal = document.getElementById('controls-modal') as HTMLDialogElement | null;
 
-    // Slice D (WU-1): all four buttons are wired to keyboard activation
-    // for free because they are real <button> elements (Enter / Space
-    // trigger click automatically). We just add explicit click→click
-    // handlers below for the actions themselves.
+  // Slice D (WU-1): all four buttons are wired to keyboard activation
+  // for free because they are real <button> elements (Enter / Space
+  // trigger click automatically). We just add explicit click→click
+  // handlers below for the actions themselves.
 
-    if (startGameBtn) {
-      startGameBtn.addEventListener('click', () => {
-        isStartedStore.set(true);
-      });
-    }
+  if (startGameBtn) {
+    startGameBtn.addEventListener('click', () => {
+      isStartedStore.set(true);
+    });
+  }
 
-    if (downloadCvBtn) {
-      downloadCvBtn.addEventListener('click', () => {
-        window.print();
-      });
-    }
+  if (downloadCvBtn) {
+    downloadCvBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
 
-    if (settingsBtn && settingsModal) {
-      settingsBtn.addEventListener('click', () => {
-        settingsModal.showModal();
-      });
-    }
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.showModal();
+    });
+  }
 
-    if (controlsBtn && controlsModal) {
-      controlsBtn.addEventListener('click', () => {
-        controlsModal.showModal();
-      });
-    }
+  if (controlsBtn && controlsModal) {
+    controlsBtn.addEventListener('click', () => {
+      controlsModal.showModal();
+    });
+  }
 
     // Slice D (WU-2): 2D grid navigation for keyboard + gamepad.
     // The 4 buttons are laid out 2x2:
@@ -238,10 +237,11 @@ const ui = locale === 'es' ? uiEs : uiEn;
     // transition. If the focused element is one of our 4 buttons, fire
     // a synthetic click so the existing click handlers do their work.
     // This mirrors the Slice C modal pattern (A activates focused).
-    window.addEventListener('gamepad-a', () => {
+    window.addEventListener('gamepad-a', (e) => {
       if (!isStartScreenActive()) return;
       const active = document.activeElement as HTMLElement | null;
       if (active && buttons.includes(active)) {
+        e.stopImmediatePropagation(); // Consume the event so no sibling listeners run this tick!
         active.click();
       }
     });
@@ -300,5 +300,4 @@ const ui = locale === 'es' ? uiEs : uiEn;
         startGameBtn.focus();
       });
     }
-  });
 </script>

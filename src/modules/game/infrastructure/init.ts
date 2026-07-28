@@ -243,6 +243,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     },
   };
 
+  // Initial gamepad connection check (TDD 4.1.b fix)
+  if (typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function') {
+    const pads = navigator.getGamepads();
+    if (pads) {
+      for (let i = 0; i < pads.length; i++) {
+        if (pads[i]) {
+          state.gamepadConnected = true;
+          break;
+        }
+      }
+    }
+  }
+
   // FPS rolling-window state. We store timestamps (ms since the page
   // navigation start, via `performance.now()`) for the last `FPS_WINDOW`
   // frames, then compute `1000 / average_dt_ms`. We expose `getFps` from
