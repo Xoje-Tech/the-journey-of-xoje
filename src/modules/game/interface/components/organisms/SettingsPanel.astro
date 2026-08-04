@@ -21,34 +21,32 @@ const ui = locale === 'es' ? uiEs : uiEn;
 <script>
   import { gamepadConnectedStore } from "@/modules/game/application/store";
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const updateGamepadStatus = () => {
-      const gamepads = typeof navigator.getGamepads === 'function' ? navigator.getGamepads() : [];
-      let active = false;
-      for (let i = 0; i < gamepads.length; i++) {
-        if (gamepads[i]) {
-          active = true;
-          break;
-        }
+  const updateGamepadStatus = () => {
+    const gamepads = typeof navigator.getGamepads === 'function' ? navigator.getGamepads() : [];
+    let active = false;
+    for (let i = 0; i < gamepads.length; i++) {
+      if (gamepads[i]) {
+        active = true;
+        break;
       }
-      gamepadConnectedStore.set(active);
-    };
-
-    setInterval(updateGamepadStatus, 500);
-    updateGamepadStatus();
-
-    // Gamepad Start button → open Settings (Slice C WU-3).
-    // The engine in init.ts dispatches a 'gamepad-start' CustomEvent when
-    // it detects the Start button (buttons[9]) edge transition. We listen
-    // here and open the settings modal. Decoupled from the engine — the
-    // modal lives in the DOM, init.ts only knows about CustomEvents.
-    const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
-    if (settingsModal) {
-      window.addEventListener('gamepad-start', () => {
-        if (!settingsModal.open) {
-          settingsModal.showModal();
-        }
-      });
     }
-  });
+    gamepadConnectedStore.set(active);
+  };
+
+  setInterval(updateGamepadStatus, 500);
+  updateGamepadStatus();
+
+  // Gamepad Start button → open Settings (Slice C WU-3).
+  // The engine in init.ts dispatches a 'gamepad-start' CustomEvent when
+  // it detects the Start button (buttons[9]) edge transition. We listen
+  // here and open the settings modal. Decoupled from the engine — the
+  // modal lives in the DOM, init.ts only knows about CustomEvents.
+  const settingsModal = document.getElementById('settings-modal') as HTMLDialogElement | null;
+  if (settingsModal) {
+    window.addEventListener('gamepad-start', () => {
+      if (!settingsModal.open) {
+        settingsModal.showModal();
+      }
+    });
+  }
 </script>

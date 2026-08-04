@@ -15,17 +15,23 @@ import DialogOverlay from "@/modules/game/interface/components/organisms/DialogO
 import TooltipOverlay from "@/modules/game/interface/components/organisms/TooltipOverlay.astro";
 import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
+import { getLocaleFromRoute } from "../../shared/lib/route-utils";
 
 export async function getStaticPaths() {
   return [{ params: { locale: 'en' } }];
 }
 
 const rawLocale = Astro.params.locale;
-if (rawLocale !== 'es' && rawLocale !== 'en') {
-  throw new Error(`Unsupported locale: ${rawLocale}`);
+if (rawLocale === 'es') {
+  return Astro.redirect('/');
 }
-const locale = rawLocale;
-const ui = locale === 'es' ? uiEs : uiEn;
+
+const locale = getLocaleFromRoute(rawLocale);
+if (!locale) {
+  return Astro.redirect('/');
+}
+
+const ui = locale === 'en' ? uiEn : uiEs;
 
 const entries = await getCollection('cv');
 const targetId = `cv.${locale}.md`;

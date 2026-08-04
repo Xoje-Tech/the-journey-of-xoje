@@ -11,16 +11,25 @@ import { BIOMES, MAP_HEIGHT, buildCollectibles } from "../src/modules/game/infra
 import type { Player, CollectibleItem } from "../src/modules/game/domain/types";
 
 describe('Journey Progression Integration', () => {
-  it('BIOMES defines exactly 19 collectibles distributed across 4 biome IDs', () => {
+  it('BIOMES defines exactly 32 collectibles distributed across 8 biome IDs', () => {
     const skills = BIOMES.flatMap((biome) => biome.skills);
-    expect(skills).toHaveLength(19);
+    expect(skills).toHaveLength(32);
 
+    expect(BIOMES.find((b) => b.id === 'infancia')?.skills).toHaveLength(3);
+    expect(BIOMES.find((b) => b.id === 'locutorio')?.skills).toHaveLength(3);
+    expect(BIOMES.find((b) => b.id === 'trabajos-varios')?.skills).toHaveLength(4);
+    expect(BIOMES.find((b) => b.id === 'ciclo-superior')?.skills).toHaveLength(3);
     expect(BIOMES.find((b) => b.id === 'lcs-robotics')?.skills).toHaveLength(4);
     expect(BIOMES.find((b) => b.id === 'crmble')?.skills).toHaveLength(5);
     expect(BIOMES.find((b) => b.id === 'twinny')?.skills).toHaveLength(5);
     expect(BIOMES.find((b) => b.id === 'ride-on')?.skills).toHaveLength(5);
 
     const items = buildCollectibles(BIOMES, [
+      { biomeId: 'infancia', name: 'Iris', initial: 'I', dialogue: { es: '¡Ey!', en: 'Hey!' } },
+      { biomeId: 'locutorio', name: 'Novich', initial: 'N', dialogue: { es: 'Hola', en: 'Hi' } },
+      { biomeId: 'trabajos-varios-crupier', name: 'El Crupier', initial: 'C', dialogue: { es: 'Hola', en: 'Hi' } },
+      { biomeId: 'trabajos-varios-feriante', name: 'El Feriante', initial: 'F', dialogue: { es: 'Hola', en: 'Hi' } },
+      { biomeId: 'ciclo-superior', name: 'Novich (Estudiante)', initial: 'N', dialogue: { es: 'Hola', en: 'Hi' } },
       { biomeId: 'lcs-robotics', name: 'Héctor', initial: 'H', dialogue: { es: '¡Ey!', en: 'Hey!' } },
       { biomeId: 'crmble', name: 'Laura', initial: 'L', dialogue: { es: 'Hola', en: 'Hi' } },
       { biomeId: 'twinny', name: 'Dani', initial: 'D', dialogue: { es: 'Hola', en: 'Hi' } },
@@ -37,7 +46,7 @@ describe('Journey Progression Integration', () => {
     expect(clampPlayerY(0, MAP_HEIGHT)).toBe(0);
 
     // Lower boundary
-    expect(clampPlayerY(4010, MAP_HEIGHT)).toBe(MAP_HEIGHT);
+    expect(clampPlayerY(8010, MAP_HEIGHT)).toBe(MAP_HEIGHT);
     expect(clampPlayerY(MAP_HEIGHT, MAP_HEIGHT)).toBe(MAP_HEIGHT);
 
     // Within bounds

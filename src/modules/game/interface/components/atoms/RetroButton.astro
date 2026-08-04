@@ -1,4 +1,7 @@
 ---
+// src/modules/game/interface/components/atoms/RetroButton.astro
+import AppButton from "./AppButton.astro";
+
 interface Props {
   id?: string;
   type?: 'button' | 'submit' | 'reset';
@@ -9,7 +12,7 @@ interface Props {
 const { id, type = 'button', class: className = '', icon } = Astro.props;
 ---
 
-<button id={id} type={type} class={`retro-btn ${className}`}>
+<AppButton id={id} type={type} class={`retro-btn ${className}`}>
   {icon ? (
     <>
       <img class="retro-btn-icon" src={icon.src} alt={icon.alt} />
@@ -18,20 +21,24 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
   ) : (
     <slot />
   )}
-</button>
+</AppButton>
 
-<style>
+<style is:global>
+  /* 
+   * Estilo cartucho pixelado unificado con Design Tokens e inyectado globalmente,
+   * pisando limpiamente al primitivo base gracias a su especificidad cero (:where).
+   */
   .retro-btn {
-    border-radius: 0;
-    border: 2px solid #09090b;
-    background-color: #1c1c1f;
-    color: #f4f4f5;
+    border-radius: var(--comp-button-retro-radius);
+    border: 2px solid var(--comp-button-retro-border);
+    background-color: var(--comp-button-retro-bg);
+    color: var(--primitive-color-secondary);
     padding: 8px 16px;
     font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 4px 4px 0px #09090b;
+    box-shadow: var(--comp-button-retro-shadow);
     transition: all 100ms ease;
     user-select: none;
     display: inline-flex;
@@ -55,19 +62,22 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
 
   .retro-btn:active {
     transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #09090b;
+    box-shadow: 2px 2px 0px var(--comp-button-retro-border);
     background-color: #3f3f46;
   }
 
   /*
-   * Focus ring — Slice D (WU-1) needs a visible focus indicator so
-   * keyboard and gamepad navigation is usable. The retro aesthetic
-   * uses a chunky pixel border instead of a thin outline; the white
-   * drop-shadow matches the Lisa: The Painful visual canon.
+   * Focus ring — Sincronizamos el foco con el comportamiento de hover.
+   * Usamos :focus para contemplar tanto foco por Tab como foco programático por flechas/gamepad.
+   * Declaramos también :focus-visible para cumplir estrictamente con el contrato estático de tests.
    */
+  .retro-btn:focus,
   .retro-btn:focus-visible {
     outline: none;
-    border-color: #f4f4f5;
-    box-shadow: 4px 4px 0px #f4f4f5, 0 0 0 2px #09090b;
+    background-color: #27272a;
+    border-color: var(--primitive-color-secondary);
+    box-shadow: 
+      4px 4px 0px var(--primitive-color-secondary), 
+      0 0 0 2px var(--primitive-color-neutral);
   }
 </style>
