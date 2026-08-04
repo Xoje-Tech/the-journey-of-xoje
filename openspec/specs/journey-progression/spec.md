@@ -8,14 +8,24 @@ Expose linear vertical gameplay with chronological career biomes, collectible sk
 
 ### Requirement: Career Biomes and Spawning
 
-The system SHALL divide a vertical map of size `[0, MAP_HEIGHT]` into 4 chronological biomes. It SHALL spawn 19 key skill collectibles within their respective biomes (4 soft skills added: 1 per biome). Soft skills MUST render with a green palette on the canvas.
+> MODIFIED 2026-07-18 (biome-engine change). Previously this requirement
+> referenced biomes by free-form display strings such as `"LCS Robotics"`. The
+> join key is now the typed `BiomeId` union. The 4/5/5/5 + 19-skill contract is
+> preserved verbatim.
+
+The system SHALL divide a vertical map of size `[0, MAP_HEIGHT]` into 4
+chronological biomes, each addressed by a `BiomeId` from the closed union
+`('lcs-robotics' | 'crmble' | 'twinny' | 'ride-on')`. It SHALL spawn 19 key
+skill collectibles within their respective biomes (4 soft skills added: 1 per
+biome). Soft skills MUST render with a green palette on the canvas.
 
 #### Scenario: Spawning layout
 
 - GIVEN a new game session
 - WHEN the map initializes
 - THEN 19 skills SHALL be placed across 4 chronological biomes from top to bottom
-- AND counts per biome MUST be: LCS Robotics: 4, Crmble: 5, Twinny: 5, RIDE ON: 5
+- AND counts per biome MUST be: `lcs-robotics`: 4, `crmble`: 5, `twinny`: 5,
+  `ride-on`: 5
 
 #### Scenario: Soft skill rendering
 
@@ -93,14 +103,24 @@ The test suite MUST verify 19 total skills and assert updated per-biome counts.
 
 ### Requirement: REQ-NPC-SPAWNING-RENDERING
 
-The map generator SHALL spawn 4 distinct coworker NPCs as part of the map's collectibles, located in their respective chronological career biomes. Each NPC MUST render on the canvas as a yellow retro circle containing their initial and their name above.
+> MODIFIED 2026-07-18 (biome-engine change). Previously NPCs were inlined on
+> each `CollectibleItem` as `npc?: NPCMetadata`. The collectible now carries
+> `npcId?: BiomeId` and the NPC data lives in the external `NPCConfig[]`
+> table. The 4-NPC contract and the per-NPC biome/skill association are
+> preserved verbatim.
 
-| NPC Name | Associated Skill      | Biome        | Initial |
-| -------- | --------------------- | ------------ | ------- |
-| Héctor   | `kuka-robotics`       | LCS Robotics | H       |
-| Laura    | `design-system`       | Crmble       | L       |
-| Dani     | `peer-mentoring`      | Twinny       | D       |
-| Marcos   | `continuous-learning` | RIDE ON      | M       |
+The map generator SHALL spawn 4 distinct coworker NPCs as part of the map's
+collectibles, located in their respective chronological career biomes. Each
+NPC MUST be resolved from the `NPCConfig[]` table via the collectible's
+`npcId` field. Each NPC MUST render on the canvas as a yellow retro circle
+containing their initial and their name above.
+
+| NPC Name | Associated Skill      | BiomeId       | Initial |
+| -------- | --------------------- | ------------- | ------- |
+| Héctor   | `kuka-robotics`       | `lcs-robotics`| H       |
+| Laura    | `design-system`       | `crmble`      | L       |
+| Dani     | `peer-mentoring`      | `twinny`      | D       |
+| Marcos   | `continuous-learning` | `ride-on`     | M       |
 
 #### Scenario: Spawning and rendering of NPCs
 
@@ -108,6 +128,8 @@ The map generator SHALL spawn 4 distinct coworker NPCs as part of the map's coll
 - WHEN the engine draws collectibles on the canvas
 - THEN 4 distinct NPCs MUST render as yellow retro circles with initials ('H', 'L', 'D', 'M')
 - AND their names MUST be displayed above their positions in their respective career biomes
+- AND each NPC MUST be resolved from the `NPCConfig[]` table using the
+  collectible's `npcId` field
 
 ### Requirement: REQ-NPC-LOOP-PAUSING
 

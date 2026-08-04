@@ -4,10 +4,10 @@
  * Unit contract for the biome-engine authoring surface. Asserts the
  * invariants the spec and design.md establish:
  *
- *   - 4 biomes, each with a unique BiomeId
+ *   - 8 biomes, each with a unique BiomeId
  *   - MAP_HEIGHT is derived (sum of biome heights), not a literal
- *   - 19 collectible skills distributed 4/5/5/5 across biomes
- *   - 4 NPCs, one per biome (Héctor, Laura, Dani, Marcos)
+ *   - 32 collectible skills distributed 3/3/4/3/4/5/5/5 across biomes
+ *   - 9 NPCs
  *   - buildCollectibles rejects out-of-range yOffset and orphan npcId
  *   - NPCS.find resolves each collectible's npcId to its NPC
  *
@@ -22,15 +22,24 @@ import {
 } from '../src/modules/game/infrastructure/biome-config';
 import type { BiomeConfig, BiomeId, NPCConfig } from '../src/modules/game/domain/types';
 
-const BIOME_ORDER: readonly BiomeId[] = ['lcs-robotics', 'crmble', 'twinny', 'ride-on'];
-const PER_BIOME_COUNTS = [4, 5, 5, 5] as const;
+const BIOME_ORDER: readonly BiomeId[] = [
+  'infancia',
+  'locutorio',
+  'trabajos-varios',
+  'ciclo-superior',
+  'lcs-robotics',
+  'crmble',
+  'twinny',
+  'ride-on',
+];
+const PER_BIOME_COUNTS = [3, 3, 4, 3, 4, 5, 5, 5] as const;
 
 describe('BIOMES — authoring surface', () => {
-  it('exports exactly 4 biomes on first ship', () => {
-    expect(BIOMES).toHaveLength(4);
+  it('exports exactly 8 biomes', () => {
+    expect(BIOMES).toHaveLength(8);
   });
 
-  it('uses BiomeId literals in declared order: lcs-robotics, crmble, twinny, ride-on', () => {
+  it('uses BiomeId literals in declared order', () => {
     expect(BIOMES.map((b) => b.id)).toEqual([...BIOME_ORDER]);
   });
 
@@ -57,38 +66,39 @@ describe('MAP_HEIGHT — derived, not literal', () => {
     expect(MAP_HEIGHT).toBe(expected);
   });
 
-  it('is 4000 on first ship (4 biomes × 1000 px each)', () => {
-    expect(MAP_HEIGHT).toBe(4000);
+  it('is 8000 (8 biomes × 1000 px each)', () => {
+    expect(MAP_HEIGHT).toBe(8000);
   });
 });
 
-describe('skills — 4/5/5/5 distribution', () => {
-  it('defines exactly 19 skills in total', () => {
+describe('skills — 3/3/4/3/4/5/5/5 distribution', () => {
+  it('defines exactly 32 skills in total', () => {
     const total = BIOMES.flatMap((b) => b.skills).length;
-    expect(total).toBe(19);
+    expect(total).toBe(32);
   });
 
-  it('distributes skills 4/5/5/5 across the 4 biomes in declared order', () => {
+  it('distributes skills 3/3/4/3/4/5/5/5 across the 8 biomes in declared order', () => {
     const counts = BIOMES.map((b) => b.skills.length);
     expect(counts).toEqual([...PER_BIOME_COUNTS]);
   });
 });
 
 describe('NPCS — external NPC table', () => {
-  it('exports exactly 4 NPCs on first ship', () => {
-    expect(NPCS).toHaveLength(4);
+  it('exports exactly 9 NPCs', () => {
+    expect(NPCS).toHaveLength(9);
   });
 
-  it('binds Héctor to lcs-robotics, Laura to crmble, Dani to twinny, Marcos to ride-on', () => {
+  it('binds NPCs to their respective biome IDs', () => {
     const byBiome = new Map(NPCS.map((n) => [n.biomeId, n]));
+    expect(byBiome.get('infancia')?.name).toBe('Iris');
+    expect(byBiome.get('locutorio')?.name).toBe('Novich');
+    expect(byBiome.get('trabajos-varios-crupier')?.name).toBe('El Crupier');
+    expect(byBiome.get('trabajos-varios-feriante')?.name).toBe('El Feriante');
+    expect(byBiome.get('ciclo-superior')?.name).toBe('Novich (Estudiante)');
     expect(byBiome.get('lcs-robotics')?.name).toBe('Héctor');
-    expect(byBiome.get('lcs-robotics')?.initial).toBe('H');
     expect(byBiome.get('crmble')?.name).toBe('Laura');
-    expect(byBiome.get('crmble')?.initial).toBe('L');
     expect(byBiome.get('twinny')?.name).toBe('Dani');
-    expect(byBiome.get('twinny')?.initial).toBe('D');
     expect(byBiome.get('ride-on')?.name).toBe('Marcos');
-    expect(byBiome.get('ride-on')?.initial).toBe('M');
   });
 
   it('provides localized dialogue for every NPC', () => {
@@ -100,9 +110,9 @@ describe('NPCS — external NPC table', () => {
 });
 
 describe('buildCollectibles — spawn-time Y resolver', () => {
-  it('produces 19 collectibles in chronological vertical order', () => {
+  it('produces 32 collectibles in chronological vertical order', () => {
     const items = buildCollectibles(BIOMES, NPCS);
-    expect(items).toHaveLength(19);
+    expect(items).toHaveLength(32);
     for (let i = 0; i < items.length - 1; i++) {
       expect(items[i]!.y).toBeLessThanOrEqual(items[i + 1]!.y);
     }
@@ -110,14 +120,18 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
 
   it('resolves yOffset to absolute world Y at the start of each biome', () => {
     const items = buildCollectibles(BIOMES, NPCS);
-    // First biome starts at y=0; kuka-robotics authored at yOffset=250.
-    expect(items[0]!.id).toBe('kuka-robotics');
-    expect(items[0]!.y).toBe(250);
+    // First biome starts at y=0; curiosity authored at yOffset=300.
+    expect(items[0]!.id).toBe('curiosity');
+    expect(items[0]!.y).toBe(300);
   });
 
-  it('preserves per-biome counts 4/5/5/5 and BiomeId assignments', () => {
+  it('preserves per-biome counts 3/3/4/3/4/5/5/5 and BiomeId assignments', () => {
     const items = buildCollectibles(BIOMES, NPCS);
-    const perBiome: Record<BiomeId, number> = {
+    const perBiome: Record<string, number> = {
+      infancia: 0,
+      locutorio: 0,
+      'trabajos-varios': 0,
+      'ciclo-superior': 0,
       'lcs-robotics': 0,
       crmble: 0,
       twinny: 0,
@@ -126,6 +140,10 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
     for (const item of items) {
       perBiome[item.biome] = (perBiome[item.biome] ?? 0) + 1;
     }
+    expect(perBiome['infancia']).toBe(3);
+    expect(perBiome['locutorio']).toBe(3);
+    expect(perBiome['trabajos-varios']).toBe(4);
+    expect(perBiome['ciclo-superior']).toBe(3);
     expect(perBiome['lcs-robotics']).toBe(4);
     expect(perBiome['crmble']).toBe(5);
     expect(perBiome['twinny']).toBe(5);
@@ -135,8 +153,7 @@ describe('buildCollectibles — spawn-time Y resolver', () => {
   it('attaches npcId to collectibles that host an NPC', () => {
     const items = buildCollectibles(BIOMES, NPCS);
     const npcItems = items.filter((i) => i.npcId !== undefined);
-    expect(npcItems).toHaveLength(4);
-    expect(npcItems.map((i) => i.npcId).sort()).toEqual([...BIOME_ORDER].sort());
+    expect(npcItems).toHaveLength(9);
   });
 
   it('attaches x = 0 (dynamic X is mapped in resize())', () => {

@@ -15,6 +15,10 @@ tmp/
 *.pdf
 !docs/**/*.pdf
 
+# E2E artifacts (Playwright)
+playwright-report/
+test-results/
+
 # Test artifacts
 coverage/
 .nyc_output/

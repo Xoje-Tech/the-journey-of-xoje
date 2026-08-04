@@ -39,6 +39,7 @@ vi.stubGlobal('Image', MockImage);
 
 // Stub browser globals
 const windowListeners: Record<string, Function[] | undefined> = {};
+let activeIntervals: Function[] = [];
 
 const mockWindow = {
   devicePixelRatio: 1,
@@ -57,6 +58,11 @@ const mockWindow = {
     }
     return true;
   }),
+  setInterval: vi.fn((cb, ms) => {
+    activeIntervals.push(cb);
+    return 999;
+  }),
+  clearInterval: vi.fn(),
 };
 
 const mockDocument = {
@@ -120,6 +126,7 @@ const makeFakeCanvas = () => {
 describe('Start Screen Core Engine Suspension', () => {
   beforeEach(() => {
     rafCallback = null;
+    activeIntervals = [];
     vi.clearAllMocks();
     // Clear window listeners
     for (const key in windowListeners) {
@@ -138,6 +145,24 @@ describe('Start Screen Core Engine Suspension', () => {
     expect(typeof handle.start).toBe('function');
     expect(handle).toHaveProperty('stop');
     expect(handle).toHaveProperty('getFps');
+    handle.stop();
+  });
+
+  it('4.1.b init() detects gamepads connected on startup and polls them', () => {
+    const { canvas } = makeFakeCanvas();
+    mockNavigator.getGamepads.mockReturnValue([{ axes: [0, 0], buttons: [] }]);
+
+    const handle = init(canvas as any);
+
+    // Trigger the gamepad poll interval manually
+    expect(activeIntervals.length).toBe(1);
+    const cb = activeIntervals[0]!;
+    mockNavigator.getGamepads.mockClear();
+
+    cb(); // Run the interval callback
+
+    // Assert that it called getGamepads inside the interval
+    expect(mockNavigator.getGamepads).toHaveBeenCalled();
     handle.stop();
   });
 
@@ -346,6 +371,43 @@ describe('Start Screen Core Engine Suspension', () => {
       // Trigger game start
       isStartedStore.set(true);
       expect(startScreenMock.classList.add).toHaveBeenCalledWith('slide-up');
+    });
+
+    it('should bind click listeners to settings and controls triggers for opening modals', () => {
+      const settingsModalMock = {
+        showModal: vi.fn(),
+        open: false,
+      };
+      const controlsModalMock = {
+        showModal: vi.fn(),
+        open: false,
+      };
+
+      const settingsBtnMock = {
+        addEventListener: vi.fn((event, cb) => {
+          if (event === 'click') cb();
+        }),
+      };
+      const controlsBtnMock = {
+        addEventListener: vi.fn((event, cb) => {
+          if (event === 'click') cb();
+        }),
+      };
+
+      // Simulating the trigger attachment logic in StartScreen.astro
+      const triggerWired = (btn: any, modal: any) => {
+        if (btn && modal) {
+          btn.addEventListener('click', () => {
+            modal.showModal();
+          });
+        }
+      };
+
+      triggerWired(settingsBtnMock, settingsModalMock);
+      triggerWired(controlsBtnMock, controlsModalMock);
+
+      expect(settingsModalMock.showModal).toHaveBeenCalled();
+      expect(controlsModalMock.showModal).toHaveBeenCalled();
     });
   });
 

@@ -243,6 +243,19 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     },
   };
 
+  // Initial gamepad connection check (TDD 4.1.b fix)
+  if (typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function') {
+    const pads = navigator.getGamepads();
+    if (pads) {
+      for (let i = 0; i < pads.length; i++) {
+        if (pads[i]) {
+          state.gamepadConnected = true;
+          break;
+        }
+      }
+    }
+  }
+
   // FPS rolling-window state. We store timestamps (ms since the page
   // navigation start, via `performance.now()`) for the last `FPS_WINDOW`
   // frames, then compute `1000 / average_dt_ms`. We expose `getFps` from
@@ -668,12 +681,13 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
     // Render. Logical-pixel coordinates because we already scaled the ctx.
     ctx.clearRect(0, 0, dims.w, dims.h);
 
-    // Draw grid stationary background
+    // Draw grid stationary background (screen coordinates).
     drawGrid(ctx, dims.w, dims.h, gridSize);
 
-    // Draw World-space elements with camera translation
-    ctx.save();
-    ctx.translate(0, -camera.y);
+    // World-space elements. Each draw helper owns its own camera translate
+    // (save + translate + restore) so the loop stays free of outer state.
+    // Draw order = back-to-front: biomes (background + chrome + decorations)
+    // → collectibles (NPCs + skills) → bottom CTA → trail → player.
 
     // Draw Biomes
     drawBiomes(
@@ -695,15 +709,13 @@ export function init(canvas: HTMLCanvasElement, opts: InitOptions = {}): GameHan
       drawBottomCTA(ctx, dims.w, MAP_HEIGHT, camera.y, dims.h);
 
       // Draw Trail
-      drawTrail(ctx, trail, TRAIL_MAX_AGE_MS);
+      drawTrail(ctx, trail, TRAIL_MAX_AGE_MS, camera.y);
     }
 
     // Draw and progress player spritesheet animation
     const animDt = isPlaying ? dtMs : 0;
     const blinkStatus = isPlaying ? blinkActive : false;
-    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, animDt, blinkStatus);
-
-    ctx.restore();
+    playerEntity.updateAndDraw(ctx, player.x, player.y, player.vx, player.vy, animDt, blinkStatus, camera.y);
 
     drawHud(ctx, player, dims.w, dims.h, fpsValue, lastInputSource, lastInputDetail, debugHud);
 

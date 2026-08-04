@@ -5,6 +5,39 @@
   --paper: #fafafa;
   --muted: #555;
   --accent: #0b66c2;
+
+  /* ========================================== */
+  /* DESIGN TOKENS (SISTEMA DE DISEÑO DE XOJE)  */
+  /* ========================================== */
+
+  /* 1. Nivel Primitivo (Valores puros) */
+  --primitive-color-primary: #1c1c1f;
+  --primitive-color-secondary: #f4f4f5;
+  --primitive-color-neutral: #09090b;
+  --primitive-color-accent: #0b66c2;
+  --primitive-color-hud-bg: rgba(30, 30, 35, 0.85);
+  --primitive-color-hud-bg-hover: rgba(45, 45, 50, 0.95);
+  --primitive-color-hud-border: rgba(255, 255, 255, 0.15);
+
+  --primitive-radius-none: 0px;
+  --primitive-radius-md: 8px;
+  --primitive-radius-pill: 20px;
+
+  /* 2. Nivel Semántico (Alias de intención) */
+  --semantic-color-bg-hud: var(--primitive-color-hud-bg);
+  --semantic-color-bg-hud-hover: var(--primitive-color-hud-bg-hover);
+  --semantic-color-border-hud: var(--primitive-color-hud-border);
+  --semantic-color-border-focus: var(--primitive-color-secondary);
+
+  --semantic-radius-pill: var(--primitive-radius-pill);
+  --semantic-radius-retro: var(--primitive-radius-none);
+
+  /* 3. Nivel de Componente (Específicos para AppPillButton) */
+  --comp-button-pill-bg: var(--semantic-color-bg-hud);
+  --comp-button-pill-bg-hover: var(--semantic-color-bg-hud-hover);
+  --comp-button-pill-border: var(--semantic-color-border-hud);
+  --comp-button-pill-radius: var(--semantic-radius-pill);
+  --comp-button-pill-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -108,6 +141,7 @@ article[data-locale] li {
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: #0e0e10;
     z-index: 10;
     /*
@@ -340,6 +374,7 @@ article[data-locale] li {
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background-color: #1c1c1f;
     color: #f4f4f5;
     display: flex;
@@ -384,31 +419,7 @@ article[data-locale] li {
     justify-content: center;
   }
 
-  /* Blocky retro-buttons */
-  .retro-btn {
-    border-radius: 0 !important;
-    border: 2px solid #09090b !important;
-    background-color: #1c1c1f !important;
-    color: #f4f4f5 !important;
-    padding: 8px 16px !important;
-    font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-    box-shadow: 4px 4px 0px #09090b !important;
-    transition: all 100ms ease;
-    user-select: none;
-  }
 
-  .retro-btn:hover {
-    background-color: #27272a !important;
-  }
-
-  .retro-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #09090b !important;
-    background-color: #3f3f46 !important;
-  }
 
   /* Retro Modals */
   .retro-modal {

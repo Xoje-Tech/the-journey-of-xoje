@@ -37,9 +37,149 @@ import type {
 
 export const BIOMES: readonly BiomeConfig[] = [
   {
+    id: 'infancia',
+    label: 'Infancia',
+    height: 1000,
+    background: 'biomes/infancia/infancia-background.png',
+    skills: [
+      {
+        id: 'curiosity',
+        name: 'Curiosity & Exploration',
+        category: 'qualitative',
+        yOffset: 300,
+        xRatio: 0.3,
+      },
+      {
+        id: 'puzzle-solving',
+        name: 'Lateral puzzle solving',
+        category: 'technical',
+        yOffset: 600,
+        xRatio: 0.7,
+      },
+      {
+        id: 'sharing-controller',
+        name: 'Sharing the controller',
+        category: 'soft',
+        yOffset: 850,
+        xRatio: 0.5,
+        npcId: 'infancia',
+      },
+    ],
+    decorations: [
+      {
+        sprite: 'biomes/infancia/ps1-console.png',
+        yOffset: 150,
+        xRatio: 0.5,
+        scale: 1,
+      },
+    ],
+  },
+  {
+    id: 'locutorio',
+    label: 'El Locutorio',
+    height: 1000,
+    background: 'biomes/locutorio/locutorio-background.png',
+    skills: [
+      {
+        id: 'interest-computer-science',
+        name: 'Interest in computer science',
+        category: 'qualitative',
+        yOffset: 300,
+        xRatio: 0.25,
+      },
+      {
+        id: 'team-gaming-strategy',
+        name: 'Team gaming strategy',
+        category: 'soft',
+        yOffset: 600,
+        xRatio: 0.5,
+        npcId: 'locutorio',
+      },
+      {
+        id: 'basic-lan-networking',
+        name: 'Basic LAN networking',
+        category: 'technical',
+        yOffset: 800,
+        xRatio: 0.75,
+      },
+    ],
+    decorations: [],
+  },
+  {
+    id: 'trabajos-varios',
+    label: 'Trabajos Varios',
+    height: 1000,
+    background: 'biomes/trabajos-varios/trabajos-varios-background.png',
+    skills: [
+      {
+        id: 'mental-agility',
+        name: 'Mental agility & quick math',
+        category: 'technical',
+        yOffset: 250,
+        xRatio: 0.3,
+        npcId: 'trabajos-varios-crupier',
+      },
+      {
+        id: 'stress-tolerance',
+        name: 'Stress tolerance & fast delivery',
+        category: 'soft',
+        yOffset: 500,
+        xRatio: 0.7,
+      },
+      {
+        id: 'precision-barista',
+        name: 'Precision & attention to detail',
+        category: 'qualitative',
+        yOffset: 700,
+        xRatio: 0.4,
+      },
+      {
+        id: 'interpersonal-charisma',
+        name: 'Resilience & interpersonal charisma',
+        category: 'soft',
+        yOffset: 900,
+        xRatio: 0.6,
+        npcId: 'trabajos-varios-feriante',
+      },
+    ],
+    decorations: [],
+  },
+  {
+    id: 'ciclo-superior',
+    label: 'Ciclo Superior',
+    height: 1000,
+    background: 'biomes/ciclo-superior/ciclo-superior-background.png',
+    skills: [
+      {
+        id: 'algorithms-logic',
+        name: 'Algoritmia y logica',
+        category: 'technical',
+        yOffset: 250,
+        xRatio: 0.3,
+      },
+      {
+        id: 'databases',
+        name: 'Bases de datos (SQL)',
+        category: 'technical',
+        yOffset: 550,
+        xRatio: 0.6,
+        npcId: 'ciclo-superior',
+      },
+      {
+        id: 'web-development',
+        name: 'Desarrollo web (DAW)',
+        category: 'technical',
+        yOffset: 850,
+        xRatio: 0.45,
+      },
+    ],
+    decorations: [],
+  },
+  {
     id: 'lcs-robotics',
     label: 'LCS Robotics',
     height: 1000,
+    background: 'biomes/lcs/lcs-background.png',
     skills: [
       {
         id: 'kuka-robotics',
@@ -84,6 +224,7 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'crmble',
     label: 'Crmble',
     height: 1000,
+    background: 'biomes/crmble/crmble-background.png',
     skills: [
       {
         id: 'sass',
@@ -128,6 +269,7 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'twinny',
     label: 'Twinny',
     height: 1000,
+    background: 'biomes/twinny/twinny-background.png',
     skills: [
       {
         id: 'angular',
@@ -172,6 +314,7 @@ export const BIOMES: readonly BiomeConfig[] = [
     id: 'ride-on',
     label: 'RIDE ON',
     height: 1000,
+    background: 'biomes/ride-on/ride-on-background.png',
     skills: [
       {
         id: 'astro',
@@ -219,6 +362,51 @@ export const BIOMES: readonly BiomeConfig[] = [
 /* ------------------------------------------------------------------ */
 
 export const NPCS: readonly NPCConfig[] = [
+  {
+    biomeId: 'infancia',
+    name: 'Iris',
+    initial: 'I',
+    dialogue: {
+      es: '¡Hola Xoje! ¿Echamos otra partida al Spyro? Tené cuidado con los precipicios y no te olvides de juntar todas las gemas en la Memory Card.',
+      en: "Hi Xoje! Shall we play another game of Spyro? Watch out for cliffs and don't forget to collect all the gems in the Memory Card.",
+    },
+  },
+  {
+    biomeId: 'locutorio',
+    name: 'Novich',
+    initial: 'N',
+    dialogue: {
+      es: '¡Qué hacés Xoje! Nos falta uno para la partida de Counter-Strike, unite que compramos chaleco y desactivador. ¡Vamos a ganarles de una!',
+      en: "Hey Xoje! We need one more for the Counter-Strike match, join us, let's buy armor and defusal kits. Let's beat them already!",
+    },
+  },
+  {
+    biomeId: 'trabajos-varios-crupier',
+    name: 'El Crupier',
+    initial: 'C',
+    dialogue: {
+      es: 'Hagan sus apuestas, por favor. En esta mesa de casino retro, la agilidad mental y el cálculo rápido bajo presión son tus mejores aliados.',
+      en: 'Place your bets, please. At this retro casino table, mental agility and quick calculation under pressure are your best allies.',
+    },
+  },
+  {
+    biomeId: 'trabajos-varios-feriante',
+    name: 'El Feriante',
+    initial: 'F',
+    dialogue: {
+      es: '¡Bienvenido a la feria de la Vila! Acercate a probar un auténtico mojito medieval. Un buen barman necesita carisma y resiliencia para dominar la barra.',
+      en: 'Welcome to the Vila fair! Come over and try an authentic medieval mojito. A good bartender needs charisma and resilience to master the counter.',
+    },
+  },
+  {
+    biomeId: 'ciclo-superior',
+    name: 'Novich (Estudiante)',
+    initial: 'N',
+    dialogue: {
+      es: '¡Jose! Qué bueno tenerte por acá en el Pere Maria Orts. Estudiar DAM me abrió la cabeza para entender los algoritmos. ¡DAW va a ser un paseo para vos!',
+      en: 'Jose! Great to have you here at Pere Maria Orts. Studying DAM blew my mind on understanding algorithms. DAW will be a breeze for you!',
+    },
+  },
   {
     biomeId: 'lcs-robotics',
     name: 'Héctor',

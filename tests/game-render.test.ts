@@ -111,6 +111,7 @@ describe('drawCollectibles — NPC rendering checks', () => {
     const ctx = {
       save: vi.fn(),
       restore: vi.fn(),
+      translate: vi.fn(),
       beginPath: vi.fn(),
       arc: vi.fn(),
       fill: vi.fn(),

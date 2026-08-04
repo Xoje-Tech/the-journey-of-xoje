@@ -1,0 +1,81 @@
+constants:
+  default_friction:
+    value: 0.92
+    source: design/gdd/movement-input.md
+    referenced_by:
+      - src/modules/game/infrastructure/init.ts
+  default_acceleration:
+    value: 0.6
+    source: design/gdd/movement-input.md
+    referenced_by:
+      - src/modules/game/application/input.ts
+  default_deadzone:
+    value: 0.15
+    source: design/gdd/movement-input.md
+    referenced_by:
+      - src/modules/game/application/input.ts
+  arrival_radius:
+    value: 1.5
+    source: design/gdd/movement-input.md
+    referenced_by:
+      - src/modules/game/application/input.ts
+  biome_height:
+    value: 1000
+    source: design/gdd/biome-engine.md
+    referenced_by:
+      - src/modules/game/infrastructure/biome-config.ts
+  map_height:
+    value: 4000
+    source: design/gdd/biome-engine.md
+    referenced_by:
+      - src/modules/game/infrastructure/biome-config.ts
+
+entities:
+  player:
+    attributes:
+      size:
+        value: 14
+        source: design/gdd/movement-input.md
+        referenced_by:
+          - src/modules/game/domain/types.ts
+          - src/modules/game/infrastructure/init.ts
+      trail_max_len:
+        value: 14
+        source: design/gdd/movement-input.md
+        referenced_by:
+          - src/modules/game/infrastructure/render.ts
+      trail_max_age_ms:
+        value: 280
+        source: design/gdd/movement-input.md
+        referenced_by:
+          - src/modules/game/infrastructure/render.ts
+
+  npcs:
+    hector:
+      biomeId: lcs-robotics
+      name: Héctor
+      initial: H
+      dialogue:
+        es: "¡Ey Xoje! Bienvenido a bordo. En este entorno internacional de automoción vas a tener que comunicarte con equipos de todo el mundo. ¡La adaptabilidad es clave!"
+        en: "Hey Xoje! Welcome aboard. In this international automotive environment, you will have to communicate with teams from all over the world. Adaptability is key!"
+    laura:
+      biomeId: crmble
+      name: Laura
+      initial: L
+      dialogue:
+        es: "Hola Jose. Diseñé estos componentes píxel-perfect. Vamos a construir juntos un sistema de componentes sólido para que sirva como única fuente de verdad."
+        en: "Hi Jose. I designed these pixel-perfect components. Let's build a solid component system together to serve as our single source of truth."
+    dani:
+      biomeId: twinny
+      name: Dani
+      initial: D
+      dialogue:
+        es: "¡Hola Xoje! Gracias por guiarme con Angular y explicarme los patrones de DDD. Tener un mentor en el equipo hace que aprender sea mucho más fácil."
+        en: "Hi Xoje! Thanks for guiding me with Angular and explaining DDD patterns. Having a mentor in the team makes learning so much easier."
+    marcos:
+      biomeId: ride-on
+      name: Marcos
+      initial: M
+      dialogue:
+        es: "Qué tal, Xoje. Aquí en RIDE ON la calidad es innegociable. No subas nada sin escribir primero sus tests unitarios. ¡TDD es el camino!"
+        en: "Hey Xoje. Here at RIDE ON, quality is non-negotiable. Don't upload anything without writing its unit tests first. TDD is the way!"

@@ -1,7 +1,9 @@
 ---
+// src/modules/game/interface/components/organisms/TechBag.astro
 import { SKILL_TEMPLATES } from "@/modules/game/infrastructure/init";
 import RetroModal from "@/modules/game/interface/components/atoms/RetroModal.astro";
 import SkillCard from "@/modules/game/interface/components/molecules/SkillCard.astro";
+import AppPillButton from "@/modules/game/interface/components/atoms/AppPillButton.astro";
 import uiEs from "@/i18n/ui.es.json";
 import uiEn from "@/i18n/ui.en.json";
 
@@ -15,19 +17,19 @@ const ui = locale === 'es' ? uiEs : uiEn;
 const totalTech = SKILL_TEMPLATES.filter((s) => s.category === 'technical').length;
 ---
 
-<button
+<AppPillButton
   id="tech-bag-hud"
   type="button"
   aria-haspopup="dialog"
   aria-expanded="false"
-  class="hud-btn no-print"
+  class="no-print"
 >
   <span class="hud-icon">🛠️</span>
   <span class="hud-label"
     >{ui.game.techBagLabel}<strong id="tech-counter">0/{totalTech}</strong></span
   >
   <span id="tech-toast" class="hud-toast"></span>
-</button>
+</AppPillButton>
 
 <RetroModal
   id="tech-skills-modal"
@@ -45,33 +47,6 @@ const totalTech = SKILL_TEMPLATES.filter((s) => s.category === 'technical').leng
 </RetroModal>
 
 <style>
-  .hud-btn {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(30, 30, 35, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    color: #fff;
-    cursor: pointer;
-    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
-    font-size: 13px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
-  }
-
-  .hud-btn:hover {
-    background: rgba(45, 45, 50, 0.95);
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-  }
-
-  .hud-btn:active {
-    transform: translateY(1px);
-  }
-
   .hud-icon {
     font-size: 16px;
   }

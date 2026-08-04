@@ -9,6 +9,11 @@
     "predev": "node scripts/build-cv-static.mjs",
     "dev": "astro dev",
     "generate-skill-sprites": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-skill-sprites.js",
+    "generate-lcs-building": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-lcs-building.js",
+    "generate-lcs-background": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-lcs-background.js",
+    "generate-crmble-background": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-crmble-background.js",
+    "generate-twinny-background": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-twinny-background.js",
+    "generate-rideon-background": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-rideon-background.js",
     "generate-start-bg": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-start-bg.js",
     "generate-start-icons": "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LD_LIBRARY_PATH=/home/hermes/tools/squashfs-root/usr/lib /home/hermes/tools/squashfs-root/usr/bin/libresprite --batch --script scripts/generate-start-icons.js",
     "build:astro": "astro build",
@@ -17,8 +22,11 @@
     "preview": "astro preview",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint .",
+    "lint:agents": "node scripts/validate-agents.mjs",
+    "lint": "eslint . && pnpm lint:agents",
     "format": "prettier --write \"**/*.{ts,astro,json,md,mjs,yml,yaml}\""
   },
   "engines": {
@@ -26,28 +34,23 @@
   },
   "packageManager": "pnpm@11.9.0",
   "dependencies": {
-    "astro": "^6.0.0",
+    "astro": "7.1.4",
     "nanostores": "1.4.0"
   },
   "devDependencies": {
     "@axe-core/cli": "4.12.1",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.61.1",
     "@types/node": "^22.0.0",
     "eslint": "10.7.0",
     "eslint-plugin-astro": "3.0.1",
     "eslint-plugin-sonarjs": "4.2.0",
     "lighthouse": "13.4.0",
     "pa11y": "9.1.1",
-    "prettier": "^3.0.0",
+    "prettier": "3.9.5",
     "prettier-plugin-astro": "0.14.1",
-    "typescript": "^5.0.0",
+    "typescript": "5.9.3",
     "typescript-eslint": "8.64.0",
-    "vitest": "^1.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "chromedriver",
-      "puppeteer"
-    ]
+    "vitest": "1.6.1"
   }
 }

@@ -1,0 +1,56 @@
+---
+// src/modules/game/interface/components/atoms/AppButton.astro
+interface Props {
+  id?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  'aria-expanded'?: string;
+  'aria-haspopup'?: string;
+  'aria-label'?: string;
+}
+
+const {
+  id,
+  type = 'button',
+  class: className = '',
+  'aria-expanded': ariaExpanded,
+  'aria-haspopup': ariaHaspopup,
+  'aria-label': ariaLabel,
+} = Astro.props;
+---
+
+<button
+  id={id}
+  type={type}
+  class={`app-btn ${className}`}
+  aria-expanded={ariaExpanded}
+  aria-haspopup={ariaHaspopup}
+  aria-label={ariaLabel}
+>
+  <slot />
+</button>
+
+<style>
+  /* 
+   * Usamos :where() para reducir la especificidad de los estilos por defecto a cero.
+   * Esto permite que cualquier clase inyectada por un wrapper (como .app-pill-btn)
+   * gane la especificidad de forma natural y sin colisiones de scope.
+   */
+  :where(.app-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    transition: all 100ms ease;
+  }
+
+  :where(.app-btn):focus-visible {
+    outline: none;
+  }
+</style>

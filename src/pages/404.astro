@@ -1,0 +1,11 @@
+---
+import { getRouteRedirectPath } from '../shared/lib/route-utils';
+
+const redirectPath = getRouteRedirectPath(Astro.url.pathname);
+
+if (redirectPath) {
+  return Astro.redirect(redirectPath);
+}
+
+return Astro.redirect('/');
+---
