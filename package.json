@@ -28,6 +28,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:visual": "playwright test --config=playwright.visual.config.ts",
     "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
+    "test:a11y": "playwright test --config=playwright.visual.config.ts tests/e2e/storybook-a11y.spec.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint:agents": "node scripts/validate-agents.mjs",
     "lint": "eslint . && pnpm lint:agents",
@@ -43,6 +44,7 @@
   },
   "devDependencies": {
     "@axe-core/cli": "4.12.1",
+    "@axe-core/playwright": "4.13.0",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.61.1",
     "@storybook-astro/framework": "1.11.0",
