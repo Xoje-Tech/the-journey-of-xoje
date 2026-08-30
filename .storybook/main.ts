@@ -5,26 +5,35 @@ import type { StorybookConfig } from '@storybook-astro/framework';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Storybook 10 + @storybook-astro/framework (community framework with
- * first-class support for Astro 5/6/7 components, SSR via AstroContainer).
+ * Storybook 10 + @storybook-astro/framework
  *
- * - Stories are colocated as `*.stories.ts` next to the components under
- *   `src/modules/game/interface/components/`.
- * - The `@` alias mirrors tsconfig `paths` so stories and the Astro
- *   components they import resolve identically.
- * - Global design tokens are loaded in `preview.css` (screen.css `:root`).
+ * Addons:
+ * - @storybook/addon-a11y (Automated accessibility checks)
+ * - @storybook/addon-docs (Component documentation, prop tables, autodocs)
+ *
+ * Visual Regression Testing is handled 100% locally via Playwright (@playwright/test).
  */
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
-  addons: ['@storybook/addon-a11y'],
+  addons: [
+    '@storybook/addon-a11y',
+    '@storybook/addon-docs',
+  ],
   framework: {
     name: '@storybook-astro/framework',
     options: {},
   },
   async viteFinal(viteConfig) {
     viteConfig.resolve = viteConfig.resolve ?? {};
-    viteConfig.resolve.alias = viteConfig.resolve.alias ?? {};
-    viteConfig.resolve.alias['@'] = path.resolve(__dirname, '../src');
+    const srcPath = path.resolve(__dirname, '../src');
+    if (Array.isArray(viteConfig.resolve.alias)) {
+      viteConfig.resolve.alias.push({ find: '@', replacement: srcPath });
+    } else {
+      viteConfig.resolve.alias = {
+        ...(viteConfig.resolve.alias as Record<string, string>),
+        '@': srcPath,
+      };
+    }
     return viteConfig;
   },
 };
