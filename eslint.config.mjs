@@ -36,8 +36,10 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**/*',
+      'storybook-static/**/*',
       '.astro/**/*',
       '.atl/**/*',
+      '.storybook/**/*',
       'node_modules/**/*',
       'tests/**/*',
       'scripts/**/*',

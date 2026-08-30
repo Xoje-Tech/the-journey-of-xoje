@@ -1,0 +1,54 @@
+/* Storybook preview styles — loaded only inside the Storybook canvas.
+
+   Production global styles (design tokens + shared screen rules) come from
+   the same single source the Astro layouts import, so component stories see
+   the exact token set the app uses.
+ */
+@import '../src/styles/screen.css';
+
+/* The game UI is dark-themed; give the story canvas the same dark backdrop
+   the app uses (`#game-canvas` background: #0e0e10). */
+body {
+  background: #0e0e10;
+}
+
+/*
+ * RetroModal renders a native <dialog> which the app opens with showModal()
+ * at runtime. Browsers keep closed dialogs at display:none, so without this
+ * rule the modal stories would be invisible. Forcing a static block shows
+ * the modal chrome and slot content for cataloging; the app behavior is
+ * unchanged (this stylesheet never ships to the site).
+ */
+.retro-modal {
+  display: block;
+}
+
+/*
+ * DialogOverlay hides itself with an inline `display: none` until the engine
+ * feeds it content. The DialogOverlay demo wrapper restores it via script;
+ * this rule is the CSS fallback for static rendering of those stories.
+ */
+.dialog-overlay {
+  display: flex !important;
+}
+
+/*
+ * TooltipOverlay is `display: none` until the engine positions it. The
+ * TooltipOverlay demo wrapper restores it via script; this rule is the CSS
+ * fallback for static rendering of that story.
+ */
+.game-tooltip {
+  display: block !important;
+  position: static !important;
+  transform: none !important;
+}
+
+/*
+ * PauseButton / PrintButton HUD containers are `display: none` until the
+ * Nanostores subscription marks the game as started. Force them visible so
+ * the explorer can catalog the HUD controls.
+ */
+.pause-hud-container,
+.print-hud-container {
+  display: block !important;
+}
