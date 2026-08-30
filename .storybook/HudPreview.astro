@@ -1,0 +1,32 @@
+---
+// Storybook-only support component: renders the canvas HUD telemetry string
+// produced by `formatHud` as a plain <pre>, so designers can preview the
+// exact debug overlay the engine draws with ctx.fillText (init.ts).
+import { formatHud } from '@/modules/game/infrastructure/hud';
+import type { Player } from '@/modules/game/domain/types';
+
+interface Props {
+  player: Player;
+  fps: number;
+  input: { source: string; detail: string; debug?: boolean };
+}
+
+const { player, fps, input } = Astro.props;
+const hudText = formatHud(player, 960, 540, fps, input);
+---
+
+<pre class="hud-preview">{hudText}</pre>
+
+<style>
+  .hud-preview {
+    margin: 0;
+    padding: 16px;
+    background: #0e0e10;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f4f4f5;
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+</style>

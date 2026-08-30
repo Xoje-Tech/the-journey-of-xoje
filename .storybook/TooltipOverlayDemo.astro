@@ -1,0 +1,33 @@
+---
+// Storybook-only support component: renders the real TooltipOverlay with
+// sample collectible data, emulating what the engine writes into the
+// tooltip slots via activeTooltipStore (init.ts).
+import TooltipOverlay from '@/modules/game/interface/components/organisms/TooltipOverlay.astro';
+
+interface Props {
+  locale: 'es' | 'en';
+  category: string;
+  title: string;
+  biome: string;
+}
+
+const { locale, category, title, biome } = Astro.props;
+---
+
+<TooltipOverlay locale={locale} />
+
+<script define:vars={{ category, title, biome }}>
+  const tooltip = document.getElementById('game-tooltip');
+  const categoryEl = document.getElementById('tooltip-category');
+  const titleEl = document.getElementById('tooltip-title');
+  const biomeEl = document.getElementById('tooltip-biome');
+
+  if (categoryEl) categoryEl.textContent = category;
+  if (titleEl) titleEl.textContent = title;
+  if (biomeEl) biomeEl.textContent = biome;
+  if (tooltip) {
+    tooltip.style.display = 'block';
+    tooltip.style.position = 'static';
+    tooltip.style.transform = 'none';
+  }
+</script>
