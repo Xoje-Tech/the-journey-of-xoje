@@ -1,0 +1,26 @@
+---
+// Storybook-only support component: renders the real DialogOverlay with
+// sample NPC dialog content, emulating what the engine writes into the
+// `dialog-npc-name` / `dialog-text` slots via activeDialogStore.
+import DialogOverlay from '@/modules/game/interface/components/organisms/DialogOverlay.astro';
+
+interface Props {
+  locale: 'es' | 'en';
+  npcName: string;
+  text: string;
+}
+
+const { locale, npcName, text } = Astro.props;
+---
+
+<DialogOverlay locale={locale} />
+
+<script define:vars={{ npcName, text }}>
+  const overlay = document.getElementById('dialog-overlay');
+  const nameEl = document.getElementById('dialog-npc-name');
+  const textEl = document.getElementById('dialog-text');
+
+  if (overlay) overlay.style.display = 'flex';
+  if (nameEl) nameEl.textContent = npcName;
+  if (textEl) textEl.textContent = text;
+</script>
