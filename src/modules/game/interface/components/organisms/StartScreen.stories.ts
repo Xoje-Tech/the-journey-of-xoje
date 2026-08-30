@@ -1,4 +1,5 @@
 import StartScreen from './StartScreen.astro';
+import { expect, userEvent, within } from 'storybook/test';
 
 export default {
   title: 'UI/Organisms/StartScreen',
@@ -19,4 +20,17 @@ export const Spanish = {
 
 export const English = {
   args: { locale: 'en' },
+};
+
+export const InteractiveNavigation = {
+  args: { locale: 'es' },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const startBtn = canvas.getByRole('button', { name: /Comenzar Juego/i });
+    const settingsBtn = canvas.getByRole('button', { name: /Ajustes/i });
+    await expect(startBtn).toBeInTheDocument();
+    await expect(settingsBtn).toBeInTheDocument();
+    await userEvent.hover(startBtn);
+    await userEvent.hover(settingsBtn);
+  },
 };
