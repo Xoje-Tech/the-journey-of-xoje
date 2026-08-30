@@ -45,6 +45,7 @@
     "@playwright/test": "1.61.1",
     "@storybook-astro/framework": "1.11.0",
     "@storybook/addon-a11y": "10.5.10",
+    "@storybook/addon-docs": "10.5.10",
     "@storybook/builder-vite": "10.5.10",
     "@types/node": "^22.0.0",
     "eslint": "10.7.0",
