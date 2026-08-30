@@ -56,7 +56,7 @@ export default defineConfig({
     //   (c) a bare-`/` baseline avoids the 404 trap and the test
     //       can use a single baseURL for both locales.
     command: 'pnpm dev --port 4321 --host 127.0.0.1',
-    url: 'http://127.0.0.1:4321/',
+    url: 'http://127.0.0.1:4321/the-journey-of-xoje',
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,
     stdout: 'pipe',
