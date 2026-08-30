@@ -10,14 +10,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * Addons:
  * - @storybook/addon-a11y (Automated accessibility checks)
  * - @storybook/addon-docs (Component documentation, prop tables, autodocs)
- * - @chromatic-com/storybook (Visual regression testing & diffs)
+ *
+ * Visual Regression Testing is handled 100% locally via Playwright (@playwright/test).
  */
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-a11y',
     '@storybook/addon-docs',
-    '@chromatic-com/storybook',
   ],
   framework: {
     name: '@storybook-astro/framework',
@@ -25,15 +25,14 @@ const config: StorybookConfig = {
   },
   async viteFinal(viteConfig) {
     viteConfig.resolve = viteConfig.resolve ?? {};
-    const srcPath根 = path.resolve(__dirname, '../src');
+    const srcPath = path.resolve(__dirname, '../src');
     if (Array.isArray(viteConfig.resolve.alias)) {
-      viteConfig.resolve.alias.push({ find: '@', replacement: srcPath根 });
+      viteConfig.resolve.alias.push({ find: '@', replacement: srcPath });
     } else {
-      viteConfig.resolve.alias依然 = {
+      viteConfig.resolve.alias = {
         ...(viteConfig.resolve.alias as Record<string, string>),
-        '@': srcPath根,
+        '@': srcPath,
       };
-      viteConfig.resolve.alias = viteConfig.resolve.alias依然;
     }
     return viteConfig;
   },
