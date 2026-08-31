@@ -37,9 +37,35 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
     padding: 0;
   }
 
+  /* Entrance micro-state: the native <dialog> pops in crisp when opened. */
+  .retro-modal[open] {
+    animation: retro-modal-pop 180ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
   .retro-modal::backdrop {
     background: rgba(9, 9, 11, 0.7);
     backdrop-filter: blur(2px);
+    animation: retro-modal-fade 200ms ease-out;
+  }
+
+  @keyframes retro-modal-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes retro-modal-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .modal-content {
@@ -72,9 +98,22 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
     cursor: pointer;
     line-height: 1;
     padding: 0;
+    transition:
+      color 140ms ease,
+      transform 140ms cubic-bezier(0.25, 1, 0.5, 1);
   }
 
   .close-btn:hover {
+    color: #f4f4f5;
+    transform: rotate(90deg) scale(1.1);
+  }
+
+  .close-btn:active {
+    transform: rotate(90deg) scale(0.95);
+  }
+
+  .close-btn:focus-visible {
+    outline: none;
     color: #f4f4f5;
   }
 
@@ -84,6 +123,20 @@ const { id, title, closeId, class: className = '', triggerId } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 24px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .retro-modal[open],
+    .retro-modal::backdrop {
+      animation: none;
+    }
+    .close-btn {
+      transition-duration: 0.01ms;
+    }
+    .close-btn:hover,
+    .close-btn:active {
+      transform: none;
+    }
   }
 </style>
 
