@@ -155,7 +155,7 @@ The orchestrator in `@personal-brand/cv` runs three guardrails over the generate
 ### Operational rules
 
 - **No sudo.** If a command needs root, surface it and stop.
-- **No auto-merge, no auto-push.** The user merges PRs and pushes. The agent validates locally.
+- **Verified autonomous push; human merge approval.** Agents may push validated feature/topic branches and open PRs autonomously provided all local gates (lint, typecheck, tests, build) pass with full empirical evidence. Merging into develop/master remains human-approved or controlled by verified QA release gates. Never push directly to develop or master.
 - **Always use clean feature branches starting from develop.** NEVER make or commit changes directly on the `develop` branch (and never on `master`/`main`). All development MUST take place on a separate, dedicated feature branch starting from a fresh `develop`, so that a clean Pull Request (PR) can be opened.
 - **No inline destructive git operations.** Multi-step git chains (rebase, merge, push) go into reusable scripts under `~/.hermes/credentials/` or skill assets, not inline.
 - **No invented DATA.** If you don't know it, ask the user. See G04.

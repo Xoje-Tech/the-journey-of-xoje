@@ -29,6 +29,11 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
    * pisando limpiamente al primitivo base gracias a su especificidad cero (:where).
    */
   .retro-btn {
+    /* Consistent motion: 140ms press micro-interactions, 240ms hover, easeOutQuint-ish curve. */
+    --rx-btn-dur-fast: 140ms;
+    --rx-btn-dur: 240ms;
+    --rx-btn-ease: cubic-bezier(0.25, 1, 0.5, 1);
+
     border-radius: var(--comp-button-retro-radius);
     border: 2px solid var(--comp-button-retro-border);
     background-color: var(--comp-button-retro-bg);
@@ -39,12 +44,18 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
     font-weight: bold;
     cursor: pointer;
     box-shadow: var(--comp-button-retro-shadow);
-    transition: all 100ms ease;
+    transition:
+      transform var(--rx-btn-dur-fast) var(--rx-btn-ease),
+      box-shadow var(--rx-btn-dur-fast) var(--rx-btn-ease),
+      background-color var(--rx-btn-dur) var(--rx-btn-ease),
+      border-color var(--rx-btn-dur) var(--rx-btn-ease);
     user-select: none;
     display: inline-flex;
     align-items: center;
     gap: 12px;
     text-align: center;
+    /* Tactile: a hair of lift on hover, pressed down hard on :active. */
+    will-change: transform;
   }
 
   .retro-btn-icon {
@@ -54,16 +65,27 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
     image-rendering: crisp-edges;
     display: block;
     flex-shrink: 0;
+    transition: transform var(--rx-btn-dur-fast) var(--rx-btn-ease);
   }
 
   .retro-btn:hover {
     background-color: #27272a;
+    transform: translateY(-1px);
+  }
+
+  .retro-btn:hover .retro-btn-icon {
+    transform: translateY(1px); /* icon stays planted while the face lifts */
   }
 
   .retro-btn:active {
-    transform: translate(2px, 2px);
+    /* Hard pixel press: pushed down, shadow collapses, sliver of squash. */
+    transform: translate(2px, 2px) scale(0.985);
     box-shadow: 2px 2px 0px var(--comp-button-retro-border);
     background-color: #3f3f46;
+  }
+
+  .retro-btn:active .retro-btn-icon {
+    transform: translate(0, 0);
   }
 
   /*
@@ -79,5 +101,25 @@ const { id, type = 'button', class: className = '', icon } = Astro.props;
     box-shadow: 
       4px 4px 0px var(--primitive-color-secondary), 
       0 0 0 2px var(--primitive-color-neutral);
+    transform: translateY(-1px);
+  }
+
+  /* Respect reduced-motion: damp the squash/lift; keep the color feedback. */
+  @media (prefers-reduced-motion: reduce) {
+    .retro-btn,
+    .retro-btn-icon {
+      transition-duration: 0.01ms;
+    }
+    .retro-btn:hover,
+    .retro-btn:focus,
+    .retro-btn:focus-visible {
+      transform: none;
+    }
+    .retro-btn:active {
+      transform: translate(2px, 2px);
+    }
+    .retro-btn:hover .retro-btn-icon {
+      transform: none;
+    }
   }
 </style>
