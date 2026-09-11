@@ -50,7 +50,11 @@ const {
     font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
     font-size: 13px;
     box-shadow: var(--comp-button-pill-shadow);
-    transition: all 0.2s ease;
+    transition:
+      transform 140ms cubic-bezier(0.25, 1, 0.5, 1),
+      background 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
   }
 
   .app-pill-btn:hover {
@@ -60,7 +64,9 @@ const {
   }
 
   .app-pill-btn:active {
-    transform: translateY(1px);
+    /* Tactile press: sink the pill and cut the drop shadow. */
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
   /* 
@@ -78,5 +84,19 @@ const {
       0 0 0 2px var(--primitive-color-primary), 
       0 0 0 4px var(--primitive-color-secondary), 
       var(--comp-button-pill-shadow);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-pill-btn {
+      transition-duration: 0.01ms;
+    }
+    .app-pill-btn:hover,
+    .app-pill-btn:focus,
+    .app-pill-btn:focus-visible {
+      transform: none;
+    }
+    .app-pill-btn:active {
+      transform: none;
+    }
   }
 </style>

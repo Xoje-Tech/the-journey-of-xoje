@@ -7,7 +7,11 @@ export function getLocaleFromRoute(rawLocale: string | undefined): 'en' | null {
 }
 
 export function getRouteRedirectPath(pathname: string): string | null {
-  const normalized = pathname.replace(/\/+$/, '') || '/';
+  let normalized = pathname;
+  while (normalized.length > 1 && normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+  normalized ||= '/';
   const segments = normalized.split('/').filter(Boolean);
 
   if (segments.length === 0) {
